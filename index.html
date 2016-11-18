@@ -2,13 +2,12 @@
 <html>
     <head><title>Game</title></head>
     <body>
-    	<canvas id="game">Sorry, this game requires HTML5 Canvas support to run!</canvas>
+    	<canvas id="game" width="720" height="480">Sorry, this game requires HTML5 Canvas support to run!</canvas>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
         <script>
 			requirejs(['src/Game'],
-			function(Game) {
-				let g = new Game();
-				g.init();
+			function(game) {
+				new game.default();
 			});
         </script>
     </body>

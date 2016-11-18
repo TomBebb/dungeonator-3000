@@ -1,9 +1,10 @@
-import Game from "./Game";
-import {Rectangle, random} from "./math";
+import Game from "./Game"
+	; import { Rectangle, random } from "./math";
 
 export default class Grid {
 	protected readonly buffer: Int8Array;
 	protected static readonly COLORS: string[] = [
+		"black",
 		"white",
 		"red",
 		"green",
@@ -11,8 +12,7 @@ export default class Grid {
 		"yellow",
 		"orange",
 		"purple",
-		"gray",
-		"black"
+		"gray"
 	];
 	readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
@@ -22,23 +22,24 @@ export default class Grid {
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = width * Game.TILE_SIZE;
 		this.canvas.height = height * Game.TILE_SIZE;
-		this.context = this.canvas.getContext("2d");
+		this.context = this.canvas.getContext("2d") !;
 		this.buffer = new Int8Array(width * height);
 		this.width = width;
 		this.height = height;
+		this.canvas.style.display = "none";
 		document.body.appendChild(this.canvas);
 		this.randomise();
 		this.internalDraw();
 	}
 	randomise() {
-		for(var x = 0; x < this.width; x++)
-			for(var y = 0; y < this.height; y++)
+		for (var x = 0; x < this.width; x++)
+			for (var y = 0; y < this.height; y++)
 				this.buffer[this.index(x, y)] = random(0, Grid.COLORS.length);
 	}
 	fill(r: Rectangle, c: number) {
 		c = c % Grid.COLORS.length;
-		for(var x = r.x; x < r.x + r.width; x++)
-			for(var y = r.y; y < r.y + r.height; y++)
+		for (var x = r.x; x < r.x + r.width; x++)
+			for (var y = r.y; y < r.y + r.height; y++)
 				this.buffer[this.index(x, y)] = c;
 	}
 	clear(index: number = 0) {
@@ -47,12 +48,27 @@ export default class Grid {
 	protected index(x: number, y: number) {
 		return x + y * this.width;
 	}
+	canMoveTo(x: number, y: number): boolean {
+		return x >= 0 && y >= 0 && x < this.width && y < this.height && this.buffer[this.index(x, y)] == 0;
+	}
 	internalDraw() {
-		for(var x = 0; x < this.width; x++)
-			for(var y = 0; y < this.height; y++) {
-				this.context.fillStyle = Grid.COLORS[this.buffer[this.index(x, y)]];
+		this.context.strokeStyle = "0.5px black";
+		for (var y = 0; y < this.height; y++) {
+			for (var x = 0; x < this.width; x++) {
+				this.context.fillStyle = Grid.COLORS[this.buffer[this.index(x, y)] != 0 ? 0 : 1];
 				this.context.fillRect(x * Game.TILE_SIZE, y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 			}
+			this.context.beginPath();
+			this.context.moveTo(0, y * Game.TILE_SIZE);
+			this.context.lineTo(this.width * Game.TILE_SIZE, y * Game.TILE_SIZE);
+			this.context.stroke();
+		}
+		for (var x = 0; x < this.width; x++) {
+			this.context.beginPath();
+			this.context.moveTo(x * Game.TILE_SIZE, 0);
+			this.context.lineTo(x * Game.TILE_SIZE, this.height * Game.TILE_SIZE);
+			this.context.stroke();
+		}
 	}
 	render(c: CanvasRenderingContext2D, x: number, y: number) {
 		c.drawImage(this.canvas, x, y);
