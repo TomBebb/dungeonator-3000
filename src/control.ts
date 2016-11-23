@@ -1,6 +1,8 @@
 import Game from "./Game";
-import { random } from "./math";
+import { Entity } from "./entities";
+import { distSquared } from "./math";
 
+/// 2D directions that entities can move in.
 export const enum Direction {
 	None,
 	Left,
@@ -13,12 +15,12 @@ export const enum Button {
 	Secondary = 1 << 0,
 	Tertiary = 1 << 1
 }
-export interface Input {
+export interface Control {
 	dir: Direction;
 	button(_: Button): boolean;
 	update(_: number): void;
 }
-export class BasicInput implements Input {
+export class BasicControl implements Control {
 	dir: Direction = Direction.None;
 	private buttons: number = 0;
 	button(which: Button): boolean {
@@ -33,9 +35,11 @@ export class BasicInput implements Input {
 	}
 	update(_: number) { }
 }
-export class RandomInput implements Input {
-
-	constructor() {
+export class FollowControl implements Control {
+	public self: Entity<FollowControl>;
+	private game: Game;
+	constructor(game: Game) {
+		this.game = game;
 	}
 
 	button(_: Button) {
@@ -43,11 +47,28 @@ export class RandomInput implements Input {
 	}
 
 	get dir(): Direction {
-		return random(Direction.None, Direction.Down + 1);
+		let nearestEntity: Entity<any> = this.game.entities.filter(x => this.self != x).reduce((a, b) => {
+			if(distSquared(this.self, a) < distSquared(this.self, b)) {
+				return a;
+			} else {
+				return b;
+			}
+		});
+		if(nearestEntity) {
+			let [dx, dy] = [nearestEntity.x - this.self.x, nearestEntity.y - this.self.y];
+			if(dx == 0 && dy == 0)
+				return Direction.None;
+			else if(Math.abs(dx) > Math.abs(dy))
+				return dx < 0 ? Direction.Left : Direction.Right;
+			else
+				return dy < 0 ? Direction.Up : Direction.Down;
+		} else {
+			return Direction.None;
+		}
 	}
 	update(_: number) { }
 }
-export class GamepadInput implements Input {
+export class GamepadControl implements Control {
 	private readonly deadzone: number = 0.1;
 	private readonly gamepad: Gamepad;
 	constructor(gamepad: Gamepad) {
@@ -76,7 +97,7 @@ export class GamepadInput implements Input {
 	update(_: number) {
 	}
 }
-export class KeyboardInput extends BasicInput {
+export class KeyboardControl extends BasicControl {
 	constructor(game: Game) {
 		super();
 		let self = this;

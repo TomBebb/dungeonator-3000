@@ -1,5 +1,5 @@
-import Game from "./Game"
-	; import { Rectangle, random } from "./math";
+import Game from "./Game";
+import { Rectangle } from "./math";
 
 export default class Grid {
 	protected readonly buffer: Int8Array;
@@ -28,13 +28,8 @@ export default class Grid {
 		this.height = height;
 		this.canvas.style.display = "none";
 		document.body.appendChild(this.canvas);
-		this.randomise();
+		this.clear();
 		this.internalDraw();
-	}
-	randomise() {
-		for (var x = 0; x < this.width; x++)
-			for (var y = 0; y < this.height; y++)
-				this.buffer[this.index(x, y)] = random(0, Grid.COLORS.length);
 	}
 	fill(r: Rectangle, c: number) {
 		c = c % Grid.COLORS.length;
@@ -48,14 +43,15 @@ export default class Grid {
 	protected index(x: number, y: number) {
 		return x + y * this.width;
 	}
-	canMoveTo(x: number, y: number): boolean {
+	isValidPosition(x: number, y: number): boolean {
 		return x >= 0 && y >= 0 && x < this.width && y < this.height && this.buffer[this.index(x, y)] == 0;
 	}
+	/// Draw to the grid's internal buffer
 	internalDraw() {
 		this.context.strokeStyle = "0.5px black";
 		for (var y = 0; y < this.height; y++) {
 			for (var x = 0; x < this.width; x++) {
-				this.context.fillStyle = Grid.COLORS[this.buffer[this.index(x, y)] != 0 ? 0 : 1];
+				this.context.fillStyle = Grid.COLORS[this.buffer[this.index(x, y)] % Grid.COLORS.length];
 				this.context.fillRect(x * Game.TILE_SIZE, y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 			}
 			this.context.beginPath();
@@ -70,7 +66,7 @@ export default class Grid {
 			this.context.stroke();
 		}
 	}
-	render(c: CanvasRenderingContext2D, x: number, y: number) {
-		c.drawImage(this.canvas, x, y);
+	render(c: CanvasRenderingContext2D) {
+		c.drawImage(this.canvas, 0, 0);
 	}
 }

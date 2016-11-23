@@ -5,10 +5,14 @@
     	<canvas id="game" width="720" height="480">Sorry, this game requires HTML5 Canvas support to run!</canvas>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
         <script>
-			requirejs(['src/Game'],
-			function(game) {
-				new game.default();
-			});
+
+        // set our baseURL reference path
+        SystemJS.config({
+            baseURL: 'src'
+        });
+
+        // loads /js/main.js
+        SystemJS.import('math.js');
         </script>
     </body>
 </html>
