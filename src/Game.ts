@@ -19,9 +19,11 @@ export default class Game {
 	readonly camera: Camera = new Camera(this.entities[0]);
 	constructor() {
 		this.canvas.tabIndex = 1;
+
+		// Add experimental functions to navigator.
 		const n: FlyNavigator = navigator as FlyNavigator;
 
-		// register an event handler for when gamepads are connected
+		// Register an event handler for when gamepads are connected
 		window.addEventListener("ongamepadconnected", function(this: Game, ge: GamepadEvent) {
 			// add a new player entity
 			const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(ge.gamepad));
@@ -29,16 +31,16 @@ export default class Game {
 			this.camera.follow = player;
 		}.bind(this));
 
-		window.addEventListener("ongamepaddisconnected", function(this: Game, ge: GamepadEvent) {
+		window.addEventListener("ongamepaddisconnected", (ge: GamepadEvent) => {
 			this.entities.forEach((e: Entity<any>, i: number) => {
 				// remove entities whose input is mapped to the gamepad that was just removed
 				if (e.control instanceof Gamepad && e.control.index == ge.gamepad.index)
 					this.entities.splice(i);
 			});
-		});
+		}.bind(this));
 		if(n.publishServer != null) {
-			n.publishServer('Game session', {}).then(function(server: Server) {
-				server.onfetch = function(event: FetchEvent) {
+			n.publishServer('Game session', {}).then((server: Server) => {
+				server.onfetch = (event: FetchEvent) => {
 					const html = `<h1>Game controller</h1>
 						'<h3>You requested ${event.request.url} </h3>`;
 					event.respondWith(new Response(html, {
@@ -52,9 +54,11 @@ export default class Game {
 		this.update(1 / 30);
 		this.render();
 	}
+	/// Check if the position `x`, `y` is valid (i.e. clear of entities and tiles)
 	isValidPosition(x: number, y: number): boolean {
 		return this.grid.isValidPosition(x, y) && this.entities.find((e, i, a) => e.x == x && e.y == y) == undefined;
 	}
+	/// Reset the game to its initial state
 	reset() {
 		this.gen.generate();
 		this.grid.internalDraw();

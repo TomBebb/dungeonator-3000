@@ -40,9 +40,11 @@ export class Entity<C extends Control> extends Sprite {
 	update(dt: number) {
 		this.sinceLast += dt;
 		if(this.sinceLast > this.delay) {
+			// Compute the next position
 			let [dx, dy] = toVector(this.control.dir);
 			this.sinceLast -= this.delay;
 			let [nx, ny] = [this.x + dx, this.y + dy];
+			// Check if the computed next position is valid
 			if(this.game.isValidPosition(nx, ny)) {
 				this.x = nx;
 				this.y = ny;

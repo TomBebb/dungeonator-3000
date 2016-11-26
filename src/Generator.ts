@@ -22,10 +22,9 @@ export default class Generator {
 		};
 		console.log(current);
 		this.rooms.push(current);
-		/*
 		for(var i = 0; i < this.rooms.length; i++) {
 			this.grid.fill(this.rooms[i], i + 1);
-		}*/
+		}
 		this.grid.internalDraw();
 	}
 }

@@ -1,8 +1,10 @@
+/// A 2d point.
 export interface Point {
 	x: number;
 	y: number;
 }
 
+/// A 2d point and set of dimensions.
 export interface Rectangle extends Point {
 	width: number;
 	height: number;

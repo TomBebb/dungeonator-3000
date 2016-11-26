@@ -15,6 +15,7 @@ export const enum Button {
 	Secondary = 1 << 0,
 	Tertiary = 1 << 1
 }
+/// A source of `Control`.
 export interface Control {
 	dir: Direction;
 	button(_: Button): boolean;
@@ -102,7 +103,7 @@ export class KeyboardControl extends BasicControl {
 		super();
 		let self = this;
 		game.canvas.tabIndex = 1;
-		game.canvas.onkeydown = function(e: KeyboardEvent) {
+		game.canvas.onkeydown = (e: KeyboardEvent) => {
 			switch (e.keyCode) {
 				case 32:
 					self.updateButton(0, true);
@@ -123,8 +124,8 @@ export class KeyboardControl extends BasicControl {
 					self.dir = Direction.Down;
 					break;
 			}
-		}
-		game.canvas.onkeyup = function(e: KeyboardEvent) {
+		};
+		game.canvas.onkeyup = (e: KeyboardEvent) => {
 			if (e.keyCode >= 37 && e.keyCode <= 40)
 				self.dir = Direction.None;
 			else if (e.keyCode == 32)
