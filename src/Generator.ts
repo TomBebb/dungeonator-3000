@@ -20,7 +20,6 @@ export default class Generator {
 			width: w,
 			height: h
 		};
-		console.log(current);
 		this.rooms.push(current);
 		for(var i = 0; i < this.rooms.length; i++) {
 			this.grid.fill(this.rooms[i], i + 1);

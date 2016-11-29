@@ -24,12 +24,12 @@ export default class Game {
 		const n: FlyNavigator = navigator as FlyNavigator;
 
 		// Register an event handler for when gamepads are connected
-		window.addEventListener("ongamepadconnected", function(this: Game, ge: GamepadEvent) {
+		window.addEventListener("ongamepadconnected", (ge: GamepadEvent) => {
 			// add a new player entity
 			const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(ge.gamepad));
 			this.entities.push(player);
 			this.camera.follow = player;
-		}.bind(this));
+		});
 
 		window.addEventListener("ongamepaddisconnected", (ge: GamepadEvent) => {
 			this.entities.forEach((e: Entity<any>, i: number) => {
@@ -37,7 +37,7 @@ export default class Game {
 				if (e.control instanceof Gamepad && e.control.index == ge.gamepad.index)
 					this.entities.splice(i);
 			});
-		}.bind(this));
+		});
 		if(n.publishServer != null) {
 			n.publishServer('Game session', {}).then((server: Server) => {
 				server.onfetch = (event: FetchEvent) => {
@@ -56,7 +56,7 @@ export default class Game {
 	}
 	/// Check if the position `x`, `y` is valid (i.e. clear of entities and tiles)
 	isValidPosition(x: number, y: number): boolean {
-		return this.grid.isValidPosition(x, y) && this.entities.find((e, i, a) => e.x == x && e.y == y) == undefined;
+		return this.grid.isValidPosition(x, y) && this.entities.find((e) => e.x == x && e.y == y) == undefined;
 	}
 	/// Reset the game to its initial state
 	reset() {

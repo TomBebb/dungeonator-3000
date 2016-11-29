@@ -18,7 +18,7 @@ export function round(num:number, inc:number):number {
 export function randomStep(min:number, max:number, inc:number):number {
 	return min + round(random(min, max) - min, inc);
 }
-
+/// Check if the rectangles `s` and `r` intersect with `spacing` needed between them to be considered intersecting.
 export function intersects(s: Rectangle, r: Rectangle, spacing: number): boolean {
 	return Math.abs((s.x + s.width / 2) - (r.x + r.width / 2)) < (s.width + r.width) / 2 + spacing
 	&& Math.abs((s.y + s.height / 2) - (r.y + r.height / 2)) < (s.height + r.height) / 2 + spacing;

@@ -23,6 +23,7 @@ export class Entity<C extends Control> extends Sprite {
 	readonly control: C;
 	/// The game instance the entity is attached to.
 	readonly game: Game;
+	/// The color of the entity.
 	readonly color: string;
 	/// The number of seconds since the last movement of the entity.
 	sinceLast: number = 0;
@@ -33,7 +34,7 @@ export class Entity<C extends Control> extends Sprite {
 		this.game = game;
 		this.control = control;
 		if(this.control instanceof FollowControl)
-			this.control.self = this as Entity<any>;
+			this.control.entity = this as Entity<any>;
 		this.color = color;
 	}
 

@@ -37,7 +37,7 @@ export class BasicControl implements Control {
 	update(_: number) { }
 }
 export class FollowControl implements Control {
-	public self: Entity<FollowControl>;
+	public entity: Entity<FollowControl>;
 	private game: Game;
 	constructor(game: Game) {
 		this.game = game;
@@ -48,15 +48,15 @@ export class FollowControl implements Control {
 	}
 
 	get dir(): Direction {
-		let nearestEntity: Entity<any> = this.game.entities.filter(x => this.self != x).reduce((a, b) => {
-			if(distSquared(this.self, a) < distSquared(this.self, b)) {
+		let nearestEntity: Entity<any> = this.game.entities.filter(x => this.entity != x).reduce((a, b) => {
+			if(distSquared(this.entity, a) < distSquared(this.entity, b)) {
 				return a;
 			} else {
 				return b;
 			}
 		});
 		if(nearestEntity) {
-			let [dx, dy] = [nearestEntity.x - this.self.x, nearestEntity.y - this.self.y];
+			let [dx, dy] = [nearestEntity.x - this.entity.x, nearestEntity.y - this.entity.y];
 			if(dx == 0 && dy == 0)
 				return Direction.None;
 			else if(Math.abs(dx) > Math.abs(dy))
@@ -101,37 +101,36 @@ export class GamepadControl implements Control {
 export class KeyboardControl extends BasicControl {
 	constructor(game: Game) {
 		super();
-		let self = this;
 		game.canvas.tabIndex = 1;
 		game.canvas.onkeydown = (e: KeyboardEvent) => {
 			switch (e.keyCode) {
 				case 32:
-					self.updateButton(0, true);
+					this.updateButton(0, true);
 					break;
 				case 18: case 225:
-					self.updateButton(1, true);
+					this.updateButton(1, true);
 					break;
 				case 37:
-					self.dir = Direction.Left;
+					this.dir = Direction.Left;
 					break;
 				case 38:
-					self.dir = Direction.Up;
+					this.dir = Direction.Up;
 					break;
 				case 39:
-					self.dir = Direction.Right;
+					this.dir = Direction.Right;
 					break;
 				case 40:
-					self.dir = Direction.Down;
+					this.dir = Direction.Down;
 					break;
 			}
 		};
 		game.canvas.onkeyup = (e: KeyboardEvent) => {
 			if (e.keyCode >= 37 && e.keyCode <= 40)
-				self.dir = Direction.None;
+				this.dir = Direction.None;
 			else if (e.keyCode == 32)
-				self.updateButton(0, false);
+				this.updateButton(0, false);
 			else if (e.keyCode == 18 || e.keyCode == 225)
-				self.updateButton(1, false);
+				this.updateButton(1, false);
 		}
 	}
 	update(_: number) {

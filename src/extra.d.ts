@@ -11,7 +11,7 @@ interface Server extends EventTarget {
 	onfetch(event: FetchEvent): void;
 }
 interface Request {
-	url: string
+	url: string;
 }
 
 interface FetchEvent extends Event {

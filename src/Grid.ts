@@ -6,7 +6,6 @@ export default class Grid {
 	/// The byte array the tiles are stored in.
 	protected readonly tiles: Int8Array;
 	protected static readonly COLORS: string[] = [
-		"black",
 		"white",
 		"red",
 		"green",
