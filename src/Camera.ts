@@ -1,7 +1,7 @@
 import Game from "./Game";
 import { Sprite } from "./entities";
 
-/// Managges
+/// Manages the transformations that apply to the canvas
 export default class Camera {
 	follow: Sprite;
 	zoom: number = 1;

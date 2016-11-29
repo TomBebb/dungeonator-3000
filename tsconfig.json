@@ -3,8 +3,8 @@
         "src/*.ts"
     ],
     "compilerOptions": {
-        "target":  "es6",
-        "module": "system",
+        "target":  "es5",
+        "module": "amd",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": false,
@@ -15,6 +15,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "pretty": true
+        "pretty": true,
+        "lib": ["es6"]
     }
 }

@@ -18,6 +18,7 @@ export default class Game {
 	];
 	readonly camera: Camera = new Camera(this.entities[0]);
 	constructor() {
+		console.log("game made");
 		this.canvas.tabIndex = 1;
 
 		// Add experimental functions to navigator.
@@ -56,7 +57,12 @@ export default class Game {
 	}
 	/// Check if the position `x`, `y` is valid (i.e. clear of entities and tiles)
 	isValidPosition(x: number, y: number): boolean {
-		return this.grid.isValidPosition(x, y) && this.entities.find((e) => e.x == x && e.y == y) == undefined;
+		if(!this.grid.isValidPosition(x, y))
+			return false;
+		for(let e of this.entities)
+			if(e.x == x && e.y == y)
+				return false;
+		return true;
 	}
 	/// Reset the game to its initial state
 	reset() {

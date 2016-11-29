@@ -42,7 +42,12 @@ export default class Grid {
 				this.tiles[this.index(x, y)] = c;
 	}
 	clear(index: number = 0) {
-		this.tiles.fill(index);
+		if(Array.prototype.fill)
+			this.tiles.fill(index);
+		else {
+			for(let i = 0; i < this.tiles.length; i++)
+				this.tiles[i] = index;
+		}
 	}
 	private index(x: number, y: number) {
 		return x + y * this.width;

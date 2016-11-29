@@ -59,9 +59,9 @@ export class FollowControl implements Control {
 			let [dx, dy] = [nearestEntity.x - this.entity.x, nearestEntity.y - this.entity.y];
 			if(dx == 0 && dy == 0)
 				return Direction.None;
-			else if(Math.abs(dx) > Math.abs(dy))
+			else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
 				return dx < 0 ? Direction.Left : Direction.Right;
-			else
+			else // when the vertical is bigger
 				return dy < 0 ? Direction.Up : Direction.Down;
 		} else {
 			return Direction.None;
