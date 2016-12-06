@@ -81,7 +81,7 @@ export class GamepadControl implements Control {
 	button(which: Button): boolean {
 		return this.gamepad.buttons[which].pressed;
 	}
-	get dir() {
+	get dir(): Direction {
 		const a = this.gamepad.axes;
 		const b = this.gamepad.buttons;
 		if (b[14].pressed || a[0] < this.deadzone)
@@ -95,7 +95,7 @@ export class GamepadControl implements Control {
 		else
 			return Direction.None;
 	}
-	update(_: number) {
+	update(_: number): void {
 	}
 }
 export class KeyboardControl extends BasicControl {
@@ -133,7 +133,7 @@ export class KeyboardControl extends BasicControl {
 				this.updateButton(1, false);
 		}
 	}
-	update(_: number) {
+	update(_: number): void {
 
 	}
 }

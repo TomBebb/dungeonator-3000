@@ -13,17 +13,14 @@ export default class Game {
 	readonly canvas: HTMLCanvasElement = document.getElementById('game') ! as HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D = this.canvas.getContext("2d") !;
 	entities: Entity<any>[] = [
-		Entity.defaultPlayer(this),
-		Entity.defaultEnemy(this)
+		Entity.defaultPlayer(this)
 	];
 	readonly camera: Camera = new Camera(this.entities[0]);
 	constructor() {
-		console.log("game made");
 		this.canvas.tabIndex = 1;
 
 		// Add experimental functions to navigator.
 		const n: FlyNavigator = navigator as FlyNavigator;
-
 		// Register an event handler for when gamepads are connected
 		window.addEventListener("ongamepadconnected", (ge: GamepadEvent) => {
 			// add a new player entity
@@ -65,11 +62,11 @@ export default class Game {
 		return true;
 	}
 	/// Reset the game to its initial state
-	reset() {
+	reset(): void {
 		this.gen.generate();
 		this.grid.internalDraw();
 	}
-	render() {
+	render(): void {
 		requestAnimationFrame(this.render.bind(this));
 		this.context.save();
 		// clear the screen
@@ -83,7 +80,7 @@ export default class Game {
 		this.entities.forEach((p) => p.draw(this.context));
 		this.context.restore();
 	}
-	update(dt: number) {
+	update(dt: number): void {
 		this.entities.forEach((p) => p.update(dt));
 		setTimeout(this.update.bind(this, dt), dt);
 	}

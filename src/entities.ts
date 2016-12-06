@@ -1,5 +1,6 @@
 import { KeyboardControl, FollowControl, Control, toVector } from "./control";
 import Game from "./Game";
+import Grid from "./Grid";
 
 /// An object that has a physical position and can be drawn to the screen.
 export abstract class Sprite {
@@ -16,6 +17,8 @@ export abstract class Sprite {
 }
 
 /// A sprite that can move.
+///
+/// This uses generics to make it able to use any control (such as gamepad or chase).
 export class Entity<C extends Control> extends Sprite {
 	/// The delay between moves of the entity, in seconds
 	readonly delay: number;
@@ -38,7 +41,7 @@ export class Entity<C extends Control> extends Sprite {
 		this.color = color;
 	}
 
-	update(dt: number) {
+	update(dt: number): void {
 		this.sinceLast += dt;
 		if(this.sinceLast > this.delay) {
 			// Compute the next position
@@ -47,22 +50,26 @@ export class Entity<C extends Control> extends Sprite {
 			let [nx, ny] = [this.x + dx, this.y + dy];
 			// Check if the computed next position is valid
 			if(this.game.isValidPosition(nx, ny)) {
-				this.x = nx;
-				this.y = ny;
+				[this.x, this.y] = [nx, ny];
 			}
 		}
 	}
 
-	draw(c: CanvasRenderingContext2D) {
+	draw(c: CanvasRenderingContext2D): void {
 		c.fillStyle = this.color;
 		c.fillRect(this.x * Game.TILE_SIZE, this.y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 	}
-	/// Create the default player
+	/// Create the default player, using a keyboard control
 	static defaultPlayer(game: Game): Entity<KeyboardControl> {
-		return new Entity(game, new KeyboardControl(game), 0.5, 0, 0, "green");
+		return new Entity(game, new KeyboardControl(game), 0.5, 1, 1, "green");
 	}
 	/// Create the default enemy
-	static defaultEnemy(game: Game): Entity<FollowControl> {
-		return new Entity(game, new FollowControl(game), 1.0, 5, 5, "red");
+	static defaultEnemy(game: Game, grid: Grid): Entity<FollowControl> {
+		let [x, y] = [0, 0];
+		do {
+			x = Math.floor(Math.random() * grid.width);
+			y = Math.floor(Math.random() * grid.height);
+		} while(!grid.isValidPosition(x, y));
+		return new Entity(game, new FollowControl(game), 1.0, x, y, "red");
 	}
 }

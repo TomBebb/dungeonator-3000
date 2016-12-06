@@ -3,14 +3,15 @@ import { Sprite } from "./entities";
 
 /// Manages the transformations that apply to the canvas
 export default class Camera {
+	/// The sprite the camera will follow
 	follow: Sprite;
 	zoom: number = 1;
 
-	get x() {
+	get x(): number {
 		return (this.follow.x + 0.5) * Game.TILE_SIZE;
 	}
 
-	get y() {
+	get y(): number {
 		return (this.follow.y + 0.5) * Game.TILE_SIZE;
 	}
 

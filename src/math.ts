@@ -9,6 +9,8 @@ export interface Rectangle extends Point {
 	width: number;
 	height: number;
 }
+
+/// Make a random integer between `min` and `max`
 export function random(min:number, max:number):number {
 	return Math.floor(min + Math.random() * (max - min));
 }

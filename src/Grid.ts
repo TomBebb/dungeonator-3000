@@ -3,20 +3,13 @@ import { Rectangle } from "./math";
 
 /// A 2D Grid
 export default class Grid {
+	private static readonly EMPTY: string = "white";
+	private static readonly FILLED: string = "black";
 	/// The byte array the tiles are stored in.
-	protected readonly tiles: Int8Array;
-	protected static readonly COLORS: string[] = [
-		"white",
-		"red",
-		"green",
-		"blue",
-		"yellow",
-		"orange",
-		"purple",
-		"gray"
-	];
 	readonly canvas: HTMLCanvasElement;
 	private readonly context: CanvasRenderingContext2D;
+	/// The byte array the tiles are stored in.
+	protected readonly tiles: Int8Array;
 	/// The width of the grid in tiles.
 	readonly width: number;
 	/// The height of the grid in tiles.
@@ -34,22 +27,18 @@ export default class Grid {
 		this.clear();
 		this.internalDraw();
 	}
-	/// Fill the rectangle `r` with the tile `c`.
-	fill(r: Rectangle, c: number) {
-		c = c % Grid.COLORS.length;
+	/// Fill the rectangle `r` with the color `c`
+	fill(r: Rectangle, c: number): void {
+		c = c % 2;
 		for (var x = r.x; x < r.x + r.width; x++)
 			for (var y = r.y; y < r.y + r.height; y++)
 				this.tiles[this.index(x, y)] = c;
 	}
-	clear(index: number = 0) {
-		if(Array.prototype.fill)
-			this.tiles.fill(index);
-		else {
-			for(let i = 0; i < this.tiles.length; i++)
-				this.tiles[i] = index;
-		}
+	clear(): void {
+		this.tiles.fill(1);
+		this.fill({x: 1, y: 1, width: this.width - 2, height: this.height - 2}, 0);
 	}
-	private index(x: number, y: number) {
+	private index(x: number, y: number): number {
 		return x + y * this.width;
 	}
 	private tileAt(x: number, y: number): number {
@@ -59,11 +48,11 @@ export default class Grid {
 		return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
 	}
 	/// Draw to the grid's internal buffer
-	internalDraw() {
+	internalDraw(): void {
 		this.context.strokeStyle = "0.5px black";
 		for (var y = 0; y < this.height; y++) {
 			for (var x = 0; x < this.width; x++) {
-				this.context.fillStyle = Grid.COLORS[this.tileAt(x, y) % Grid.COLORS.length];
+				this.context.fillStyle = this.tileAt(x, y) != 0 ? Grid.FILLED : Grid.EMPTY;
 				this.context.fillRect(x * Game.TILE_SIZE, y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
 			}
 			this.context.beginPath();
@@ -78,7 +67,7 @@ export default class Grid {
 			this.context.stroke();
 		}
 	}
-	render(c: CanvasRenderingContext2D) {
+	render(c: CanvasRenderingContext2D): void {
 		c.drawImage(this.canvas, 0, 0);
 	}
 }
