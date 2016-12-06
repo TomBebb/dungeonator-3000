@@ -4,10 +4,14 @@ export interface Point {
 	y: number;
 }
 
-/// A 2d point and set of dimensions.
-export interface Rectangle extends Point {
+/// A 2d size.
+export interface Size {
 	width: number;
 	height: number;
+}
+
+/// A 2d point and set of dimensions.
+export interface Rectangle extends Point, Size {
 }
 
 /// Make a random integer between `min` and `max`

@@ -21,20 +21,21 @@ export interface Control {
 	button(_: Button): boolean;
 	update(_: number): void;
 }
+/// The basic implementation of the `Control` interface
 export class BasicControl implements Control {
 	dir: Direction = Direction.None;
 	private buttons: number = 0;
 	button(which: Button): boolean {
 		return (this.buttons & which) != 0;
 	}
-	protected updateButton(button: Button, pressed: boolean) {
+	protected updateButton(button: Button, pressed: boolean): void {
 		if (pressed)
 			this.buttons |= button;
 		else
 			this.buttons = (this.buttons | button) ^ button;
 
 	}
-	update(_: number) { }
+	update(_: number): void { }
 }
 export class FollowControl implements Control {
 	public entity: Entity<FollowControl>;
@@ -43,7 +44,7 @@ export class FollowControl implements Control {
 		this.game = game;
 	}
 
-	button(_: Button) {
+	button(_: Button): boolean {
 		return false;
 	}
 
@@ -67,7 +68,7 @@ export class FollowControl implements Control {
 			return Direction.None;
 		}
 	}
-	update(_: number) { }
+	update(_: number): void { }
 }
 export class GamepadControl implements Control {
 	private readonly deadzone: number = 0.1;
@@ -134,7 +135,6 @@ export class KeyboardControl extends BasicControl {
 		}
 	}
 	update(_: number): void {
-
 	}
 }
 const DIRS: [number, number][] = [
