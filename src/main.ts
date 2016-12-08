@@ -1,5 +1,5 @@
 import Game from "./Game";
-export default function main() {
+function main() {
   new Game();
 }
 main();

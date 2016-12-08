@@ -16,6 +16,6 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
-        "lib": ["es6"]
+        "lib": ["es6", "es2015", "dom"]
     }
 }
