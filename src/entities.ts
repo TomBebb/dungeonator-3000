@@ -1,5 +1,6 @@
 import { KeyboardControl, FollowControl, Control, toVector } from "./control";
 import Game from "./Game";
+import { Point } from "./math";
 
 /// An object that has a physical position and can be drawn to the screen.
 export abstract class Sprite {
@@ -25,19 +26,20 @@ export class Entity<C extends Control> extends Sprite {
     readonly control: C;
     /// The game instance the entity is attached to.
     readonly game: Game;
-    /// The color of the entity.
-    readonly color: string;
+    /// The spritesheet this will use
+    readonly spritesheet: HTMLImageElement;
+    /// offset in the spritesheet
+    readonly offset: Point;
     /// The number of seconds since the last movement of the entity.
     sinceLast: number = 0;
 
-    constructor(game: Game, control: C, delay: number = 0.5, x: number = 0, y: number = 0, color: string = "green") {
+    constructor(game: Game, control: C, delay: number = 0.5, x: number = 0, y: number = 0, offsetX: number, offsetY: number) {
         super(x, y);
         this.delay = delay;
         this.game = game;
         this.control = control;
         if(this.control instanceof FollowControl)
             this.control.entity = this as Entity<any>;
-        this.color = color;
     }
 
     update(dt: number): void {
@@ -54,8 +56,8 @@ export class Entity<C extends Control> extends Sprite {
     }
 
     draw(c: CanvasRenderingContext2D): void {
-        c.fillStyle = this.color;
-        c.fillRect(this.x * Game.TILE_SIZE, this.y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
+      const { x: ox, y: oy } = this.offset;
+      c.drawImage(this.spritesheet, ox, oy, Game.TILE_SIZE, Game.TILE_SIZE, this.x * Game.TILE_SIZE, this.y * Game.TILE_SIZE);
     }
     /// Create the default player, using a keyboard control
     static defaultPlayer(game: Game): Entity<KeyboardControl> {

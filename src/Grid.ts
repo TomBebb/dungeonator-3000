@@ -15,7 +15,7 @@ export default class Grid {
     readonly emptyTile: HTMLImageElement = document.createElement("img");
     readonly wallTile: HTMLImageElement = document.createElement("img");
     constructor(width: number, height: number) {
-        this.emptyTile.src = "assets/empty.png";
+        this.emptyTile.src = "assets/blank.png";
         this.wallTile.src = "assets/wall1.png";
         this.canvas = document.createElement("canvas");
         this.canvas.width = width * Game.TILE_SIZE;
