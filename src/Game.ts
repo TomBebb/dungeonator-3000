@@ -8,7 +8,7 @@ import { Entity } from "./entities";
 import { random, Point } from "./math";
 
 export default class Game {
-    static readonly TILE_SIZE = 32;
+    static readonly TILE_SIZE = 16;
     private readonly grid: Grid = new Grid(64, 64);
     private readonly gen: Generator = new Generator();
     readonly canvas: HTMLCanvasElement = document.getElementById('game') ! as HTMLCanvasElement;

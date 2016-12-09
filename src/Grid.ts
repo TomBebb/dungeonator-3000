@@ -3,8 +3,6 @@ import { Rectangle, Point } from "./math";
 
 /// A 2D Grid
 export default class Grid {
-    private static readonly EMPTY: string = "white";
-    private static readonly FILLED: string = "black";
     /// The byte array the tiles are stored in.
     readonly canvas: HTMLCanvasElement;
     private readonly context: CanvasRenderingContext2D;
@@ -14,7 +12,11 @@ export default class Grid {
     readonly width: number;
     /// The height of the grid in tiles.
     readonly height: number;
+    readonly emptyTile: HTMLImageElement = document.createElement("img");
+    readonly wallTile: HTMLImageElement = document.createElement("img");
     constructor(width: number, height: number) {
+        this.emptyTile.src = "assets/empty.png";
+        this.wallTile.src = "assets/wall1.png";
         this.canvas = document.createElement("canvas");
         this.canvas.width = width * Game.TILE_SIZE;
         this.canvas.height = height * Game.TILE_SIZE;
@@ -25,7 +27,8 @@ export default class Grid {
         this.canvas.style.display = "none";
         document.body.appendChild(this.canvas);
         this.clear();
-        this.internalDraw();
+        this.emptyTile.onload = this.internalDraw.bind(this);
+        this.wallTile.onload = this.internalDraw.bind(this);
     }
     /// Fill the rectangle `r` with the color `c`
     fill(r: Rectangle, c: number = 1): void {
@@ -59,22 +62,9 @@ export default class Grid {
     /// Draw to the grid's internal buffer
     internalDraw(): void {
         this.context.strokeStyle = "0.5px black";
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                this.context.fillStyle = this.tileAt(x, y) !== 0 ? Grid.FILLED : Grid.EMPTY;
-                this.context.fillRect(x * Game.TILE_SIZE, y * Game.TILE_SIZE, Game.TILE_SIZE, Game.TILE_SIZE);
-            }
-            this.context.beginPath();
-            this.context.moveTo(0, y * Game.TILE_SIZE);
-            this.context.lineTo(this.width * Game.TILE_SIZE, y * Game.TILE_SIZE);
-            this.context.stroke();
-        }
-        for (let x = 0; x < this.width; x++) {
-            this.context.beginPath();
-            this.context.moveTo(x * Game.TILE_SIZE, 0);
-            this.context.lineTo(x * Game.TILE_SIZE, this.height * Game.TILE_SIZE);
-            this.context.stroke();
-        }
+        for (let y = 0; y < this.height; y++)
+            for (let x = 0; x < this.width; x++)
+                this.context.drawImage(this.tiles[this.index(x, y)] ? this.wallTile : this.emptyTile, x * Game.TILE_SIZE, y * Game.TILE_SIZE);
     }
     render(c: CanvasRenderingContext2D): void {
         c.drawImage(this.canvas, 0, 0);
