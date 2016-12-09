@@ -3,7 +3,7 @@
         "src/*.ts"
     ],
     "compilerOptions": {
-        "target":  "es5",
+        "target":  "es6",
         "module": "amd",
         "noImplicitAny": true,
         "removeComments": true,
@@ -16,6 +16,6 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
-        "lib": ["es6", "es2015", "dom"]
+        "lib": ["es6", "es2016", "dom"]
     }
 }

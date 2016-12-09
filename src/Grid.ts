@@ -1,5 +1,6 @@
 import Game from "./Game";
-import { Rectangle, Point } from "./math";
+import { Rectangle, Point, pointEq } from "./math";
+import { lowest } from "./util";
 
 /// A 2D Grid
 export default class Grid {
@@ -80,48 +81,73 @@ export default class Grid {
         c.drawImage(this.canvas, 0, 0);
     }
 
-    findPath(start: Point, goal: Point): void {
-        const open = new Array<Node>();
-        const closed = new Array<Node>();
-        const startNode = Object.assign({
-            parent: undefined,
+
+    findPath(start: Point, goal: Point): Set<Point> | null {
+        const openList: Set<Node> = new Set<Node>();
+        const closedList: Set<Node> = new Set<Node>();
+        openList.add(Object.assign({
             g: 0,
-            h: 0,
-            f: 0
-        }, start);
-        open.push(startNode);
-        while(open.length > 0) {
-            let qIndex: number = -1;
-            let dq: Node | undefined = undefined;
-            // get the square on the open list with the lowest score
-            for(let i = 0; i < open.length; i++) {
-                if(dq === undefined || open[i].f < dq.f) {
-                    dq = open[i];
-                    qIndex = i;
+            f: 0 + this.heuristic(start, goal)
+        }, start));
+        while(openList.size > 0) {
+            const current: Node = lowest<Node>(openList.values(), (v: Node) => v.f!!)!!;
+            if(pointEq(current, goal))
+                return this.constructPath(current);
+            openList.delete(current);
+            closedList.add(current);
+            for(let neighbor of this.neighbors(current)) {
+                if(!closedList.has(neighbor)) {
+                    neighbor.f = neighbor.g + this.heuristic(neighbor, goal);
                 }
             }
-            // remove this from the open list and add to the closed list
-            const q: Node = dq!;
-            open.splice(qIndex, 1);
-            closed.push(q);
-            const qSuccessors = new Array<Node>();
-            const g = q.g + 1;
-            const h = Math.abs(goal.x - q.x) + Math.abs(goal.y - q.y);
-            qSuccessors.push({
-                parent: q,
-                x: q.x,
-                y: q.y - 1,
-                g: g,
-                h: h,
-                f: g + h
-            });
         }
+        return null;
+    }
+    private neighbors(node: Node): Set<Node> {
+        const nodes = new Array<Node>(4);
+        nodes.push({
+            x: node.x - 1,
+            y: node.y,
+            parent: node,
+            g: node.g + 1
+        });
+        nodes.push({
+            x: node.x + 1,
+            y: node.y,
+            parent: node,
+            g: node.g + 1
+        });
+        nodes.push({
+            x: node.x,
+            y: node.y - 1,
+            parent: node,
+            g: node.g + 1
+        });
+        nodes.push({
+            x: node.x,
+            y: node.y + 1,
+            parent: node,
+            g: node.g + 1
+        });
+        return new Set(nodes.filter((v) => this.isValidPosition(v.x, v.y)));
+    }
+
+    private heuristic(p: Point, g: Point): number {
+        return Math.abs(p.x - g.x) + Math.abs(p.y - g.y);
+    }
+    private constructPath(node: Node): Set<Node> {
+        const path = new Set([node]);
+        while(node.parent !== null) {
+            node = node.parent!!;
+            path.add(node);
+        }
+        return path;
     }
 }
 
 interface Node extends Point {
-    parent: Node | undefined;
+    parent?: Node;
     g: number;
-    h: number;
-    f: number;
+    /// total cost of the path via current node
+    f?: number;
 }

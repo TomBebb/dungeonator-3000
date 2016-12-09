@@ -1,6 +1,6 @@
 import Game from "./Game";
 import { Entity } from "./entities";
-import { distSquared } from "./math";
+import { Point, distSquared } from "./math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -57,13 +57,20 @@ export class FollowControl implements Control {
             }
         });
         if(nearestEntity) {
-            let [dx, dy] = [nearestEntity.x - this.entity.x, nearestEntity.y - this.entity.y];
-            if(dx === 0 && dy === 0)
+            const path = this.game.grid.findPath(this.entity, nearestEntity);
+            if(path == null)
                 return Direction.None;
-            else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
-                return dx < 0 ? Direction.Left : Direction.Right;
-            else // when the vertical is bigger
-                return dy < 0 ? Direction.Up : Direction.Down;
+            else {
+                const n: Point = path.entries().next().value[0];
+
+                let [dx, dy] = [n.x - this.entity.x, n.y - this.entity.y];
+                if(dx === 0 && dy === 0)
+                    return Direction.None;
+                else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
+                    return dx < 0 ? Direction.Left : Direction.Right;
+                else // when the vertical is bigger
+                    return dy < 0 ? Direction.Up : Direction.Down;
+            }
         } else {
             return Direction.None;
         }
