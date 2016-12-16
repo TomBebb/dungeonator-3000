@@ -1,6 +1,6 @@
-import Game from "./Game";
 import { Rectangle, Point, pointEq } from "./math";
-import { lowest } from "./util";
+import { Assets, lowest } from "./util";
+import Game from "./Game";
 
 /// A 2D Grid
 export default class Grid {
@@ -13,23 +13,27 @@ export default class Grid {
     readonly width: number;
     /// The height of the grid in tiles.
     readonly height: number;
-    readonly emptyTile: HTMLImageElement = document.createElement("img");
-    readonly wallTile: HTMLImageElement = document.createElement("img");
-    constructor(width: number, height: number) {
-        this.emptyTile.src = "assets/blank.png";
-        this.wallTile.src = "assets/wall1.png";
-        this.canvas = document.createElement("canvas");
+    private emptyTile: HTMLImageElement;
+    private wallTile: HTMLImageElement;
+    constructor(width: number, height: number, assets: Promise<Assets>) {
+        // Initialise the grid
+        this.canvas = document.createElement("canvas")
         this.canvas.width = width * Game.TILE_SIZE;
         this.canvas.height = height * Game.TILE_SIZE;
-        this.context = this.canvas.getContext("2d") !;
+        this.context = this.canvas.getContext("2d")!;
         this.tiles = new Int8Array(width * height);
         this.width = width;
         this.height = height;
         this.canvas.style.display = "none";
-        document.body.appendChild(this.canvas);
         this.clear();
-        this.emptyTile.onload = this.internalDraw.bind(this);
-        this.wallTile.onload = this.internalDraw.bind(this);
+        document.body.appendChild(this.canvas);
+        // Set a callback
+        assets.then((assets: Assets) => {
+            console.log(assets);
+            this.emptyTile = assets.getImage("blank.png")!;
+            this.wallTile = assets.getImage("wall1.png")!;
+            this.internalDraw();
+        });
     }
     /// Fill the rectangle `r` with the color `c`
     fill(r: Rectangle, c: number = 1): void {
@@ -57,11 +61,14 @@ export default class Grid {
     private tileAt(x: number, y: number): number {
         return this.tiles[this.index(x, y)];
     }
+    /// Returns true when the position {x, y} is in the grid and empty
     isValidPosition(x: number, y: number): boolean {
         return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
     }
     /// Draw to the grid's internal buffer
     internalDraw(): void {
+        if(this.emptyTile === undefined)
+            return;
         this.context.strokeStyle = "0.5px black";
         for (let y = 0; y < this.height; y++)
             for (let x = 0; x < this.width; x++)
@@ -72,12 +79,12 @@ export default class Grid {
     }
 
 
-    findPath(start: Point, goal: Point): Set<Point> | null {
+    findPath(start: Point, goal: Point, heuristic: (a: Point, b: Point) => number): Set<Point> | null {
         const openList: Set<Node> = new Set<Node>();
         const closedList: Set<Node> = new Set<Node>();
         openList.add(Object.assign({
             g: 0,
-            f: 0 + this.heuristic(start, goal)
+            f: 0 + heuristic(start, goal)
         }, start));
         while(openList.size > 0) {
             const current: Node = lowest<Node>(openList.values(), (v: Node) => v.f!!)!!;
@@ -87,12 +94,13 @@ export default class Grid {
             closedList.add(current);
             for(let neighbor of this.neighbors(current)) {
                 if(!closedList.has(neighbor)) {
-                    neighbor.f = neighbor.g + this.heuristic(neighbor, goal);
+                    neighbor.f = neighbor.g + heuristic(neighbor, goal);
                 }
             }
         }
         return null;
     }
+    /// Create a set containing each neighbour of the node.
     private neighbors(node: Node): Set<Node> {
         const nodes = new Array<Node>(4);
         nodes.push({
@@ -107,6 +115,7 @@ export default class Grid {
             parent: node,
             g: node.g + 1
         });
+
         nodes.push({
             x: node.x,
             y: node.y - 1,
@@ -119,12 +128,10 @@ export default class Grid {
             parent: node,
             g: node.g + 1
         });
+        // only keep the nodes that have valid positions on the grid.
         return new Set(nodes.filter((v) => this.isValidPosition(v.x, v.y)));
     }
-
-    private heuristic(p: Point, g: Point): number {
-        return Math.abs(p.x - g.x) + Math.abs(p.y - g.y);
-    }
+    /// Make a path from the node by joining up its parent to its parent etc.
     private constructPath(node: Node): Set<Node> {
         const path = new Set([node]);
         while(node.parent !== null) {
@@ -135,6 +142,7 @@ export default class Grid {
     }
 }
 
+/// Structural interfaces are cool
 interface Node extends Point {
     parent?: Node;
     g: number;

@@ -35,3 +35,8 @@ export function intersects(s: Rectangle, r: Rectangle, spacing: number): boolean
 export function distSquared(a: Point, b: Point) {
     return Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
 }
+
+/// Compute the Manhattan distance between two points.
+export function manhattanDistance(p: Point, g: Point): number {
+    return Math.abs(p.x - g.x) + Math.abs(p.y - g.y);
+}

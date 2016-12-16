@@ -3,6 +3,54 @@
 	{
 		"selected_items":
 		[
+			[
+				"cre",
+				"createElement\tmethod"
+			],
+			[
+				"BOOLEA",
+				"boolean\tkeyword"
+			],
+			[
+				"HTML",
+				"HTMLElement\tinterface"
+			],
+			[
+				"Ass",
+				"AssetType\tenum"
+			],
+			[
+				"he",
+				"heuristic\tmethod"
+			],
+			[
+				"clos",
+				"closedList\tconst"
+			],
+			[
+				"value",
+				"valueCost\tlet"
+			],
+			[
+				"Iterator",
+				"IteratorResult\tinterface"
+			],
+			[
+				"It",
+				"Iterator\tinterface"
+			],
+			[
+				"open",
+				"openList\tconst"
+			],
+			[
+				"nu",
+				"number\tkeyword"
+			],
+			[
+				"h",
+				"heuristic\tmethod"
+			]
 		]
 	},
 	"buffers":
@@ -12,8 +60,54 @@
 			"settings":
 			{
 				"buffer_size": 636,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/Game.ts",
+			"settings":
+			{
+				"buffer_size": 3871,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "import { KeyboardControl, FollowControl, Control, toVector } from \"./control\";\nimport Game from \"./Game\";\nimport { Point } from \"./math\";\nimport { loadImage } from \"./util\";\n\n/// An object that has a physical position and can be drawn to the screen.\nexport abstract class Sprite {\n    x: number;\n    y: number;\n    constructor(x: number, y: number) {\n        this.x = x;\n        this.y = y;\n    }\n    /// Draw the sprite to the screen.\n    abstract draw(c: CanvasRenderingContext2D): void;\n    /// Update the sprite with a delta (in seconds).\n    update(_: number) {}\n}\n\n/// A sprite that can move.\n///\n/// This uses generics to make it able to use any control (such as gamepad or chase).\nexport class Entity<C extends Control> extends Sprite {\n    /// The delay between moves of the entity, in seconds\n    readonly delay: number;\n    /// The source of input that controls this entity.\n    readonly control: C;\n    /// The game instance the entity is attached to.\n    readonly game: Game;\n    /// The spritesheet this will use\n    readonly spritesheet: HTMLImageElement;\n    /// offset in the spritesheet\n    readonly offset: Point;\n    /// The number of seconds since the last movement of the entity.\n    sinceLast: number = 0;\n\n    constructor(game: Game, control: C, spritesheet: HTMLImageElement, delay: number = 0.5, x: number = 0, y: number = 0, offset: Point = {x: 0, y: 0}) {\n        super(x, y);\n        this.delay = delay;\n        this.game = game;\n        this.control = control;\n        this.spritesheet = spritesheet;\n        if(this.control instanceof FollowControl)\n            this.control.entity = this as Entity<any>;\n        this.offset = offset;\n    }\n\n    update(dt: number): void {\n        this.sinceLast += dt;\n        if(this.sinceLast > this.delay) {\n            // Compute the next position\n            let [dx, dy] = toVector(this.control.dir);\n            this.sinceLast -= this.delay;\n            let [nx, ny] = [this.x + dx, this.y + dy];\n            // Check if the computed next position is valid\n            if(this.game.isValidPosition(nx, ny))\n                [this.x, this.y] = [nx, ny];\n        }\n    }\n\n    draw(c: CanvasRenderingContext2D): void {\n      const { x: ox, y: oy } = this.offset;\n      c.drawImage(this.spritesheet, ox, oy, Game.TILE_SIZE, Game.TILE_SIZE, this.x * Game.TILE_SIZE, this.y * Game.TILE_SIZE);\n    }\n    /// Create the default player, using a keyboard control\n    static defaultPlayer(game: Game): Entity<KeyboardControl> {\n        const sprites = game.assets.get(\"\")\n        return new Entity(game, new KeyboardControl(game), sprites, 0.5, 1, 1);\n    }\n    /// Create the default enemy\n    static defaultEnemy(game: Game): Entity<FollowControl> {\n        return new Entity(game, new FollowControl(game), sprites, 1.0, 10, 10);\n    }\n}\n",
+			"file": "src/entities.ts",
+			"file_size": 2860,
+			"file_write_time": 131257750332902991,
+			"settings":
+			{
+				"buffer_size": 2800,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/Assets.ts",
+			"settings":
+			{
+				"buffer_size": 901,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "tsconfig.json",
+			"settings":
+			{
+				"buffer_size": 534,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "proj.sublime-project",
+			"settings":
+			{
+				"buffer_size": 96,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
 			}
 		}
 	],
@@ -24,10 +118,30 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 400.0,
-		"last_filter": "",
+		"height": 179.0,
+		"last_filter": "git push",
 		"selected_items":
 		[
+			[
+				"git push",
+				"Git: Push"
+			],
+			[
+				"git commit",
+				"Git: Commit"
+			],
+			[
+				"git add",
+				"Git: Add All"
+			],
+			[
+				"build",
+				"Build With: TypeScript"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
 			[
 				"install",
 				"Package Control: Install Package"
@@ -58,10 +172,18 @@
 	],
 	"file_history":
 	[
+		"/home/tom/code/dungern/src/util.ts",
+		"/home/tom/code/dungern/src/math.ts",
+		"/home/tom/code/dungern/src/control.ts",
+		"/home/tom/code/dungern/src/Grid.ts",
+		"/home/tom/code/dungern/src/entities.ts",
+		"/home/tom/code/dungern/src/main.ts",
+		"/home/tom/code/dungern/src/extra.d.ts",
+		"/home/tom/code/dungern/src/Game.ts"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 23.0
 	},
 	"find_in_files":
 	{
@@ -75,6 +197,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"lowest"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -92,7 +215,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -108,8 +231,8 @@
 						"selection":
 						[
 							[
-								361,
-								361
+								365,
+								365
 							]
 						],
 						"settings":
@@ -128,7 +251,162 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/Game.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3871,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1371,
+								1371
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript/TypeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true,
+							"typescript_plugin_format_options":
+							{
+								"convertTabsToSpaces": true,
+								"indentSize": 4,
+								"tabSize": 4
+							},
+							"use_tab_stops": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 135.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/entities.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2800,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2219,
+								2219
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript/TypeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true,
+							"use_tab_stops": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 765.0,
+						"zoom_level": 1.0
+					},
 					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/Assets.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 901,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								709,
+								709
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript/TypeScript.tmLanguage",
+							"use_tab_stops": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 90.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "tsconfig.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 534,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								93,
+								93
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "proj.sublime-project",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 96,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								34,
+								34
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
 					"type": "text"
 				}
 			]
@@ -136,11 +414,11 @@
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 23.0
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 32.0
 	},
 	"layout":
 	{
@@ -169,15 +447,23 @@
 	{
 		"height": 0.0
 	},
+	"output.exec":
+	{
+		"height": 98.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0
 	},
-	"pinned_build_system": "",
+	"output.git":
+	{
+		"height": 98.0
+	},
+	"pinned_build_system": "Packages/TypeScript/TypeScript.sublime-build",
 	"project": "proj.sublime-project",
 	"replace":
 	{
-		"height": 0.0
+		"height": 42.0
 	},
 	"save_all_on_build": true,
 	"select_file":

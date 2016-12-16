@@ -1,6 +1,6 @@
 import Game from "./Game";
 import { Entity } from "./entities";
-import { Point, distSquared } from "./math";
+import { distSquared } from "./math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -17,8 +17,11 @@ export const enum Button {
 }
 /// A source of `Control`.
 export interface Control {
+    /// The direction the entity should move in.
     dir: Direction;
+    /// Check if any buttons are being pressed.
     button(_: Button): boolean;
+    /// Update with a delta time, in seconds.
     update(_: number): void;
 }
 /// The basic implementation of the `Control` interface
@@ -57,20 +60,14 @@ export class FollowControl implements Control {
             }
         });
         if(nearestEntity) {
-            const path = this.game.grid.findPath(this.entity, nearestEntity);
-            if(path == null)
-                return Direction.None;
-            else {
-                const n: Point = path.entries().next().value[0];
 
-                let [dx, dy] = [n.x - this.entity.x, n.y - this.entity.y];
-                if(dx === 0 && dy === 0)
-                    return Direction.None;
-                else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
-                    return dx < 0 ? Direction.Left : Direction.Right;
-                else // when the vertical is bigger
-                    return dy < 0 ? Direction.Up : Direction.Down;
-            }
+            let [dx, dy] = [nearestEntity.x - this.entity.x, nearestEntity.y - this.entity.y];
+            if(dx === 0 && dy === 0) // when there is no change.
+                return Direction.None;
+            else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
+                return dx < 0 ? Direction.Left : Direction.Right;
+            else // when the vertical is bigger
+                return dy < 0 ? Direction.Up : Direction.Down;
         } else {
             return Direction.None;
         }
@@ -153,4 +150,18 @@ const DIRS: [number, number][] = [
 ];
 export function toVector(dir: Direction): [number, number] {
     return DIRS[dir];
+}
+export function toString(dir: Direction) : string {
+    switch(dir) {
+        case Direction.Down:
+            return 'down';
+        case Direction.Up:
+            return 'up';
+        case Direction.Left:
+            return 'left';
+        case Direction.Right:
+            return 'right';
+        default:
+            return 'down';
+    }
 }
