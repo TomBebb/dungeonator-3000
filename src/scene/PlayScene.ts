@@ -1,8 +1,8 @@
 /// <reference path="../extra.d.ts" />
 
 import Camera from "../Camera";
-import Generator from "../Generator";
-import Grid from "../Grid";
+import Generator from "../util/Generator";
+import Grid from "../util/Grid";
 import { GamepadControl } from "../control";
 import { Entity } from "../entities";
 import { random, Point } from "../util/math";

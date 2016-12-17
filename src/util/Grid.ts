@@ -1,7 +1,7 @@
-import { Rectangle, Point, pointEq } from "./util/math";
-import { lowest } from "./util/util";
-import PlayScene from "./scene/PlayScene";
-import Main from "./main";
+import { Rectangle, Point, pointEq } from "./math";
+import { lowest } from "./util";
+import PlayScene from "../scene/PlayScene";
+import Main from "../main";
 
 
 /// Structural interfaces are cool

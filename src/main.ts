@@ -11,7 +11,8 @@ export default class Main {
 	scene: Scene = new LoadingScene();
 	constructor() {
         this.assets.load({
-            images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ]
+            images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ],
+            audio: [ ] 
         }).then((_) => this.scene = new PlayScene());
 		this.canvas.tabIndex = 1;
 		this.context.oImageSmoothingEnabled = false;

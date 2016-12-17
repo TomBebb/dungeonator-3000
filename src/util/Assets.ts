@@ -1,9 +1,11 @@
 
 export interface AssetsPreload {
-	images: Array<string>
+	images: Array<string>,
+	audio: Array<string>
 }
 export default class Assets {
 	images: Map<string, HTMLImageElement> = new Map();
+	audio: Map<string, HTMLAudioElement> = new Map();
 	private loaded: number = 0;
 	private total: number = 0;
 	get progress(): number {
@@ -37,10 +39,36 @@ export default class Assets {
 			}
 		})
 	}
+	/// Asynchronous image loading
+	loadAudio(path: string): Promise<HTMLAudioElement> {
+		return new Promise((resolve, reject) => {
+			if(this.audio.has(path))
+				resolve(this.audio.get(path)!);
+			// make the audio
+			let loaded = false;
+			const a = new Audio(`assets/${path}`);
+			// add it to the assets
+			this.audio.set(path, a);
+			this.total++;
+			a.onload = (_: Event) => {
+				loaded = true;
+				this.loaded++;
+				resolve(a);
+			};
+			a.onerror = (e: ErrorEvent) => {
+				reject(`Failed to load ${a.src} ${e.error}`);
+			}
+		})
+	}
 	load(assets: AssetsPreload): Promise<Assets> {
 		return new Promise((resolve, _) => {
 			for(const path of assets.images)
 				this.loadImage(path).then((_) => {
+					if(this.loaded >= this.total)
+						resolve(this);
+				});
+			for(const path of assets.audio)
+				this.loadAudio(path).then((_) => {
 					if(this.loaded >= this.total)
 						resolve(this);
 				});
