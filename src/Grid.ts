@@ -1,7 +1,7 @@
 import { Rectangle, Point, pointEq } from "./util/math";
 import Assets from "./util/Assets";
 import { lowest } from "./util/util";
-import Game from "./Game";
+import PlayScene from "./scene/PlayScene";
 
 
 /// Structural interfaces are cool
@@ -25,11 +25,11 @@ export default class Grid {
     readonly height: number;
     private emptyTile: HTMLImageElement;
     private wallTile: HTMLImageElement;
-    constructor(width: number, height: number, assets: Promise<Assets>) {
+    constructor(width: number, height: number, assets: Assets) {
         // Initialise the grid
         this.canvas = document.createElement("canvas")
-        this.canvas.width = width * Game.TILE_SIZE;
-        this.canvas.height = height * Game.TILE_SIZE;
+        this.canvas.width = width * PlayScene.TILE_SIZE;
+        this.canvas.height = height * PlayScene.TILE_SIZE;
         this.context = this.canvas.getContext("2d")!;
         this.tiles = new Int8Array(width * height);
         this.width = width;
@@ -38,12 +38,9 @@ export default class Grid {
         this.clear();
         document.body.appendChild(this.canvas);
         // Set a callback
-        assets.then((assets: Assets) => {
-            console.log(assets);
-            this.emptyTile = assets.getImage("blank.png")!;
-            this.wallTile = assets.getImage("wall1.png")!;
-            this.internalDraw();
-        });
+        this.emptyTile = assets.getImage("blank.png")!;
+        this.wallTile = assets.getImage("wall1.png")!;
+        this.internalDraw();
     }
     /// Fill the rectangle `r` with the color `c`
     fill(r: Rectangle, c: number = 1): void {
@@ -77,12 +74,10 @@ export default class Grid {
     }
     /// Draw to the grid's internal buffer
     internalDraw(): void {
-        if(this.emptyTile === undefined)
-            return;
         this.context.strokeStyle = "0.5px black";
         for (let y = 0; y < this.height; y++)
             for (let x = 0; x < this.width; x++)
-                this.context.drawImage(this.tiles[this.index(x, y)] ? this.wallTile : this.emptyTile, x * Game.TILE_SIZE, y * Game.TILE_SIZE);
+                this.context.drawImage(this.tiles[this.index(x, y)] ? this.wallTile : this.emptyTile, x * PlayScene.TILE_SIZE, y * PlayScene.TILE_SIZE);
     }
     render(c: CanvasRenderingContext2D): void {
         c.drawImage(this.canvas, 0, 0);

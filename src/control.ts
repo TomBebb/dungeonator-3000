@@ -1,6 +1,7 @@
-import Game from "./Game";
+import PlayScene from "./scene/PlayScene";
 import { Entity } from "./entities";
 import { distSquared } from "./util/math";
+import Main from "./main";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -42,9 +43,9 @@ export class BasicControl implements Control {
 }
 export class FollowControl implements Control {
     public entity: Entity<FollowControl>;
-    private game: Game;
-    constructor(game: Game) {
-        this.game = game;
+    private scene: PlayScene;
+    constructor(scene: PlayScene) {
+        this.scene = scene;
     }
 
     button(_: Button): boolean {
@@ -52,7 +53,7 @@ export class FollowControl implements Control {
     }
 
     get dir(): Direction {
-        let nearestEntity: Entity<any> = this.game.entities.filter(x => this.entity != x).reduce((a, b) => {
+        let nearestEntity: Entity<any> = this.scene.entities.filter(x => this.entity != x).reduce((a, b) => {
             if(distSquared(this.entity, a) < distSquared(this.entity, b)) {
                 return a;
             } else {
@@ -104,10 +105,11 @@ export class GamepadControl implements Control {
     }
 }
 export class KeyboardControl extends BasicControl {
-    constructor(game: Game) {
+    constructor() {
         super();
-        game.canvas.tabIndex = 1;
-        game.canvas.onkeydown = (e: KeyboardEvent) => {
+        const m = Main.instance;
+        m.canvas.tabIndex = 1;
+        m.canvas.onkeydown = (e: KeyboardEvent) => {
             switch (e.keyCode) {
                 case 32:
                     this.updateButton(0, true);
@@ -129,7 +131,7 @@ export class KeyboardControl extends BasicControl {
                     break;
             }
         };
-        game.canvas.onkeyup = (e: KeyboardEvent) => {
+        m.canvas.onkeyup = (e: KeyboardEvent) => {
             if (e.keyCode >= 37 && e.keyCode <= 40)
                 this.dir = Direction.None;
             else if (e.keyCode == 32)

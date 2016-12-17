@@ -1,5 +1,5 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "./control";
-import Game from "./Game";
+import PlayScene from "./scene/PlayScene";
 import { Point } from "./util/math";
 import Assets from "./util/Assets";
 
@@ -46,7 +46,7 @@ export class Dynamic extends Sprite {
     }
     draw(c: CanvasRenderingContext2D) {
         const f = this._animation[this.frame];
-        c.drawImage(this.source, f.x, f.y, this.frameWidth, this.frameHeight, this.x * Game.TILE_SIZE, this.y * Game.TILE_SIZE, this.frameWidth, this.frameHeight);
+        c.drawImage(this.source, f.x, f.y, this.frameWidth, this.frameHeight, this.x * PlayScene.TILE_SIZE, this.y * PlayScene.TILE_SIZE, this.frameWidth, this.frameHeight);
     }
     update(dt: number) {
         this.sinceLast += dt;
@@ -65,11 +65,11 @@ export class Dynamic extends Sprite {
 export class Entity<C extends Control> extends Dynamic {
     /// The source of input that controls this entity.
     readonly control: C;
-    /// The game instance the entity is attached to.
-    readonly game: Game;
+    /// The scene instance the entity is attached to.
+    readonly scene: PlayScene;
     private lastDir: Direction;
 
-    constructor(game: Game, control: C, assets: Assets, sprite: string = "player.png", x: number = 0, y: number = 0) {
+    constructor(scene: PlayScene, control: C, assets: Assets, sprite: string = "player.png", x: number = 0, y: number = 0) {
         super(assets.getImage(sprite)!, x, y);
         // Register animations from the sprite sheet.
         this.animations.set("walk_up", [
@@ -102,7 +102,7 @@ export class Entity<C extends Control> extends Dynamic {
         ]);
         this.lastDir = Direction.None;
         this.animation = "walk_up";
-        this.game = game;
+        this.scene = scene;
         this.control = control;
         if(this.control instanceof FollowControl)
             this.control.entity = this as Entity<any>;
@@ -115,7 +115,7 @@ export class Entity<C extends Control> extends Dynamic {
         let [dx, dy] = toVector(cdir);
         let [nx, ny] = [this.x + dx, this.y + dy];
         // Check if the computed next position is valid
-        if(this.game.isValidPosition(nx, ny))
+        if(this.scene.isValidPosition(nx, ny))
             return [{
                 x: nx,
                 y: ny
@@ -130,7 +130,7 @@ export class Entity<C extends Control> extends Dynamic {
         let [dx, dy] = toVector(cdir);
         let [nx, ny] = [this.x + dx, this.y + dy];
         // Check if the computed next position is valid
-        if(this.game.isValidPosition(nx, ny))
+        if(this.scene.isValidPosition(nx, ny))
             [this.x, this.y] = [nx, ny];
         const anim = dx != 0 || dy != 0 ? 'walk' : 'stand';
         if(this.lastDir !== cdir || !this.animationName.startsWith(anim))
@@ -138,11 +138,11 @@ export class Entity<C extends Control> extends Dynamic {
         this.lastDir = cdir;
     }
     /// Create the default player, using a keyboard control
-    static defaultPlayer(game: Game, assets: Assets): Entity<KeyboardControl> {
-        return new Entity(game, new KeyboardControl(game), assets, undefined, 2, 2);
+    static defaultPlayer(scene: PlayScene, assets: Assets): Entity<KeyboardControl> {
+        return new Entity(scene, new KeyboardControl(), assets, undefined, 2, 2);
     }
     /// Create the default enemy
-    static defaultEnemy(game: Game, assets: Assets): Entity<FollowControl> {
-        return new Entity(game, new FollowControl(game), assets, undefined, 10, 10);
+    static defaultEnemy(scene: PlayScene, assets: Assets): Entity<FollowControl> {
+        return new Entity(scene, new FollowControl(scene), assets, undefined, 10, 10);
     }
 }

@@ -6,7 +6,7 @@ export default class LoadingScene implements Scene {
 
 	}
 	render(c: CanvasRenderingContext2D): void {
-		c.fillStyle = '#1e2f0a';
+		c.fillStyle = 'gray';
 		const [w, h] = [c.canvas.width, c.canvas.height];
 		c.fillRect(0, 0, w, h);
 		c.fillStyle = 'white';

@@ -1,4 +1,4 @@
-import Game from "./Game";
+import PlayScene from "./scene/PlayScene";
 import { Sprite } from "./entities";
 
 /// Manages the transformations that apply to the canvas
@@ -7,11 +7,11 @@ export default class Camera {
     follow: Sprite | undefined;
 
     get x(): number {
-        return this.follow === undefined ? 0 : (this.follow.x + 0.5) * Game.TILE_SIZE;
+        return this.follow === undefined ? 0 : (this.follow.x + 0.5) * PlayScene.TILE_SIZE;
     }
 
     get y(): number {
-        return this.follow === undefined ? 0 : (this.follow.y + 0.5) * Game.TILE_SIZE;
+        return this.follow === undefined ? 0 : (this.follow.y + 0.5) * PlayScene.TILE_SIZE;
     }
 
     constructor(follow?: Sprite) {

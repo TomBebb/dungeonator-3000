@@ -4,7 +4,7 @@ define(["require", "exports"], function (require, exports) {
         constructor() {
         }
         render(c) {
-            c.fillStyle = '#1e2f0a';
+            c.fillStyle = 'gray';
             const [w, h] = [c.canvas.width, c.canvas.height];
             c.fillRect(0, 0, w, h);
             c.fillStyle = 'white';
