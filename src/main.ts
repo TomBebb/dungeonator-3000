@@ -7,17 +7,17 @@ export default class Main {
 	static readonly DELTA = 1 / 30;
     readonly canvas = document.getElementById('game') ! as HTMLCanvasElement;
 	readonly context = this.canvas.getContext("2d") !;
+	readonly assets = new Assets();
 	scene: Scene = new LoadingScene();
 	constructor() {
-        const assets = new Assets().load({
+        this.assets.load({
             images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ]
-        });
+        }).then((_) => this.scene = new PlayScene());
 		this.canvas.tabIndex = 1;
 		this.context.oImageSmoothingEnabled = false;
 		this.context.msImageSmoothingEnabled = false;
 		this.context.webkitImageSmoothingEnabled = false;
 		setInterval(() => this.scene.update(Main.DELTA), Main.DELTA * 1000);
-		assets.then((assets) => this.scene = new PlayScene(assets));
 	}
 	render() {
         requestAnimationFrame(this.render.bind(this));

@@ -1,7 +1,7 @@
 import { Rectangle, Point, pointEq } from "./util/math";
-import Assets from "./util/Assets";
 import { lowest } from "./util/util";
 import PlayScene from "./scene/PlayScene";
+import Main from "./main";
 
 
 /// Structural interfaces are cool
@@ -25,7 +25,7 @@ export default class Grid {
     readonly height: number;
     private emptyTile: HTMLImageElement;
     private wallTile: HTMLImageElement;
-    constructor(width: number, height: number, assets: Assets) {
+    constructor(width: number, height: number) {
         // Initialise the grid
         this.canvas = document.createElement("canvas")
         this.canvas.width = width * PlayScene.TILE_SIZE;
@@ -37,7 +37,8 @@ export default class Grid {
         this.canvas.style.display = "none";
         this.clear();
         document.body.appendChild(this.canvas);
-        // Set a callback
+        // Load images
+        const assets = Main.instance.assets;
         this.emptyTile = assets.getImage("blank.png")!;
         this.wallTile = assets.getImage("wall1.png")!;
         this.internalDraw();

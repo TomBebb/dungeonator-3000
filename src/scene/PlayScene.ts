@@ -7,30 +7,26 @@ import { GamepadControl } from "../control";
 import { Entity } from "../entities";
 import { random, Point } from "../util/math";
 import Scene from "./Scene";
-import Assets from "../util/Assets";
 
 export default class PlayScene implements Scene {
     static readonly TILE_SIZE = 16;
-    readonly delay: number = 0.5;
+    readonly delay: number = 0.1;
     private sinceLast: number = 0;
     private readonly gen: Generator = new Generator();
     entities: Entity<any>[] = [
+        Entity.defaultPlayer(this)
     ];
     readonly camera: Camera = new Camera();
-    readonly assets: Assets;
-    readonly grid: Grid;
-    constructor(assets: Assets) {
-        this.assets = assets;
-        this.grid = new Grid(64, 64, this.assets);
-        this.entities.push(Entity.defaultPlayer(this, this.assets));
-        this.entities.push(Entity.defaultEnemy(this, this.assets));
+    readonly grid: Grid = new Grid(64, 64);
+    constructor() {
+        this.entities.push(Entity.defaultEnemy(this));
         this.camera.follow = this.entities[0];
         for(const entity of this.entities)
             this.place(entity);
         // Register an event handler for when gamepads are connected
         window.addEventListener("ongamepadconnected", (ge: GamepadEvent) => {
             // add a new player entity
-            const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(ge.gamepad), assets);
+            const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(ge.gamepad));
             this.entities.push(player);
             this.camera.follow = player;
         });
@@ -105,6 +101,5 @@ export default class PlayScene implements Scene {
             for(const e of this.entities)
                 e.step();
         }
-        setTimeout(this.update.bind(this, dt), dt);
     }
 }

@@ -1,7 +1,7 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "./control";
 import PlayScene from "./scene/PlayScene";
 import { Point } from "./util/math";
-import Assets from "./util/Assets";
+import Main from "./main";
 
 /// An object that has a physical position and can be drawn to the screen.
 export abstract class Sprite {
@@ -69,8 +69,8 @@ export class Entity<C extends Control> extends Dynamic {
     readonly scene: PlayScene;
     private lastDir: Direction;
 
-    constructor(scene: PlayScene, control: C, assets: Assets, sprite: string = "player.png", x: number = 0, y: number = 0) {
-        super(assets.getImage(sprite)!, x, y);
+    constructor(scene: PlayScene, control: C, sprite: string = "player.png", x: number = 0, y: number = 0) {
+        super(Main.instance.assets.getImage(sprite)!, x, y);
         // Register animations from the sprite sheet.
         this.animations.set("walk_up", [
             {x: 0, y: 0},
@@ -138,11 +138,11 @@ export class Entity<C extends Control> extends Dynamic {
         this.lastDir = cdir;
     }
     /// Create the default player, using a keyboard control
-    static defaultPlayer(scene: PlayScene, assets: Assets): Entity<KeyboardControl> {
-        return new Entity(scene, new KeyboardControl(), assets, undefined, 2, 2);
+    static defaultPlayer(scene: PlayScene): Entity<KeyboardControl> {
+        return new Entity(scene, new KeyboardControl(), undefined, 2, 2);
     }
     /// Create the default enemy
-    static defaultEnemy(scene: PlayScene, assets: Assets): Entity<FollowControl> {
-        return new Entity(scene, new FollowControl(scene), assets, undefined, 10, 10);
+    static defaultEnemy(scene: PlayScene): Entity<FollowControl> {
+        return new Entity(scene, new FollowControl(scene), undefined, 10, 10);
     }
 }

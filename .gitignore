@@ -1,2 +1,6 @@
 src/*.js
 src/*.js.map
+src/scene/*.js
+src/scene/*.js.map
+src/util/*.js
+src/util/*.js.map

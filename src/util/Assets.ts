@@ -6,6 +6,9 @@ export default class Assets {
 	images: Map<string, HTMLImageElement> = new Map();
 	private loaded: number = 0;
 	private total: number = 0;
+	get progress(): number {
+		return this.total === 0 ? 1 : this.loaded / this.total;
+	}
 	getImage(path: string): HTMLImageElement {
 		if(this.images.has(path))
 			return this.images.get(path)!;
