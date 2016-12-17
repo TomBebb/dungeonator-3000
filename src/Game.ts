@@ -5,8 +5,8 @@ import Generator from "./Generator";
 import Grid from "./Grid";
 import { GamepadControl } from "./control";
 import { Entity } from "./entities";
-import { random, Point } from "./math";
-import { Assets } from "./util";
+import { random, Point } from "./util/math";
+import Assets from "./util/Assets";
 
 export default class Game {
     static readonly TILE_SIZE = 16;
@@ -18,16 +18,18 @@ export default class Game {
     entities: Entity<any>[] = [
     ];
     readonly camera: Camera = new Camera();
-    readonly assets: Promise<Assets> = Assets.load({
-            images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ]
-        });
-    readonly grid: Grid = new Grid(64, 64, this.assets);
+    readonly assets: Assets = new Assets();;
+    readonly grid: Grid;
     constructor() {
         this.canvas.tabIndex = 1;
         this.context.oImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
-        this.assets.then((assets) => {
+        const assets = this.assets.load({
+            images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ]
+        })
+        this.grid = new Grid(64, 64, assets);
+        assets.then((assets) => {
             this.entities.push(Entity.defaultPlayer(this, assets));
             this.entities.push(Entity.defaultEnemy(this, assets));
             this.camera.follow = this.entities[0];

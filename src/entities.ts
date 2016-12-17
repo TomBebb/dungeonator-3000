@@ -1,7 +1,7 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "./control";
 import Game from "./Game";
-import { Point } from "./math";
-import { Assets } from "./util";
+import { Point } from "./util/math";
+import Assets from "./util/Assets";
 
 /// An object that has a physical position and can be drawn to the screen.
 export abstract class Sprite {
@@ -106,6 +106,22 @@ export class Entity<C extends Control> extends Dynamic {
         this.control = control;
         if(this.control instanceof FollowControl)
             this.control.entity = this as Entity<any>;
+    }
+    // Plan the entity's movement in the next step.
+    plan(): Point[] {
+        // Cache the result of the direction since it is computed each time it is accessed.
+        const cdir = this.control.dir;
+        // Compute the next position
+        let [dx, dy] = toVector(cdir);
+        let [nx, ny] = [this.x + dx, this.y + dy];
+        // Check if the computed next position is valid
+        if(this.game.isValidPosition(nx, ny))
+            return [{
+                x: nx,
+                y: ny
+            }];
+        else
+            return [];
     }
     step(): void {
         // Cache the result of the direction since it is computed each time it is accessed.

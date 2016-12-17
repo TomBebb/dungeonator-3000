@@ -1,22 +1,11 @@
-export function lowest<T>(iter: Iterator<T>, cb: (v: T) => number): T | null {
-	let value: T | null = null;
-	let valueCost = Infinity;
-	let next: IteratorResult<T> | null;
-	while((next = iter.next()) != null) {
-		if(next != null && cb(next.value) < valueCost) {
-			value = next.value;
-			valueCost = cb(next.value);
-			if(next.done)
-				break;
-		}
-	}
-	return value;
-}
+
 export interface AssetsPreload {
 	images: Array<string>
 }
-export class Assets {
+export default class Assets {
 	images: Map<string, HTMLImageElement> = new Map();
+	private loaded: number = 0;
+	private total: number = 0;
 	getImage(path: string): HTMLImageElement {
 		if(this.images.has(path))
 			return this.images.get(path)!;
@@ -34,8 +23,10 @@ export class Assets {
 			i.src = `assets/${path}`;
 			// add it to the assets
 			this.images.set(path, i);
+			this.total++;
 			i.onload = (_: Event) => {
 				loaded = true;
+				this.loaded++;
 				resolve(i);
 			};
 			i.onerror = (_: Event) => {
@@ -43,19 +34,15 @@ export class Assets {
 			}
 		})
 	}
-	static load(assets: AssetsPreload): Promise<Assets> {
+	load(assets: AssetsPreload): Promise<Assets> {
 		return new Promise((resolve, _) => {
-			const loadedAssets = new Assets();
-			let loaded = 0;
-			const numAssets = assets.images.length;
 			for(const path of assets.images)
-				loadedAssets.loadImage(path).then((_) => {
-					loaded += 1;
-					if(loaded >= numAssets)
-						resolve(loadedAssets);
+				this.loadImage(path).then((_) => {
+					if(this.loaded >= this.total)
+						resolve(this);
 				});
-			if(numAssets <= 0)
-				resolve(loadedAssets);
+			if(this.total <= 0)
+				resolve(this);
 		});
 	}
 }

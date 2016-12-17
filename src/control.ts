@@ -1,6 +1,6 @@
 import Game from "./Game";
 import { Entity } from "./entities";
-import { distSquared } from "./math";
+import { distSquared } from "./util/math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {

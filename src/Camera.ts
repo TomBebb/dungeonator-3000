@@ -5,7 +5,6 @@ import { Sprite } from "./entities";
 export default class Camera {
     /// The sprite the camera will follow
     follow: Sprite | undefined;
-    zoom: number = 1;
 
     get x(): number {
         return this.follow === undefined ? 0 : (this.follow.x + 0.5) * Game.TILE_SIZE;
@@ -21,7 +20,6 @@ export default class Camera {
 
     apply(c: CanvasRenderingContext2D) {
         c.translate(c.canvas.width / 2, c.canvas.height / 2);
-        c.scale(this.zoom, this.zoom);
         c.translate(-this.x, -this.y);
     }
 }

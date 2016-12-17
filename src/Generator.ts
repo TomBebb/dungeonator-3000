@@ -1,5 +1,5 @@
 import Grid from "./Grid";
-import {Size, Rectangle, random, intersects} from "./math";
+import {Size, Rectangle, random, intersects} from "./util/math";
 
 export default class Generator {
 	private static readonly MIN_ROOM_SIZE: number = 4;

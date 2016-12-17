@@ -1,6 +1,8 @@
 {
     "include": [
-        "src/*.ts"
+        "src/*.ts",
+        "src/scene/*.ts",
+        "src/util/*.ts"
     ],
     "compilerOptions": {
         "target":  "es6",

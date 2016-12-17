@@ -1,6 +1,16 @@
-import { Rectangle, Point, pointEq } from "./math";
-import { Assets, lowest } from "./util";
+import { Rectangle, Point, pointEq } from "./util/math";
+import Assets from "./util/Assets";
+import { lowest } from "./util/util";
 import Game from "./Game";
+
+
+/// Structural interfaces are cool
+interface Node extends Point {
+    parent?: Node;
+    g: number;
+    /// total cost of the path via current node
+    f?: number;
+}
 
 /// A 2D Grid
 export default class Grid {
@@ -140,12 +150,4 @@ export default class Grid {
         }
         return path;
     }
-}
-
-/// Structural interfaces are cool
-interface Node extends Point {
-    parent?: Node;
-    g: number;
-    /// total cost of the path via current node
-    f?: number;
 }
