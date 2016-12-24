@@ -2,20 +2,14 @@
 <html>
     <head><title>Game</title></head>
     <body>
-        <style>
-        canvas {  
-          image-rendering: -moz-crisp-edges;
-          image-rendering: -webkit-crisp-edges;
-          image-rendering: pixelated;
-        }
-</style>
-    	<canvas id="game" width="180" height="120" style="width:720px;height:480px">Sorry, this game requires HTML5 Canvas support to run!</canvas>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.3.0/pixi.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
         <script>
         requirejs.config({
-    baseUrl: 'src'
-});
-        requirejs(['./main'], function(main) {});
+            baseUrl: 'src'
+        });
+        requirejs(['./main'], function() { console.log(PIXI) });
       </script>
     </body>
 </html>

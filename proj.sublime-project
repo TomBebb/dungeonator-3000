@@ -3,10 +3,7 @@
 	[
 		{
 			"path": ".",
-			 "file_exclude_patterns": [
-			 	"*.js",
-			 	"*.js.map"
-			 ]
+			"file_exclude_patterns": [ "*.js", "*.js.map", ".gitignore", "*.sublime-project" ]
 		}
-	],
+	]
 }

@@ -1,11 +1,10 @@
 import PlayScene from "./scene/PlayScene";
-import { Entity } from "./entities";
-import { distSquared } from "./util/math";
+import { Entity } from "./ui/entities";
+import { Point, distSquared } from "./util/math";
 import Main from "./main";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
-    None,
     Left,
     Right,
     Up,
@@ -18,32 +17,16 @@ export const enum Button {
 }
 /// A source of `Control`.
 export interface Control {
-    /// The direction the entity should move in.
-    dir: Direction;
+    /// The direction the entity should move in, or undefined if it shouldn't move.
+    dir: Direction | undefined;
     /// Check if any buttons are being pressed.
     button(_: Button): boolean;
-    /// Update with a delta time, in seconds.
-    update(_: number): void;
-}
-/// The basic implementation of the `Control` interface
-export class BasicControl implements Control {
-    dir: Direction = Direction.None;
-    private buttons: number = 0;
-    button(which: Button): boolean {
-        return (this.buttons & which) !== 0;
-    }
-    protected updateButton(button: Button, pressed: boolean): void {
-        if (pressed)
-            this.buttons |= button;
-        else
-            this.buttons = (this.buttons | button) ^ button;
-
-    }
-    update(_: number): void { }
 }
 export class FollowControl implements Control {
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
+    lastPath: Point[] = [];
+    path: Promise<Point[]> | undefined = undefined;
     constructor(scene: PlayScene) {
         this.scene = scene;
     }
@@ -52,34 +35,45 @@ export class FollowControl implements Control {
         return false;
     }
 
-    get dir(): Direction {
-        let nearestEntity: Entity<any> = this.scene.entities.filter(x => this.entity != x).reduce((a, b) => {
-            if(distSquared(this.entity, a) < distSquared(this.entity, b)) {
+    get dir(): Direction | undefined {
+        const nearestEntity: Entity<any> = this.scene.entities.filter(x => this.entity !== x).reduce((a, b) => {
+            if (distSquared(this.entity, a) < distSquared(this.entity, b)) {
                 return a;
             } else {
                 return b;
             }
         });
-        if(nearestEntity) {
+        this.lastPath = [];
+        if(this.path === undefined) {
+            this.path = new Promise((resolve, _) => {
+                const r = this.scene.map.grid.search(this.entity, nearestEntity);
+                resolve(r);
+            });
+            this.path.then(console.log);
+            this.path.then((path:Point[]) => {
+                this.lastPath = path;
+                this.path = undefined;
+            });
+        };
+        if (nearestEntity && this.lastPath.length > 0) {
 
-            let [dx, dy] = [nearestEntity.x - this.entity.x, nearestEntity.y - this.entity.y];
-            if(dx === 0 && dy === 0) // when there is no change.
-                return Direction.None;
-            else if(Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
+            let [dx, dy] = [this.lastPath[0].x - this.entity.x, this.lastPath[0].y - this.entity.y];
+            if (dx === 0 && dy === 0) // when there is no change.
+                return undefined;
+            else if (Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
                 return dx < 0 ? Direction.Left : Direction.Right;
             else // when the vertical is bigger
                 return dy < 0 ? Direction.Up : Direction.Down;
-        } else {
-            return Direction.None;
-        }
+        } else
+            return undefined;
     }
-    update(_: number): void { }
 }
 export class GamepadControl implements Control {
     private readonly deadzone: number = 0.1;
     private readonly gamepad: Gamepad;
     constructor(gamepad: Gamepad) {
         this.gamepad = gamepad;
+        console.log(gamepad);
     }
     get index(): number {
         return this.gamepad.index;
@@ -87,9 +81,12 @@ export class GamepadControl implements Control {
     button(which: Button): boolean {
         return this.gamepad.buttons[which].pressed;
     }
-    get dir(): Direction {
+    get dir(): Direction | undefined {
         const a = this.gamepad.axes;
         const b = this.gamepad.buttons;
+        for(let i = 0; i < b.length; i++)
+            if(b[i].pressed)
+                console.log(i);
         if (b[14].pressed || a[0] < this.deadzone)
             return Direction.Left;
         else if (b[15].pressed || a[0] > 1 - this.deadzone)
@@ -99,52 +96,38 @@ export class GamepadControl implements Control {
         else if (b[13].pressed || a[1] > 1 - this.deadzone)
             return Direction.Down;
         else
-            return Direction.None;
-    }
-    update(_: number): void {
+            return undefined;
     }
 }
-export class KeyboardControl extends BasicControl {
+export class KeyboardControl implements Control {
+    down: number[] = [];
     constructor() {
-        super();
-        const m = Main.instance;
-        m.canvas.tabIndex = 1;
-        m.canvas.onkeydown = (e: KeyboardEvent) => {
-            switch (e.keyCode) {
-                case 32:
-                    this.updateButton(0, true);
-                    break;
-                case 18: case 225:
-                    this.updateButton(1, true);
-                    break;
-                case 37:
-                    this.dir = Direction.Left;
-                    break;
-                case 38:
-                    this.dir = Direction.Up;
-                    break;
-                case 39:
-                    this.dir = Direction.Right;
-                    break;
-                case 40:
-                    this.dir = Direction.Down;
-                    break;
-            }
-        };
-        m.canvas.onkeyup = (e: KeyboardEvent) => {
-            if (e.keyCode >= 37 && e.keyCode <= 40)
-                this.dir = Direction.None;
-            else if (e.keyCode == 32)
-                this.updateButton(0, false);
-            else if (e.keyCode === 18 || e.keyCode === 225)
-                this.updateButton(1, false);
+        const c = Main.instance.renderer.view;
+        window.addEventListener("keydown", (e: KeyboardEvent) => this.down.push(e.keyCode), true);
+        window.addEventListener("keyup", (e: KeyboardEvent) => {
+            const i = this.down.indexOf(e.keyCode);
+            if(i >= 0)
+                this.down.splice(i);
+        }, true);
+    }
+
+    get dir(): Direction | undefined {
+        for(const key of this.down) {
+            const dir = fromKey(key);
+            if (dir !== undefined)
+                return dir;
         }
+        return undefined;
     }
-    update(_: number): void {
+
+    button(b: Button): boolean {
+        if (b === Button.Primary)
+            return this.down.indexOf(32) >= 0;
+        else return false;
     }
+
 }
 const DIRS: [number, number][] = [
-    [0, 0],
     [-1, 0],
     [1, 0],
     [0, -1],
@@ -153,17 +136,28 @@ const DIRS: [number, number][] = [
 export function toVector(dir: Direction): [number, number] {
     return DIRS[dir];
 }
-export function toString(dir: Direction) : string {
-    switch(dir) {
+export function fromKey(key: number): Direction | undefined {
+    switch (key) {
+        case 37:
+            return Direction.Left;
+        case 38:
+            return Direction.Up;
+        case 39:
+            return Direction.Right;
+        case 40:
+            return Direction.Down;
+        default: return undefined;
+    }
+}
+export function toString(dir: Direction): string {
+    switch (dir) {
         case Direction.Down:
-            return 'down';
+            return "down";
         case Direction.Up:
-            return 'up';
+            return "up";
         case Direction.Left:
-            return 'left';
+            return "left";
         case Direction.Right:
-            return 'right';
-        default:
-            return 'down';
+            return "right";
     }
 }

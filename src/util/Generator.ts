@@ -34,9 +34,10 @@ export default class Generator {
 			if(this.placeOnGrid(current)) {
 				this.rooms.push(current);
 				this.grid.line(current, 1);
+				this.grid.setTileAt(current.x + Math.floor(current.width / 2), current.y, 0);
+				this.grid.setTileAt(current.x + Math.floor(current.width / 2), current.y + current.height, 0);
 				numAttempts = 0;
 			}
 		}
-		this.grid.internalDraw();
 	}
 }

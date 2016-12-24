@@ -27,6 +27,9 @@ export function randomStep(min: number, max: number, inc: number): number {
 export function pointEq(a: Point, b: Point): boolean {
     return a.x === b.x && a.y === b.y;
 }
+export function pointHash(a: Point): string {
+    return `${a.x},${a.y}`;
+}
 /// Check if the rectangles `s` and `r` intersect with `spacing` needed between them to be considered intersecting.
 export function intersects(s: Rectangle, r: Rectangle, spacing: number): boolean {
     return Math.abs((s.x + s.width / 2) - (r.x + r.width / 2)) < (s.width + r.width) / 2 + spacing

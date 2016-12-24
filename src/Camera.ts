@@ -1,25 +1,18 @@
 import PlayScene from "./scene/PlayScene";
-import { Sprite } from "./entities";
+import DisplayObject = PIXI.DisplayObject;
 
 /// Manages the transformations that apply to the canvas
-export default class Camera {
-    /// The sprite the camera will follow
-    follow: Sprite | undefined;
-
-    get x(): number {
-        return this.follow === undefined ? 0 : (this.follow.x + 0.5) * PlayScene.TILE_SIZE;
-    }
-
-    get y(): number {
-        return this.follow === undefined ? 0 : (this.follow.y + 0.5) * PlayScene.TILE_SIZE;
-    }
-
-    constructor(follow?: Sprite) {
+export default class Camera extends PIXI.Transform {
+    /// The object the camera will follow
+    follow: DisplayObject | undefined;
+    constructor(follow?: DisplayObject) {
+        super();
+        this.scale.set(2, 2);
         this.follow = follow;
     }
-
-    apply(c: CanvasRenderingContext2D) {
-        c.translate(c.canvas.width / 2, c.canvas.height / 2);
-        c.translate(-this.x, -this.y);
+    update() {
+        if(this.follow !== undefined) {
+            this.position.set((this.follow.x + 0.5) * PlayScene.TILE_SIZE, (this.follow.y + 0.5) * PlayScene.TILE_SIZE);
+        }
     }
 }

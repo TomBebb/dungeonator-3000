@@ -1,26 +1,27 @@
-import Scene from './Scene';
 import Main from '../main';
+import Container = PIXI.Container;
+import Graphics = PIXI.Graphics;
+import Text = PIXI.Text;
 
-export default class LoadingScene implements Scene {
+export default class LoadingScene extends Container {
 	static readonly TEXT = "Loading";
-
+	readonly graphics: Graphics;
 	constructor() {
-
+		super();
+		this.addChild(new Text(LoadingScene.TEXT, {
+			align: 'center',
+			fontFamily: 'sans',
+			fontSize: 8,
+			fill: 'white'
+		}));
+		this.graphics = new Graphics();
+		this.addChild(this.graphics);
+		PIXI.loader.on("progress", () => {
+			this.graphics.beginFill(0xFFFFFF);
+			const p = PIXI.loader.progress;
+			this.graphics.drawRect(0, this.height / 2, p * this.width, 20);
+		});
 	}
-	get progress(): number {
-		return Main.instance.assets.progress;
-	}
-	render(c: CanvasRenderingContext2D): void {
-		c.fillStyle = 'gray';
-		const [w, h] = [c.canvas.width, c.canvas.height];
-		c.fillRect(0, 0, w, h);
-		c.fillStyle = 'white';
-		c.font = '20px sans';
-		const tw = c.measureText(LoadingScene.TEXT);
-		c.fillText(LoadingScene.TEXT, (w - tw.width) / 2, (h - 20) / 2);
-		c.fillRect(0, h - 40, this.progress * w, 20);
-	}
-	update(_: number): void {
-
+	update(dt: number): void {
 	}
 }

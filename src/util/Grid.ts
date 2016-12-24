@@ -1,47 +1,22 @@
-import { Rectangle, Point, pointEq } from "./math";
-import { lowest } from "./util";
+///<reference path='../util/immutable.d.ts'/>
 import PlayScene from "../scene/PlayScene";
+
+import { Rectangle, Point, pointHash, pointEq } from "../util/math";
 import Main from "../main";
-
-
-/// Structural interfaces are cool
-interface Node extends Point {
-    parent?: Node;
-    g: number;
-    /// total cost of the path via current node
-    f?: number;
-}
-
+import { manhattan } from "../path/heuristic"; 
 /// A 2D Grid
 export default class Grid {
-    /// The byte array the tiles are stored in.
-    readonly canvas: HTMLCanvasElement;
-    private readonly context: CanvasRenderingContext2D;
-    /// The byte array the tiles are stored in.
-    protected readonly tiles: Int8Array;
     /// The width of the grid in tiles.
     readonly width: number;
     /// The height of the grid in tiles.
     readonly height: number;
-    private emptyTile: HTMLImageElement;
-    private wallTile: HTMLImageElement;
+
+    readonly tiles: Int8Array;
     constructor(width: number, height: number) {
-        // Initialise the grid
-        this.canvas = document.createElement("canvas")
-        this.canvas.width = width * PlayScene.TILE_SIZE;
-        this.canvas.height = height * PlayScene.TILE_SIZE;
-        this.context = this.canvas.getContext("2d")!;
-        this.tiles = new Int8Array(width * height);
         this.width = width;
         this.height = height;
-        this.canvas.style.display = "none";
+        this.tiles = new Int8Array(width * height);
         this.clear();
-        document.body.appendChild(this.canvas);
-        // Load images
-        const assets = Main.instance.assets;
-        this.emptyTile = assets.getImage("blank.png")!;
-        this.wallTile = assets.getImage("wall1.png")!;
-        this.internalDraw();
     }
     /// Fill the rectangle `r` with the color `c`
     fill(r: Rectangle, c: number = 1): void {
@@ -66,84 +41,103 @@ export default class Grid {
     private index(x: number, y: number): number {
         return x + y * this.width;
     }
-    private tileAt(x: number, y: number): number {
+    tileAt(x: number, y: number): number {
         return this.tiles[this.index(x, y)];
+    }
+    setTileAt(x: number, y: number, v: number) {
+        this.tiles[this.index(x, y)] = v;
     }
     /// Returns true when the position {x, y} is in the grid and empty
     isValidPosition(x: number, y: number): boolean {
         return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
     }
-    /// Draw to the grid's internal buffer
-    internalDraw(): void {
-        this.context.strokeStyle = "0.5px black";
-        for (let y = 0; y < this.height; y++)
-            for (let x = 0; x < this.width; x++)
-                this.context.drawImage(this.tiles[this.index(x, y)] ? this.wallTile : this.emptyTile, x * PlayScene.TILE_SIZE, y * PlayScene.TILE_SIZE);
-    }
-    render(c: CanvasRenderingContext2D): void {
-        c.drawImage(this.canvas, 0, 0);
-    }
-
-
-    findPath(start: Point, goal: Point, heuristic: (a: Point, b: Point) => number): Set<Point> | null {
-        const openList: Set<Node> = new Set<Node>();
-        const closedList: Set<Node> = new Set<Node>();
-        openList.add(Object.assign({
-            g: 0,
-            f: 0 + heuristic(start, goal)
-        }, start));
-        while(openList.size > 0) {
-            const current: Node = lowest<Node>(openList.values(), (v: Node) => v.f!!)!!;
-            if(pointEq(current, goal))
-                return this.constructPath(current);
-            openList.delete(current);
-            closedList.add(current);
-            for(let neighbor of this.neighbors(current)) {
-                if(!closedList.has(neighbor)) {
-                    neighbor.f = neighbor.g + heuristic(neighbor, goal);
-                }
+    search(start: Point, end: Point, maxSearchDistance: number = 16): Immutable.OrderedSet<Node> {
+        const nodes: Node[][] = [];
+        const game: PlayScene = Main.instance.scene as PlayScene;
+        for(let x = 0; x < this.width; x++) {
+            nodes[x] = [];
+            for(let y = 0; y < this.height; y++) {
+                nodes[x][y] = new Node(x, y);
+                nodes[x][y].walkable = game.isValidPosition(x, y);
             }
+        };
+        let closed = Immutable.Set<Node>();
+        let open = Immutable.Set<Node>();
+        const startNode = nodes[start.x][start.y]
+        startNode.cost = 0;
+        startNode.depth = 0;
+        open = open.add(startNode);
+        let maxDepth = 0;
+        while(open.size > 0 && maxDepth < maxSearchDistance) {
+            let current: Node = open.sort((a, b) => a.heuristic + a.cost - b.heuristic - b.cost).first();
+            if(pointEq(current, end))
+                return Grid.constructPath(current);
+            open.delete(current);
+            closed.add(current);
+            this.neighbors(nodes, current).forEach((n) => {
+                if(!closed.has(n) && n.walkable) {
+                    const nextStepCost = current.cost + manhattan(n, end);
+                    if(nextStepCost < n.cost) {
+                        open = open.delete(n);
+                        closed = closed.delete(n);
+                    }
+                    if(!open.has(n) && !closed.has(n)) {
+                        n.cost = nextStepCost;
+                        n.heuristic = manhattan(n, end);
+                        n.parent = current;
+                        maxDepth = Math.max(maxDepth, n.depth);
+                        open = open.add(n);
+                    }
+                }
+            });
         }
-        return null;
+        return Immutable.OrderedSet<Node>();
     }
     /// Create a set containing each neighbour of the node.
-    private neighbors(node: Node): Set<Node> {
-        const nodes = new Array<Node>(4);
-        nodes.push({
-            x: node.x - 1,
-            y: node.y,
-            parent: node,
-            g: node.g + 1
-        });
-        nodes.push({
-            x: node.x + 1,
-            y: node.y,
-            parent: node,
-            g: node.g + 1
-        });
-
-        nodes.push({
-            x: node.x,
-            y: node.y - 1,
-            parent: node,
-            g: node.g + 1
-        });
-        nodes.push({
-            x: node.x,
-            y: node.y + 1,
-            parent: node,
-            g: node.g + 1
-        });
-        // only keep the nodes that have valid positions on the grid.
-        return new Set(nodes.filter((v) => this.isValidPosition(v.x, v.y)));
+    private neighbors(nodes: Node[][], node: Node): Immutable.Set<Node> {
+        let ns = Immutable.Set<Node>();
+        if(node.x - 1 >= 0)
+            ns.add(nodes[node.x - 1][node.y]);
+        if(node.x + 1 < this.width)
+            ns.add(nodes[node.x + 1][node.y]);
+        if(node.y - 1 >= 0)
+            ns.add(nodes[node.x][node.y - 1]);
+        if(node.y + 1 < this.height)
+            ns.add(nodes[node.x][node.y + 1]);
+        return ns;
     }
     /// Make a path from the node by joining up its parent to its parent etc.
-    private constructPath(node: Node): Set<Node> {
-        const path = new Set([node]);
-        while(node.parent !== null) {
+    private static constructPath(node: Node): Immutable.OrderedSet<Node> {
+        let path = Immutable.OrderedSet<Node>([node]);
+        while(node.parent !== undefined) {
             node = node.parent!!;
-            path.add(node);
+            path = path.add(node);
         }
-        return path;
+        return Immutable.OrderedSet(path.reverse());
     }
+}
+
+class Node {
+    readonly x: number;
+    readonly y: number;
+    /// The path cost
+    cost: number;
+    /// The parent of this node
+    private _parent: Node;
+    heuristic: number;
+    depth: number = -1;
+    walkable: boolean = false;
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+    get parent() {
+        return this._parent;
+    }
+
+    set parent(p: Node) {
+        this.depth = p.depth + 1;
+        this._parent  = p;
+    }
+
 }

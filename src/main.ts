@@ -1,28 +1,45 @@
-import Scene from "./scene/Scene";
+///<reference path='./pixi.js.d.ts'/>
+
 import LoadingScene from "./scene/LoadingScene";
 import PlayScene from "./scene/PlayScene";
-import Assets from "./util/Assets";
+import Scene from "./scene/Scene";
 export default class Main {
 	static instance: Main;
+	/// How many seconds between updates.
 	static readonly DELTA = 1 / 30;
-    readonly canvas = document.getElementById('game') ! as HTMLCanvasElement;
-	readonly context = this.canvas.getContext("2d") !;
-	readonly assets = new Assets();
-	scene: Scene = new LoadingScene();
+	/// The renderer
+	readonly renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer;
+	private _scene: Scene;
+	get scene(): Scene {
+		return this._scene;
+	}
+	set scene(s: Scene) {
+		this._scene = s;
+		s.width = this.renderer.width;
+		s.height = this.renderer.height;
+	}
 	constructor() {
-        this.assets.load({
-            images: [ "blank.png", "player.png", "wall1.png", "wall2.png" ],
-            audio: [ ] 
-        }).then((_) => this.scene = new PlayScene());
-		this.canvas.tabIndex = 1;
-		this.context.oImageSmoothingEnabled = false;
-		this.context.msImageSmoothingEnabled = false;
-		this.context.webkitImageSmoothingEnabled = false;
+		this.renderer = PIXI.autoDetectRenderer(720, 480, {
+			backgroundColor: 0x000000,
+	        antialias: false,
+	        roundPixels: true
+		});
+		PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+		this.renderer.view.tabIndex = 1;
+		document.body.appendChild(this.renderer.view);
+		this.scene = new LoadingScene();
+		PIXI.loader.baseUrl = 'assets/';
+		PIXI.loader
+			.add("blank", "blank.png")
+			.add("player", "player.png")
+			.add("wall1", "wall1.png")
+			.add("wall2", "wall2.png")
+			.load((_) => this.scene = new PlayScene());
 		setInterval(() => this.scene.update(Main.DELTA), Main.DELTA * 1000);
 	}
 	render() {
         requestAnimationFrame(this.render.bind(this));
-		this.scene.render(this.context);
+		this.renderer.render(this.scene);
 	}
 }
 
