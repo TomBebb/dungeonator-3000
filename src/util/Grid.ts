@@ -51,7 +51,7 @@ export default class Grid {
     isValidPosition(x: number, y: number): boolean {
         return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
     }
-    findPath(start: Point, goal: Point, max: number = 100): Node[] {
+    findPath(start: Point, goal: Point, max: number = 24): Node[] {
         const closed: Node[] = [];
         const open: Node[] = [{
             g: 0,
@@ -72,9 +72,7 @@ export default class Grid {
                     return Grid.constructPath(n);
                 n.h = manhattan(goal, n);
                 n.f = n.g + n.h;
-                if(open.find((p) => pointEq(p, n) && p.f < n.f) || closed.find((p) => pointEq(p, n) && p.f < n.f))
-                    continue;
-                if(n.g < max)
+                if(n.g < max && !open.find((p) => pointEq(p, n) && p.f < n.f) && !closed.find((p) => pointEq(p, n) && p.f < n.f))
                     open.push(n);
             }
         }
