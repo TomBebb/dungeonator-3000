@@ -1,9 +1,8 @@
 /// <reference path="../extra.d.ts" />
 
-import Camera from "../Camera";
 import Generator from "../util/Generator";
 import UIMap from "../ui/Map";
-import { GamepadControl } from "../control";
+import { GamepadControl, KeyboardControl } from "../control";
 import { Entity } from "../ui/entities";
 import { random, Point } from "../util/math";
 import Container = PIXI.Container;
@@ -14,25 +13,32 @@ export default class PlayScene extends Container {
     readonly delay: number = 0.1;
     private sinceLast: number = 0;
     entities: Entity<any>[] = [
-        Entity.defaultPlayer(this),
-        Entity.defaultEnemy(this)
+        
     ];
+    enemies: Entity<any>[] = [];
+    players: Entity<GamepadControl | KeyboardControl>[] = [];
+    private movedEntities: Entity<any>[] = [];
+    private unmovedEntities: Entity<any>[] = [];
     private inStep: boolean = false;
-    readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
-    readonly camera: Camera = new Camera();
+    private readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
     readonly map: UIMap;
-    currentEntity: number = 0;
+    private addEntity(e: Entity<any>) {
+        this.entities.push(e);
+        if(e.control instanceof GamepadControl || e.control instanceof KeyboardControl)
+            this.players.push(e);
+        else
+            this.enemies.push(e);
+        this.place(e);
+        this.addChild(e);
+    }
     constructor() {
         super();
         const r = Main.instance.renderer;
         this.position.set(r.width / 2, r.height / 2);
         this.map = new UIMap(r.width / PlayScene.TILE_SIZE, r.height / PlayScene.TILE_SIZE);
         this.addChild(this.map);
-        this.camera.follow = this.entities[0];
-        for (const entity of this.entities) {
-            this.addChild(entity);
-            this.place(entity);
-        }
+        this.addEntity(Entity.defaultPlayer(this));
+        this.addEntity(Entity.defaultEnemy(this));
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for(const g of gamepads)
             if(g !== undefined && g !== null)
@@ -67,7 +73,6 @@ export default class PlayScene extends Container {
             return;
         const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(g));
         this.entities.push(player);
-        this.camera.follow = player;
         this.place(player);
         this.addChild(player);
         this.gamepadEntities.set(g.index, player);
@@ -88,30 +93,30 @@ export default class PlayScene extends Container {
             p.y = random(1, this.map.tileHeight - 2) * PlayScene.TILE_SIZE;
         } while (!this.isValidPosition(p.x, p.y) && numAttempts-- > 0);
     }
+    startStep() {
+        for(let i = 0; i < this.entities.length; i++)
+            this.unmovedEntities[i] = this.entities[i];
+        this.inStep = true;
+    }
+    endStep() {
+        this.inStep = false;
+        this.movedEntities.splice(0);
+    }
     update(dt: number): void {
-        this.camera.update();
-        if(this.inStep) {
-            let nextIndex = this.currentEntity + 1;
-            if (nextIndex >= this.entities.length)
-                nextIndex = 0;
-            const es = this.entities[this.currentEntity];
-            if (es.tryMove()) {
-                this.currentEntity = nextIndex;
-                this.inStep = false;
+        for(let i = 0; i < this.unmovedEntities.length; i++) {
+            const u = this.unmovedEntities[i];
+            if (u.tryMove()) {
+                this.unmovedEntities.splice(i, 1);
+                this.movedEntities.push(u);
             }
-        } else {
+        }
+        if(this.inStep && this.unmovedEntities.length === 0) {
+            this.endStep();
+        } else if(!this.inStep) {
             this.sinceLast += dt;
-            if (this.sinceLast >= this.delay) {
-                this.sinceLast -= this.delay;
-                let nextIndex = this.currentEntity + 1;
-                if (nextIndex >= this.entities.length)
-                    nextIndex = 0;
-                const e = this.entities[this.currentEntity];
-                if (e.tryMove()) {
-                    this.currentEntity = nextIndex;
-                } else {
-                    this.inStep = true;
-                }
+            if (this.sinceLast > this.delay) {
+                this.sinceLast %= this.delay;
+                this.startStep();
             }
         }
         const e = this.entities[0];

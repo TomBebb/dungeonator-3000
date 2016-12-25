@@ -38,13 +38,7 @@ export class FollowControl implements Control {
     }
 
     get dir(): Direction | undefined {
-        const nearestEntity: Entity<any> = this.scene.entities.filter(x => this.entity !== x).reduce((a, b) => {
-            if (distSquared(this.entity, a) < distSquared(this.entity, b)) {
-                return a;
-            } else {
-                return b;
-            }
-        });
+        const nearestEntity: Entity<any> = this.scene.players[0];
         if(this.lastPath.length === 0 || this.steps > FollowControl.STEPS_VALID) {
             this.lastPath = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(nearestEntity));
             this.lastPath.pop();
