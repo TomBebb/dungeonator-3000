@@ -5,7 +5,7 @@
         "src/util/*.ts"
     ],
     "compilerOptions": {
-        "target":  "es5",
+        "target":  "es6",
         "module": "amd",
         "noImplicitAny": true,
         "removeComments": true,

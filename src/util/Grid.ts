@@ -1,7 +1,7 @@
 ///<reference path='../util/immutable.d.ts'/>
 import PlayScene from "../scene/PlayScene";
 
-import { Rectangle, Point, pointHash, pointEq } from "../util/math";
+import { Rectangle, Point, pointHash, pointEq } from "../util/math"
 import Main from "../main";
 import { manhattan } from "../path/heuristic"; 
 /// A 2D Grid
@@ -51,93 +51,62 @@ export default class Grid {
     isValidPosition(x: number, y: number): boolean {
         return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
     }
-    search(start: Point, end: Point, maxSearchDistance: number = 16): Immutable.OrderedSet<Node> {
-        const nodes: Node[][] = [];
-        const game: PlayScene = Main.instance.scene as PlayScene;
-        for(let x = 0; x < this.width; x++) {
-            nodes[x] = [];
-            for(let y = 0; y < this.height; y++) {
-                nodes[x][y] = new Node(x, y);
-                nodes[x][y].walkable = game.isValidPosition(x, y);
+    findPath(start: Point, goal: Point, max: number = 100): Node[] {
+        const closed: Node[] = [];
+        const open: Node[] = [{
+            g: 0,
+            h: 0,
+            f: 0,
+            x: start.x,
+            y: start.y
+        }];
+        while(open.length > 0) {
+            // Find lowest f score
+            const q = open.reduce((a, b) => a.f < b.f ? a : b);
+            // Remove from open list
+            open.splice(open.findIndex((v) => v == q), 1);
+            // Push to closed list
+            closed.push(q);
+            for(const n of this.neighbors(q)) {
+                if(pointEq(n, goal))
+                    return Grid.constructPath(n);
+                n.h = manhattan(goal, n);
+                n.f = n.g + n.h;
+                if(open.find((p) => pointEq(p, n) && p.f < n.f) || closed.find((p) => pointEq(p, n) && p.f < n.f))
+                    continue;
+                if(n.g < max)
+                    open.push(n);
             }
-        };
-        let closed = Immutable.Set<Node>();
-        let open = Immutable.Set<Node>();
-        const startNode = nodes[start.x][start.y]
-        startNode.cost = 0;
-        startNode.depth = 0;
-        open = open.add(startNode);
-        let maxDepth = 0;
-        while(open.size > 0 && maxDepth < maxSearchDistance) {
-            let current: Node = open.sort((a, b) => a.heuristic + a.cost - b.heuristic - b.cost).first();
-            if(pointEq(current, end))
-                return Grid.constructPath(current);
-            open.delete(current);
-            closed.add(current);
-            this.neighbors(nodes, current).forEach((n) => {
-                if(!closed.has(n) && n.walkable) {
-                    const nextStepCost = current.cost + manhattan(n, end);
-                    if(nextStepCost < n.cost) {
-                        open = open.delete(n);
-                        closed = closed.delete(n);
-                    }
-                    if(!open.has(n) && !closed.has(n)) {
-                        n.cost = nextStepCost;
-                        n.heuristic = manhattan(n, end);
-                        n.parent = current;
-                        maxDepth = Math.max(maxDepth, n.depth);
-                        open = open.add(n);
-                    }
-                }
-            });
         }
-        return Immutable.OrderedSet<Node>();
+        return [];
     }
     /// Create a set containing each neighbour of the node.
-    private neighbors(nodes: Node[][], node: Node): Immutable.Set<Node> {
-        let ns = Immutable.Set<Node>();
-        if(node.x - 1 >= 0)
-            ns.add(nodes[node.x - 1][node.y]);
-        if(node.x + 1 < this.width)
-            ns.add(nodes[node.x + 1][node.y]);
-        if(node.y - 1 >= 0)
-            ns.add(nodes[node.x][node.y - 1]);
-        if(node.y + 1 < this.height)
-            ns.add(nodes[node.x][node.y + 1]);
-        return ns;
+    private neighbors(node: Node): Node[] {
+        return [
+            { parent: node, g: node.g + 1, x:  node.x - 1, y: node.y},
+            { parent: node, g: node.g + 1, x:  node.x + 1, y: node.y},
+            { parent: node, g: node.g + 1, x:  node.x, y: node.y - 1},
+            { parent: node, g: node.g + 1, x:  node.x, y: node.y + 1},
+        ].filter((n) => this.isValidPosition(n.x, n.y));
     }
     /// Make a path from the node by joining up its parent to its parent etc.
-    private static constructPath(node: Node): Immutable.OrderedSet<Node> {
-        let path = Immutable.OrderedSet<Node>([node]);
+    private static constructPath(node: Node): Node[] {
+        let path = [node];
         while(node.parent !== undefined) {
             node = node.parent!!;
-            path = path.add(node);
+            path.push(node);
         }
-        return Immutable.OrderedSet(path.reverse());
+        return path;
     }
 }
 
-class Node {
+interface Node {
+    readonly parent?: Node;
     readonly x: number;
     readonly y: number;
-    /// The path cost
-    cost: number;
-    /// The parent of this node
-    private _parent: Node;
-    heuristic: number;
-    depth: number = -1;
-    walkable: boolean = false;
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-    get parent() {
-        return this._parent;
-    }
-
-    set parent(p: Node) {
-        this.depth = p.depth + 1;
-        this._parent  = p;
-    }
-
+    /// The cost to get to the node
+    g: number;
+    /// The guessed cost
+    h?: number;
+    f?: number;
 }

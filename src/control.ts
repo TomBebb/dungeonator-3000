@@ -23,9 +23,11 @@ export interface Control {
     button(_: Button): boolean;
 }
 export class FollowControl implements Control {
+    private static readonly STEPS_VALID: number = 5;
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
     lastPath: Point[] = [];
+    private steps: number = 0;
     path: Promise<Point[]> | undefined = undefined;
     constructor(scene: PlayScene) {
         this.scene = scene;
@@ -43,21 +45,16 @@ export class FollowControl implements Control {
                 return b;
             }
         });
-        this.lastPath = [];
-        if(this.path === undefined) {
-            this.path = new Promise((resolve, _) => {
-                const r = this.scene.map.grid.search(this.entity, nearestEntity);
-                resolve(r);
-            });
-            this.path.then(console.log);
-            this.path.then((path:Point[]) => {
-                this.lastPath = path;
-                this.path = undefined;
-            });
+        if(this.lastPath.length === 0 || this.steps > FollowControl.STEPS_VALID) {
+            this.lastPath = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(nearestEntity));
+            this.lastPath.pop();
+            this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
+            this.steps = 0;
         };
         if (nearestEntity && this.lastPath.length > 0) {
-
-            let [dx, dy] = [this.lastPath[0].x - this.entity.x, this.lastPath[0].y - this.entity.y];
+            const p = this.lastPath.pop()!;
+            this.steps += 1;
+            let [dx, dy] = [p.x * PlayScene.TILE_SIZE - this.entity.x, p.y * PlayScene.TILE_SIZE - this.entity.y];
             if (dx === 0 && dy === 0) // when there is no change.
                 return undefined;
             else if (Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
@@ -67,13 +64,18 @@ export class FollowControl implements Control {
         } else
             return undefined;
     }
+    static map(p: Point):Point {
+        return {
+            x: p.x / PlayScene.TILE_SIZE,
+            y: p.y / PlayScene.TILE_SIZE
+        }
+    }
 }
 export class GamepadControl implements Control {
     private readonly deadzone: number = 0.1;
     private readonly gamepad: Gamepad;
     constructor(gamepad: Gamepad) {
         this.gamepad = gamepad;
-        console.log(gamepad);
     }
     get index(): number {
         return this.gamepad.index;
@@ -84,9 +86,6 @@ export class GamepadControl implements Control {
     get dir(): Direction | undefined {
         const a = this.gamepad.axes;
         const b = this.gamepad.buttons;
-        for(let i = 0; i < b.length; i++)
-            if(b[i].pressed)
-                console.log(i);
         if (b[14].pressed || a[0] < this.deadzone)
             return Direction.Left;
         else if (b[15].pressed || a[0] > 1 - this.deadzone)

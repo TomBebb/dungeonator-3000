@@ -56,7 +56,7 @@ export class Entity<C extends Control> extends Dynamic {
     readonly control: C;
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
-    private lastDir: Direction | undefined = undefined;
+    private lastDir: Direction = Direction.Down;
 
     constructor(scene: PlayScene, control: C, source: string = "player", x: number = 0, y: number = 0) {
         super(source, Dynamic.makeAnims(source, 16, 16, {
@@ -102,7 +102,7 @@ export class Entity<C extends Control> extends Dynamic {
         else {
             let [nx, ny] = toVector(cdir);
             [nx, ny] = [this.x + PlayScene.TILE_SIZE * nx, this.y + PlayScene.TILE_SIZE * ny];
-            if (!this.scene.isValidPosition(nx / PlayScene.TILE_SIZE, ny / PlayScene.TILE_SIZE))
+            if (!this.scene.isValidPosition(nx, ny))
                 return false;
             [this.x, this.y] = [nx, ny];
             const anim = this.x === nx && this.y === ny ? "walk" : "stand";
@@ -111,6 +111,14 @@ export class Entity<C extends Control> extends Dynamic {
                 this.lastDir = cdir;
             }
             return true;
+        }
+    }
+    update(dt: number) {
+        super.update(dt);
+        const cdir = this.control.dir || this.lastDir;
+        const scdir = toString(cdir);
+        if(!this.animation.endsWith(scdir)) {
+            this.animation = `${this.animation.split("_")[0]}_${scdir}`;
         }
     }
     /// Create the default player, using a keyboard control

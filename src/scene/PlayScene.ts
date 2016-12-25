@@ -15,8 +15,9 @@ export default class PlayScene extends Container {
     private sinceLast: number = 0;
     entities: Entity<any>[] = [
         Entity.defaultPlayer(this),
-        //Entity.defaultEnemy(this)
+        Entity.defaultEnemy(this)
     ];
+    private inStep: boolean = false;
     readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
     readonly camera: Camera = new Camera();
     readonly map: UIMap;
@@ -24,6 +25,7 @@ export default class PlayScene extends Container {
     constructor() {
         super();
         const r = Main.instance.renderer;
+        this.position.set(r.width / 2, r.height / 2);
         this.map = new UIMap(r.width / PlayScene.TILE_SIZE, r.height / PlayScene.TILE_SIZE);
         this.addChild(this.map);
         this.camera.follow = this.entities[0];
@@ -72,7 +74,7 @@ export default class PlayScene extends Container {
     }
     /// Check if the position `x`, `y` is valid (i.e. clear of entities and tiles)
     isValidPosition(x: number, y: number): boolean {
-        if (!this.map.grid.isValidPosition(x, y))
+        if (!this.map.isValidPosition(x, y))
             return false;
         for (let e of this.entities)
             if (e.x === x && e.y === y)
@@ -82,23 +84,37 @@ export default class PlayScene extends Container {
     /// Attempt to place the point `p` in the game.
     private place(p: Point, numAttempts: number = 5) {
         do {
-            p.x = random(0, this.map.tileWidth) * PlayScene.TILE_SIZE;
-            p.y = random(0, this.map.tileHeight) * PlayScene.TILE_SIZE;
+            p.x = random(1, this.map.tileWidth - 2) * PlayScene.TILE_SIZE;
+            p.y = random(1, this.map.tileHeight - 2) * PlayScene.TILE_SIZE;
         } while (!this.isValidPosition(p.x, p.y) && numAttempts-- > 0);
     }
     update(dt: number): void {
         this.camera.update();
-        this.sinceLast += dt;
-        if (this.sinceLast >= this.delay) {
-            this.sinceLast -= this.delay;
+        if(this.inStep) {
             let nextIndex = this.currentEntity + 1;
             if (nextIndex >= this.entities.length)
                 nextIndex = 0;
-            const e = this.entities[this.currentEntity];
-            if (e.tryMove()) {
+            const es = this.entities[this.currentEntity];
+            if (es.tryMove()) {
                 this.currentEntity = nextIndex;
-                console.log(`${this.currentEntity} moved`);
+                this.inStep = false;
+            }
+        } else {
+            this.sinceLast += dt;
+            if (this.sinceLast >= this.delay) {
+                this.sinceLast -= this.delay;
+                let nextIndex = this.currentEntity + 1;
+                if (nextIndex >= this.entities.length)
+                    nextIndex = 0;
+                const e = this.entities[this.currentEntity];
+                if (e.tryMove()) {
+                    this.currentEntity = nextIndex;
+                } else {
+                    this.inStep = true;
+                }
             }
         }
+        const e = this.entities[0];
+        this.pivot.set(e.x, e.y);
     }
 }

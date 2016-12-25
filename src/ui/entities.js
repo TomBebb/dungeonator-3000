@@ -1,58 +1,40 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 define(["require", "exports", "../control", "../scene/PlayScene"], function (require, exports, control_1, PlayScene_1) {
     "use strict";
-    var Dynamic = (function (_super) {
-        __extends(Dynamic, _super);
-        function Dynamic(source, anims, anim, x, y, frameWidth, frameHeight) {
-            if (frameWidth === void 0) { frameWidth = 16; }
-            if (frameHeight === void 0) { frameHeight = 18; }
-            var _this = _super.call(this, anims[anim]) || this;
-            _this._animations = anims;
-            _this.animationName = anim;
-            _this.x = x;
-            _this.y = y;
-            _this.animationSpeed = 0.2;
-            _this.frameWidth = frameWidth;
-            _this.frameHeight = frameHeight;
-            _this.loop = true;
-            _this.play();
-            return _this;
+    class Dynamic extends PIXI.extras.AnimatedSprite {
+        get animation() {
+            return this.animationName;
         }
-        Object.defineProperty(Dynamic.prototype, "animation", {
-            get: function () {
-                return this.animationName;
-            },
-            set: function (n) {
-                this.animationName = n;
-                this.textures = this._animations[n];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Dynamic.makeAnims = function (source, fw, fh, anims) {
-            var b = new PIXI.BaseTexture(PIXI.loader.resources[source].data);
-            var a = {};
-            for (var anim in anims) {
-                var points = anims[anim];
-                var textures = points.map(function (p) { return new PIXI.Texture(b, new PIXI.Rectangle(p.x, p.y, fw, fh)); });
+        set animation(n) {
+            this.animationName = n;
+            this.textures = this._animations[n];
+        }
+        constructor(source, anims, anim, x, y, frameWidth = 16, frameHeight = 18) {
+            super(anims[anim]);
+            this._animations = anims;
+            this.animationName = anim;
+            this.x = x;
+            this.y = y;
+            this.animationSpeed = 0.2;
+            this.frameWidth = frameWidth;
+            this.frameHeight = frameHeight;
+            this.loop = true;
+            this.play();
+        }
+        static makeAnims(source, fw, fh, anims) {
+            const b = new PIXI.BaseTexture(PIXI.loader.resources[source].data);
+            const a = {};
+            for (const anim in anims) {
+                const points = anims[anim];
+                const textures = points.map((p) => new PIXI.Texture(b, new PIXI.Rectangle(p.x, p.y, fw, fh)));
                 a[anim] = textures;
             }
             return a;
-        };
-        return Dynamic;
-    }(PIXI.extras.AnimatedSprite));
+        }
+    }
     exports.Dynamic = Dynamic;
-    var Entity = (function (_super) {
-        __extends(Entity, _super);
-        function Entity(scene, control, source, x, y) {
-            if (source === void 0) { source = "player"; }
-            if (x === void 0) { x = 0; }
-            if (y === void 0) { y = 0; }
-            var _this = _super.call(this, source, Dynamic.makeAnims(source, 16, 16, {
+    class Entity extends Dynamic {
+        constructor(scene, control, source = "player", x = 0, y = 0) {
+            super(source, Dynamic.makeAnims(source, 16, 16, {
                 stand_up: [{ x: 0, y: 0 }],
                 stand_right: [{ x: 0, y: 18 }],
                 stand_down: [{ x: 0, y: 36 }],
@@ -81,40 +63,45 @@ define(["require", "exports", "../control", "../scene/PlayScene"], function (req
                     { x: 32, y: 54 },
                     { x: 48, y: 54 },
                 ]
-            }), "stand_up", x, y) || this;
-            _this.lastDir = undefined;
-            _this.scene = scene;
-            _this.control = control;
-            if (_this.control instanceof control_1.FollowControl)
-                _this.control.entity = _this;
-            return _this;
+            }), "stand_up", x, y);
+            this.lastDir = 3;
+            this.scene = scene;
+            this.control = control;
+            if (this.control instanceof control_1.FollowControl)
+                this.control.entity = this;
         }
-        Entity.prototype.tryMove = function () {
-            var cdir = this.control.dir;
+        tryMove() {
+            const cdir = this.control.dir;
             if (cdir === undefined)
                 return false;
             else {
-                var _a = control_1.toVector(cdir), nx = _a[0], ny = _a[1];
-                _b = [this.x + PlayScene_1.default.TILE_SIZE * nx, this.y + PlayScene_1.default.TILE_SIZE * ny], nx = _b[0], ny = _b[1];
-                if (!this.scene.isValidPosition(nx / PlayScene_1.default.TILE_SIZE, ny / PlayScene_1.default.TILE_SIZE))
+                let [nx, ny] = control_1.toVector(cdir);
+                [nx, ny] = [this.x + PlayScene_1.default.TILE_SIZE * nx, this.y + PlayScene_1.default.TILE_SIZE * ny];
+                if (!this.scene.isValidPosition(nx, ny))
                     return false;
-                _c = [nx, ny], this.x = _c[0], this.y = _c[1];
-                var anim = this.x === nx && this.y === ny ? "walk" : "stand";
+                [this.x, this.y] = [nx, ny];
+                const anim = this.x === nx && this.y === ny ? "walk" : "stand";
                 if (this.lastDir !== cdir || !this.animationName.startsWith(anim)) {
-                    this.animation = anim + "_" + control_1.toString(cdir);
+                    this.animation = `${anim}_${control_1.toString(cdir)}`;
                     this.lastDir = cdir;
                 }
                 return true;
             }
-            var _b, _c;
-        };
-        Entity.defaultPlayer = function (scene) {
+        }
+        update(dt) {
+            super.update(dt);
+            const cdir = this.control.dir || this.lastDir;
+            const scdir = control_1.toString(cdir);
+            if (!this.animation.endsWith(scdir)) {
+                this.animation = `${this.animation.split("_")[0]}_${scdir}`;
+            }
+        }
+        static defaultPlayer(scene) {
             return new Entity(scene, new control_1.KeyboardControl(), undefined, 2 * PlayScene_1.default.TILE_SIZE, 2 * PlayScene_1.default.TILE_SIZE);
-        };
-        Entity.defaultEnemy = function (scene) {
+        }
+        static defaultEnemy(scene) {
             return new Entity(scene, new control_1.FollowControl(scene), undefined, 10 * PlayScene_1.default.TILE_SIZE, 10 * PlayScene_1.default.TILE_SIZE);
-        };
-        return Entity;
-    }(Dynamic));
+        }
+    }
     exports.Entity = Entity;
 });

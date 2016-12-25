@@ -30,7 +30,9 @@ export default class Map extends Container {
         this.tileHeight = tileHeight;
         this.redraw();
     }
-
+    isValidPosition(x: number, y: number): boolean {
+        return this.grid.isValidPosition(x / PlayScene.TILE_SIZE, y / PlayScene.TILE_SIZE);
+    }
     redraw() {
         // Load images
         const textures = [
