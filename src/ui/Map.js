@@ -16,8 +16,11 @@ define(["require", "exports", "../util/Grid", "../scene/PlayScene", "../util/Gen
             this.tileHeight = tileHeight;
             this.redraw();
         }
-        isValidPosition(x, y) {
-            return this.grid.isValidPosition(x / PlayScene_1.default.TILE_SIZE, y / PlayScene_1.default.TILE_SIZE);
+        isValidAt(p) {
+            return this.grid.isValidAt({ x: p.x / PlayScene_1.default.TILE_SIZE, y: p.y / PlayScene_1.default.TILE_SIZE });
+        }
+        isEmptyAt(p) {
+            return this.grid.isEmptyAt({ x: p.x / PlayScene_1.default.TILE_SIZE, y: p.y / PlayScene_1.default.TILE_SIZE });
         }
         redraw() {
             const textures = [
@@ -27,7 +30,7 @@ define(["require", "exports", "../util/Grid", "../scene/PlayScene", "../util/Gen
             const TS = PlayScene_1.default.TILE_SIZE;
             for (let x = 0; x < this.tileWidth; x++)
                 for (let y = 0; y < this.tileHeight; y++) {
-                    const t = this.grid.tileAt(x, y);
+                    const t = this.grid.tileAt({ x, y });
                     const s = new Sprite(textures[t]);
                     s.position.set(x * TS, y * TS);
                     this.addChild(s);

@@ -8,19 +8,16 @@ export default class LoadingScene extends Container {
 	readonly graphics: Graphics;
 	constructor() {
 		super();
-		this.addChild(new Text(LoadingScene.TEXT, {
+		const r = Main.instance.renderer;
+		const text = new Text(LoadingScene.TEXT, {
 			align: 'center',
 			fontFamily: 'sans',
-			fontSize: 8,
+			fontSize: r.height / 16,
 			fill: 'white'
-		}));
-		this.graphics = new Graphics();
-		this.addChild(this.graphics);
-		PIXI.loader.on("progress", () => {
-			this.graphics.beginFill(0xFFFFFF);
-			const p = PIXI.loader.progress;
-			this.graphics.drawRect(0, this.height / 2, p * this.width, 20);
 		});
+		text.width = r.width;
+		text.height = r.height;
+		this.addChild(text);
 	}
 	update(dt: number): void {
 	}

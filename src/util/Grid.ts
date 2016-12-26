@@ -1,9 +1,10 @@
-///<reference path='../util/immutable.d.ts'/>
 import PlayScene from "../scene/PlayScene";
 
 import { Rectangle, Point, pointHash, pointEq } from "../util/math"
 import Main from "../main";
 import { manhattan } from "../path/heuristic"; 
+import Heap from "./Heap";
+import Tile from "./Tile";
 /// A 2D Grid
 export default class Grid {
     /// The width of the grid in tiles.
@@ -18,74 +19,92 @@ export default class Grid {
         this.tiles = new Int8Array(width * height);
         this.clear();
     }
-    /// Fill the rectangle `r` with the color `c`
-    fill(r: Rectangle, c: number = 1): void {
+    /// Fill the rectangle `r` with the tile `c`
+    fill(r: Rectangle, t: Tile): void {
         for (let x = r.x; x < r.x + r.width; x++)
             for (let y = r.y; y < r.y + r.height; y++)
-                this.tiles[this.index(x, y)] = c;
+                this.tiles[this.index(x, y)] = t;
     }
-    line(r: Rectangle, c: number = 1): void {
+    outline(r: Rectangle, t: Tile): void {
         for (let x = r.x; x <= r.x + r.width; x++) {
-            this.tiles[this.index(x, r.y)] = c;
-            this.tiles[this.index(x, r.y + r.height)] = c;
+            this.tiles[this.index(x, r.y)] = t;
+            this.tiles[this.index(x, r.y + r.height)] = t;
         }
         for (let y = r.y; y <= r.y + r.height; y++) {
-            this.tiles[this.index(r.x, y)] = c;
-            this.tiles[this.index(r.x + r.width, y)] = c;
+            this.tiles[this.index(r.x, y)] = t;
+            this.tiles[this.index(r.x + r.width, y)] = t;
         }
     }
-    clear(): void {
-        this.tiles.fill(1);
-        this.fill({x: 1, y: 1, width: this.width - 2, height: this.height - 2}, 0);
+    hline(x1: number, x2: number, y: number, t: Tile): void {
+        for(const tmp = {x: Math.min(x1, x2), y}; tmp.x <= Math.max(x1, x2); tmp.x++)
+            this.setTileAt(tmp, t);
+    }
+    vline(x: number, y1: number, y2: number, t: Tile): void {
+        for(const tmp = {x, y: Math.min(y1, y2)}; tmp.y <= Math.max(y1, y2); tmp.y++)
+            this.setTileAt(tmp, t);
+    }
+    clear(t: Tile = Tile.Empty): void {
+        this.tiles.fill(t);
     }
     private index(x: number, y: number): number {
         return x + y * this.width;
     }
-    tileAt(x: number, y: number): number {
-        return this.tiles[this.index(x, y)];
+    tileAt(p: Point): Tile {
+        return this.tiles[this.index(p.x, p.y)];
     }
-    setTileAt(x: number, y: number, v: number) {
-        this.tiles[this.index(x, y)] = v;
+    setTileAt(p: Point, t: Tile) {
+        this.tiles[this.index(p.x, p.y)] = t;
+    }
+    /// Returns true when the position `p` is in the grid
+    isValidAt(p: Point): boolean {
+        return p.x >= 0 && p.y >= 0 && p.x < this.width && p.y < this.height;
     }
     /// Returns true when the position {x, y} is in the grid and empty
-    isValidPosition(x: number, y: number): boolean {
-        return x >= 0 && y >= 0 && x < this.width && y < this.height && this.tileAt(x, y) == 0;
+    isEmptyAt(p :Point): boolean {
+        return this.isValidAt(p) && this.tileAt(p) == Tile.Empty;
     }
-    findPath(start: Point, goal: Point, max: number = 24): Node[] {
-        const closed: Node[] = [];
-        const open: Node[] = [{
+    /// Returns true when the position {x, y} is in the grid and not empty
+    isNotEmptyAt(p: Point): boolean {
+        return this.isValidAt(p) && this.tileAt(p) != Tile.Empty;
+    }
+    findPath(start: Point, goal: Point, max: number = 10, isValid: (p: Point) => boolean = (p) => this.isValidAt(p)): Node[] {
+        if(!isValid(start) || !isValid(goal) || pointEq(start, goal))
+            return [];
+        const p = (n: Node) => n.f || 0;
+        const closed: Heap<Node> = new Heap<Node>(p);
+        const open: Heap<Node> = new Heap<Node>(p);
+        open.push({
             g: 0,
             h: 0,
             f: 0,
             x: start.x,
             y: start.y
-        }];
-        while(open.length > 0) {
-            // Find lowest f score
-            const q = open.reduce((a, b) => a.f < b.f ? a : b);
-            // Remove from open list
-            open.splice(open.findIndex((v) => v == q), 1);
+        });
+        while(open.size > 0) {
+            // Find node with lowest f score, and remove from open list
+            const q: Node = open.pop()!;
             // Push to closed list
             closed.push(q);
-            for(const n of this.neighbors(q)) {
+            for(const n of this.neighbors(q, isValid)) {
                 if(pointEq(n, goal))
                     return Grid.constructPath(n);
                 n.h = manhattan(goal, n);
                 n.f = n.g + n.h;
-                if(n.g < max && !open.find((p) => pointEq(p, n) && p.f < n.f) && !closed.find((p) => pointEq(p, n) && p.f < n.f))
+                const nEq = (v: Node) => pointEq(v, n);
+                if(n.g < max && !open.allUnder(n).find(nEq) && !closed.allUnder(n).find(nEq))
                     open.push(n);
             }
         }
         return [];
     }
     /// Create a set containing each neighbour of the node.
-    private neighbors(node: Node): Node[] {
+    private neighbors(node: Node, isValid: (p: Point) => boolean): Node[] {
         return [
             { parent: node, g: node.g + 1, x:  node.x - 1, y: node.y},
             { parent: node, g: node.g + 1, x:  node.x + 1, y: node.y},
             { parent: node, g: node.g + 1, x:  node.x, y: node.y - 1},
             { parent: node, g: node.g + 1, x:  node.x, y: node.y + 1},
-        ].filter((n) => this.isValidPosition(n.x, n.y));
+        ].filter(isValid);
     }
     /// Make a path from the node by joining up its parent to its parent etc.
     private static constructPath(node: Node): Node[] {

@@ -1,6 +1,6 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "../control";
 import PlayScene from "../scene/PlayScene";
-import { Point } from "../util/math";
+import { pointEq, Point } from "../util/math";
 import Main from "../main";
 
 export interface Animations {
@@ -101,11 +101,14 @@ export class Entity<C extends Control> extends Dynamic {
             return false;
         else {
             let [nx, ny] = toVector(cdir);
-            [nx, ny] = [this.x + PlayScene.TILE_SIZE * nx, this.y + PlayScene.TILE_SIZE * ny];
-            if (!this.scene.isValidPosition(nx, ny))
+            const newPos: Point = {
+                x: this.x + PlayScene.TILE_SIZE * nx,
+                y: this.y + PlayScene.TILE_SIZE * ny
+            };
+            if (!this.scene.isEmptyAt(newPos))
                 return false;
-            [this.x, this.y] = [nx, ny];
-            const anim = this.x === nx && this.y === ny ? "walk" : "stand";
+            [this.x, this.y] = [newPos.x, newPos.y];
+            const anim = pointEq(this, newPos) ? "walk" : "stand";
             if (this.lastDir !== cdir || !this.animationName.startsWith(anim)) {
                 this.animation = `${anim}_${toString(cdir)}`;
                 this.lastDir = cdir;

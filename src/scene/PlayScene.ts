@@ -4,19 +4,28 @@ import Generator from "../util/Generator";
 import UIMap from "../ui/Map";
 import { GamepadControl, KeyboardControl } from "../control";
 import { Entity } from "../ui/entities";
-import { random, Point } from "../util/math";
+import { random, pointEq, Point } from "../util/math";
 import Container = PIXI.Container;
+import Text = PIXI.Text;
 import Main from "../main";
 
 export default class PlayScene extends Container {
     static readonly TILE_SIZE = 16;
-    readonly delay: number = 0.1;
+    readonly delay: number = 0.15;
     private sinceLast: number = 0;
     entities: Entity<any>[] = [
         
     ];
     enemies: Entity<any>[] = [];
     players: Entity<GamepadControl | KeyboardControl>[] = [];
+    private floor: number = 0;
+    private readonly top: PIXI.Container = new PIXI.Container();
+    private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
+        fontFamily: "sans",
+        fontSize: 12,
+        fill: "white",
+        align: "left"
+    });
     private movedEntities: Entity<any>[] = [];
     private unmovedEntities: Entity<any>[] = [];
     private inStep: boolean = false;
@@ -33,12 +42,15 @@ export default class PlayScene extends Container {
     }
     constructor() {
         super();
+        this.top.addChild(this.floorLabel);
+        this.addChild(this.top);
         const r = Main.instance.renderer;
         this.position.set(r.width / 2, r.height / 2);
         this.map = new UIMap(r.width / PlayScene.TILE_SIZE, r.height / PlayScene.TILE_SIZE);
         this.addChild(this.map);
         this.addEntity(Entity.defaultPlayer(this));
-        this.addEntity(Entity.defaultEnemy(this));
+        //this.addEntity(Entity.defaultEnemy(this));
+        this.addChild(this.floorLabel);
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for(const g of gamepads)
             if(g !== undefined && g !== null)
@@ -77,21 +89,16 @@ export default class PlayScene extends Container {
         this.addChild(player);
         this.gamepadEntities.set(g.index, player);
     }
-    /// Check if the position `x`, `y` is valid (i.e. clear of entities and tiles)
-    isValidPosition(x: number, y: number): boolean {
-        if (!this.map.isValidPosition(x, y))
-            return false;
-        for (let e of this.entities)
-            if (e.x === x && e.y === y)
-                return false;
-        return true;
+    /// Check if the position `x`, `y` is clear of entities and tiles
+    isEmptyAt(p: Point): boolean {
+        return this.map.isEmptyAt(p) && this.entities.find((q) => pointEq(p, q)) == undefined;
     }
     /// Attempt to place the point `p` in the game.
-    private place(p: Point, numAttempts: number = 5) {
+    private place(p: Point, numAttempts: number = 10) {
         do {
-            p.x = random(1, this.map.tileWidth - 2) * PlayScene.TILE_SIZE;
-            p.y = random(1, this.map.tileHeight - 2) * PlayScene.TILE_SIZE;
-        } while (!this.isValidPosition(p.x, p.y) && numAttempts-- > 0);
+            p.x = Math.floor(Math.random() * this.map.tileWidth) * PlayScene.TILE_SIZE;
+            p.y = Math.floor(Math.random() * this.map.tileHeight) * PlayScene.TILE_SIZE;
+        } while (!this.isEmptyAt(p) && numAttempts-- > 0);
     }
     startStep() {
         for(let i = 0; i < this.entities.length; i++)
@@ -119,7 +126,9 @@ export default class PlayScene extends Container {
                 this.startStep();
             }
         }
-        const e = this.entities[0];
+        const r = Main.instance.renderer;
+        const e = this.players[0];
         this.pivot.set(e.x, e.y);
+        this.top.pivot.set(e.x, e.y);
     }
 }

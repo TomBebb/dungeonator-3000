@@ -30,8 +30,11 @@ export default class Map extends Container {
         this.tileHeight = tileHeight;
         this.redraw();
     }
-    isValidPosition(x: number, y: number): boolean {
-        return this.grid.isValidPosition(x / PlayScene.TILE_SIZE, y / PlayScene.TILE_SIZE);
+    isValidAt(p: Point): boolean {
+        return this.grid.isValidAt({x: p.x / PlayScene.TILE_SIZE, y: p.y / PlayScene.TILE_SIZE});
+    }
+    isEmptyAt(p: Point): boolean {
+        return this.grid.isEmptyAt({x: p.x / PlayScene.TILE_SIZE, y: p.y / PlayScene.TILE_SIZE});
     }
     redraw() {
         // Load images
@@ -42,7 +45,7 @@ export default class Map extends Container {
         const TS = PlayScene.TILE_SIZE;
         for(let x = 0; x < this.tileWidth; x++)
             for(let y = 0; y < this.tileHeight; y++) {
-                const t = this.grid.tileAt(x, y);
+                const t = this.grid.tileAt({x, y});
                 const s = new Sprite(textures[t]);
                 s.position.set(x * TS, y * TS);
                 this.addChild(s);

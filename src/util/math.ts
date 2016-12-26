@@ -18,6 +18,9 @@ export interface Rectangle extends Point, Size {
 export function random(min: number, max: number): number {
     return Math.floor(min + Math.random() * (max - min));
 }
+export function randomIn<T>(array: T[]): T | undefined {
+    return array[Math.floor(Math.random() * array.length)]
+}
 export function round(num: number, inc: number): number {
     return Math.round(num / inc) * inc;
 }

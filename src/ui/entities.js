@@ -1,4 +1,4 @@
-define(["require", "exports", "../control", "../scene/PlayScene"], function (require, exports, control_1, PlayScene_1) {
+define(["require", "exports", "../control", "../scene/PlayScene", "../util/math"], function (require, exports, control_1, PlayScene_1, math_1) {
     "use strict";
     class Dynamic extends PIXI.extras.AnimatedSprite {
         get animation() {
@@ -76,11 +76,14 @@ define(["require", "exports", "../control", "../scene/PlayScene"], function (req
                 return false;
             else {
                 let [nx, ny] = control_1.toVector(cdir);
-                [nx, ny] = [this.x + PlayScene_1.default.TILE_SIZE * nx, this.y + PlayScene_1.default.TILE_SIZE * ny];
-                if (!this.scene.isValidPosition(nx, ny))
+                const newPos = {
+                    x: this.x + PlayScene_1.default.TILE_SIZE * nx,
+                    y: this.y + PlayScene_1.default.TILE_SIZE * ny
+                };
+                if (!this.scene.isEmptyAt(newPos))
                     return false;
-                [this.x, this.y] = [nx, ny];
-                const anim = this.x === nx && this.y === ny ? "walk" : "stand";
+                [this.x, this.y] = [newPos.x, newPos.y];
+                const anim = math_1.pointEq(this, newPos) ? "walk" : "stand";
                 if (this.lastDir !== cdir || !this.animationName.startsWith(anim)) {
                     this.animation = `${anim}_${control_1.toString(cdir)}`;
                     this.lastDir = cdir;
