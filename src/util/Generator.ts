@@ -3,10 +3,10 @@ import Tile from "./Tile";
 import {Size, Rectangle, Point, random, randomIn, intersects} from "./math";
 
 export default class Generator {
-	private static readonly EDGE_DISTANCE: number = 2;
+	private static readonly EDGE_DISTANCE: number = 0;
 	private static readonly MIN_ROOM_SIZE: number = 8;
-	private static readonly MAX_ROOM_SIZE: number = 18;
-	private static readonly NUM_ROOMS: number = 6;
+	private static readonly MAX_ROOM_SIZE: number = 14;
+	private static readonly NUM_ROOMS: number = 8;
 	private static readonly ROOM_SPACING: number = 2;
 
 	public grid: Grid;
@@ -41,16 +41,19 @@ export default class Generator {
 			}
 		}
 		for(let i = 0; i < this.rooms.length; i++) {
-			const room = this.rooms[i];
-			const middle = Generator.middle(room);
-			const last = Generator.middle(this.rooms[(i + 1) % this.rooms.length]);
-			if(Math.random() > 0.5) {
-				this.grid.hline(last.x, room.x, last.y, Tile.Empty);
-				this.grid.vline(room.x, last.y, room.y, Tile.Empty);
-			} else {
-				this.grid.vline(last.x, last.y, room.y, Tile.Empty);
-				this.grid.hline(last.x, room.x, room.y, Tile.Empty);
-			}
+			this.connect(this.rooms[i], this.rooms[(i + 1) % this.rooms.length]);
+			this.connect(this.rooms[i], this.rooms[(i + 2) % this.rooms.length]);
+		}
+	}
+	private connect(a: Rectangle, b: Rectangle) {
+		const middle = Generator.middle(a);
+		const last = Generator.middle(b);
+		if(Math.random() > 0.5) {
+			this.grid.hline(last.x, middle.x, last.y, Tile.Empty);
+			this.grid.vline(middle.x, last.y, middle.y, Tile.Empty);
+		} else {
+			this.grid.vline(last.x, last.y, middle.y, Tile.Empty);
+			this.grid.hline(last.x, middle.x, middle.y, Tile.Empty);
 		}
 	}
 	private static middle(r: Rectangle) : Point {
