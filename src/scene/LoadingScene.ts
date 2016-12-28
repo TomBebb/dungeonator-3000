@@ -19,6 +19,6 @@ export default class LoadingScene extends Container {
 		text.height = r.height;
 		this.addChild(text);
 	}
-	update(dt: number): void {
+	update(_: number): void {
 	}
 }

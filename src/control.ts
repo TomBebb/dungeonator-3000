@@ -1,7 +1,6 @@
 import PlayScene from "./scene/PlayScene";
 import { Entity } from "./ui/entities";
-import { Point, distSquared } from "./util/math";
-import Main from "./main";
+import { Point } from "./util/math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -95,7 +94,6 @@ export class GamepadControl implements Control {
 export class KeyboardControl implements Control {
     down: number[] = [];
     constructor() {
-        const c = Main.instance.renderer.view;
         window.addEventListener("keydown", (e: KeyboardEvent) => this.down.push(e.keyCode), true);
         window.addEventListener("keyup", (e: KeyboardEvent) => {
             const i = this.down.indexOf(e.keyCode);

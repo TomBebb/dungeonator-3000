@@ -1,13 +1,13 @@
 import Grid from "./Grid";
 import Tile from "./Tile";
-import {Size, Rectangle, Point, random, randomIn, intersects} from "./math";
+import {Size, Rectangle, Point, random, intersects} from "./math";
 
 export default class Generator {
-	private static readonly EDGE_DISTANCE: number = 0;
+	private static readonly EDGE_DISTANCE: number = 1;
 	private static readonly MIN_ROOM_SIZE: number = 8;
 	private static readonly MAX_ROOM_SIZE: number = 14;
-	private static readonly NUM_ROOMS: number = 8;
-	private static readonly ROOM_SPACING: number = 2;
+	private static readonly NUM_ROOMS: number = 5;
+	private static readonly ROOM_SPACING: number = 1;
 
 	public grid: Grid;
 	private rooms: Rectangle[] = [];
@@ -44,6 +44,7 @@ export default class Generator {
 			this.connect(this.rooms[i], this.rooms[(i + 1) % this.rooms.length]);
 			this.connect(this.rooms[i], this.rooms[(i + 2) % this.rooms.length]);
 		}
+		this.grid.rooms = this.rooms;
 	}
 	private connect(a: Rectangle, b: Rectangle) {
 		const middle = Generator.middle(a);

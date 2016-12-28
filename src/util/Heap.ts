@@ -60,10 +60,6 @@ export default class Heap<T> {
         return this.content.length;
     }
 
-    private rescoreElement(n: T) {
-        this.sinkDown(this.content.indexOf(n));
-    }
-
     private sinkDown(n: number) {
         // Fetch the element that has to be sunk.
         const element = this.content[n];

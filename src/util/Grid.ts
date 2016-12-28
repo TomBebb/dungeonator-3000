@@ -1,7 +1,4 @@
-import PlayScene from "../scene/PlayScene";
-
-import { Rectangle, Point, pointHash, pointEq } from "../util/math"
-import Main from "../main";
+import { Rectangle, Point, pointEq } from "../util/math"
 import { manhattan } from "../path/heuristic"; 
 import Heap from "./Heap";
 import Tile from "./Tile";
@@ -13,6 +10,8 @@ export default class Grid {
     readonly height: number;
 
     readonly tiles: Int8Array;
+
+    rooms: Rectangle[] = [];
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;

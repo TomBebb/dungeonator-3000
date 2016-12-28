@@ -1,13 +1,9 @@
-///<reference path='../util/immutable.d.ts'/>
-import { Rectangle, Point, pointHash, pointEq } from "../util/math";
+import { Point } from "../util/math";
 import Grid from "../util/Grid";
 import PlayScene from "../scene/PlayScene";
-import Main from "../main";
 import Generator from "../util/Generator";
-import { manhattan } from "../path/heuristic"; 
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
-import Texture = PIXI.Texture;
 
 /// A 2D Grid
 export default class Map extends Container {
@@ -35,6 +31,9 @@ export default class Map extends Container {
     }
     isEmptyAt(p: Point): boolean {
         return this.grid.isEmptyAt({x: p.x / PlayScene.TILE_SIZE, y: p.y / PlayScene.TILE_SIZE});
+    }
+    isNotEmptyAt(p: Point): boolean {
+        return this.grid.isNotEmptyAt({x: p.x / PlayScene.TILE_SIZE, y: p.y / PlayScene.TILE_SIZE});
     }
     redraw() {
         // Load images

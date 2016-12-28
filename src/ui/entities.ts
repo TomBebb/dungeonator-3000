@@ -1,7 +1,6 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "../control";
 import PlayScene from "../scene/PlayScene";
 import { pointEq, Point } from "../util/math";
-import Main from "../main";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
@@ -22,7 +21,7 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
         this.animationName = n;
         this.textures = this._animations[n];
     }
-    constructor(source: string, anims: Animations, anim: string, x: number, y: number, frameWidth: number = 16, frameHeight: number = 18) {
+    constructor(anims: Animations, anim: string, x: number, y: number, frameWidth: number = 16, frameHeight: number = 18) {
         super(anims[anim]);
         this._animations = anims;
         this.animationName = anim;
@@ -59,7 +58,7 @@ export class Entity<C extends Control> extends Dynamic {
     private lastDir: Direction = Direction.Down;
 
     constructor(scene: PlayScene, control: C, source: string = "player", x: number = 0, y: number = 0) {
-        super(source, Dynamic.makeAnims(source, 16, 16, {
+        super(Dynamic.makeAnims(source, 16, 16, {
             stand_up: [ {x: 0, y: 0} ],
             stand_right: [ {x: 0, y: 18} ],
             stand_down: [ {x: 0, y: 36} ],

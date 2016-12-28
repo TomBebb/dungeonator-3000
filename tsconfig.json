@@ -2,10 +2,12 @@
     "include": [
         "src/*.ts",
         "src/scene/*.ts",
-        "src/util/*.ts"
+        "src/util/*.ts",
+        "src/ui/*.ts",
+        "src/path/*.ts"
     ],
     "compilerOptions": {
-        "target":  "es6",
+        "target":  "es5",
         "module": "amd",
         "noImplicitAny": true,
         "removeComments": true,
@@ -14,6 +16,8 @@
         "strictNullChecks": true,
         "noImplicitThis": true,
         "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
         "lib": ["es6", "es2016", "dom"]
