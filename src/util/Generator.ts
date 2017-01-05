@@ -83,6 +83,7 @@ export default class Generator {
 			this.grid.hline(bMid.x, aMid.x, aMid.y, Tile.Empty);
 		}
 	}
+	/// Return the centre tile of the rectangle `r`.
 	private static middle(r: Rectangle) : Point {
 		return {
 			x: r.x + Math.floor(r.width / 2),
