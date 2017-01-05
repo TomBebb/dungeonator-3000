@@ -1,4 +1,5 @@
 /// A binary heap that sorts from lowest to highest
+/// based on pseudcode from tutorial
 export default class Heap<T> {
     readonly content: T[];
     scoreFunction: (n: T) => number;
