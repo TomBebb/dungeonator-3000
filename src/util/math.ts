@@ -48,3 +48,11 @@ export function distSquared(a: Point, b: Point) {
 export function manhattanDistance(p: Point, g: Point): number {
     return Math.abs(p.x - g.x) + Math.abs(p.y - g.y);
 }
+
+/// Return the centre tile of the rectangle `r`.
+export function centre(r: Rectangle) : Point {
+    return {
+        x: r.x + Math.floor(r.width / 2),
+        y: r.y + Math.floor(r.height / 2)
+    };
+}

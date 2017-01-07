@@ -1,6 +1,6 @@
 import Grid from "./Grid";
 import Tile from "./Tile";
-import {Size, Rectangle, Point, random, intersects} from "./math";
+import {Size, Rectangle, centre, random, intersects} from "./math";
 
 /// This is responsible for generating dungeons on a `Grid`.
 export default class Generator {
@@ -15,9 +15,9 @@ export default class Generator {
 	/// The minimum number of tiles between one room's walls and another room's walls.
 	private static readonly ROOM_SPACING: number = 1;
 	/// The number of connections between rooms
-	private static readonly MIN_ROOM_CONNECTIONS: number = 1;
+	private static readonly MIN_ROOM_CORRIDORS: number = 1;
 	/// The number of connections between rooms
-	private static readonly MAX_ROOM_CONNECTIONS: number = 2;
+	private static readonly MAX_ROOM_CORRIDORS: number = 2;
 
 	/// The grid to generate rooms on.
 	grid: Grid;
@@ -46,39 +46,43 @@ export default class Generator {
 	}
 	/// Generate a dungeon floor on the grid, attempting to generate a room a maximum of `numAttempts` times before giving up.
 	public generate(numAttempts: number = 5) {
-		/// Clear the grid to walls
+		// Clear the grid to walls
 		this.grid.clear(Tile.Wall);
 		let _num = numAttempts;
 		while(this.rooms.length < Generator.NUM_ROOMS && --_num > 0) {
-			/// Make a rectangle with default values.
+			// Make a rectangle with default values.
 			const room: Rectangle = {x: 0, y: 0, width: 0, height: 0};
-			/// Generate a room size for the `room`
+			// Generate a room size for the `room`
 			this.generateRoomSize(room);
-			/// If the room could be placed in the dungeon, i.e. its position could be set randomly.
+			// If the room could be placed in the dungeon, i.e. its position could be set randomly.
 			if(this.placeOnGrid(room)) {
-				/// Set all the tiles inside `room` to empty ones.
+				// Set all the tiles inside `room` to empty ones.
 				this.grid.fill(room, Tile.Empty);
-				/// Set all the tiles along `room`'s walls to wall tiles.
+				// Set all the tiles along `room`'s walls to wall tiles.
 				this.grid.outline(room, Tile.Wall);
 				_num = numAttempts;
-				/// Add the room to the `rooms` array.
+				// Add the room to the `rooms` array.
 				this.rooms.push(room);
 			}
 		}
-		/// For each room in the dungeon
+		// For each room in the dungeon
 		for(let i = 0; i < this.rooms.length; i++) {
-			const connections = random(Generator.MIN_ROOM_CONNECTIONS, Generator.MAX_ROOM_CONNECTIONS);
-			/// Connect this room and the other rooms.
-			for(let j = 0; j < connections; j++)
+			// The number of corridors to have between rooms.
+			const corridors = random(Generator.MIN_ROOM_CORRIDORS, Generator.MAX_ROOM_CORRIDORS);
+			// Connect this room and the other rooms.
+			for(let j = 0; j < corridors; j++)
 				this.connect(this.rooms[i], this.rooms[(i + j) % this.rooms.length]);
 		}
-		/// Synchronise the new rooms with the grid's.
+		// Synchronise the new rooms with the grid's.
 		this.grid.rooms = this.rooms;
 	}
 	/// Connect the rooms `a` and `b` with a corridor.
 	private connect(a: Rectangle, b: Rectangle) {
-		const aMid = Generator.middle(a);
-		const bMid = Generator.middle(b);
+		// Find the centre of a
+		const aMid = centre(a);
+		// Find the centre of b
+		const bMid = centre(b);
+		// Make a corridor connecting `aMid` and `bMid`
 		if(Math.random() > 0.5) {
 			this.grid.hline(bMid.x, aMid.x, bMid.y, Tile.Empty);
 			this.grid.vline(aMid.x, bMid.y, aMid.y, Tile.Empty);
@@ -86,12 +90,5 @@ export default class Generator {
 			this.grid.vline(bMid.x, bMid.y, aMid.y, Tile.Empty);
 			this.grid.hline(bMid.x, aMid.x, aMid.y, Tile.Empty);
 		}
-	}
-	/// Return the centre tile of the rectangle `r`.
-	private static middle(r: Rectangle) : Point {
-		return {
-			x: r.x + Math.floor(r.width / 2),
-			y: r.y + Math.floor(r.height / 2)
-		};
 	}
 }
