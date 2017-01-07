@@ -21,7 +21,10 @@ export default class Generator {
 
 	/// The grid to generate rooms on.
 	grid: Grid;
+	/// The array of rooms, which is needed post-gen for fast spawning.
 	private rooms: Rectangle[] = [];
+
+	/// Create a generator on `grid`
 	public Generator(grid: Grid) {
 		this.grid = grid;
 	}
@@ -34,14 +37,16 @@ export default class Generator {
 		size.width = roomSize();
 		size.height = roomSize();
 	}
-	/// Attempt to place the rectangle `rect` on the grid a maximum of `numAttempts` times.
+	/// Attempt to place the room `room` on the grid a maximum of `numAttempts` times.
 	///
-	/// This returns true if the rectangle could be placed i.e. it doesn't overlap with any other rectangles.
-	private placeOnGrid(rect: Rectangle, numAttempts: number = 5): boolean {
+	/// This returns true if the room could be placed i.e. it doesn't overlap with any other rectangles.
+	private placeOnGrid(room: Rectangle, numAttempts: number = 5): boolean {
 		do {
-			rect.x = random(Generator.EDGE_DISTANCE, this.grid.width - rect.width - Generator.EDGE_DISTANCE * 2);
-			rect.y = random(Generator.EDGE_DISTANCE, this.grid.height - rect.height - Generator.EDGE_DISTANCE * 2);
-		} while(this.rooms.find((r: Rectangle) => intersects(r, rect, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
+			/// Generate a random position that should be valid.
+			room.x = random(Generator.EDGE_DISTANCE, this.grid.width - room.width - Generator.EDGE_DISTANCE * 2);
+			room.y = random(Generator.EDGE_DISTANCE, this.grid.height - room.height - Generator.EDGE_DISTANCE * 2);
+			/// Repeat the above if there is a room with `room`.
+		} while(this.rooms.find((r: Rectangle) => intersects(r, room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
 		return numAttempts > 0;
 	}
 	/// Generate a dungeon floor on the grid, attempting to generate a room a maximum of `numAttempts` times before giving up.
@@ -70,7 +75,7 @@ export default class Generator {
 			// The number of corridors to have between rooms.
 			const corridors = random(Generator.MIN_ROOM_CORRIDORS, Generator.MAX_ROOM_CORRIDORS);
 			// Connect this room and the other rooms.
-			for(let j = 0; j < corridors; j++)
+			for(let j = 1; j <= corridors; j++)
 				this.connect(this.rooms[i], this.rooms[(i + j) % this.rooms.length]);
 		}
 		// Synchronise the new rooms with the grid's.
