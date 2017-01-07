@@ -14,6 +14,10 @@ export default class Generator {
 	private static readonly NUM_ROOMS: number = 5;
 	/// The minimum number of tiles between one room's walls and another room's walls.
 	private static readonly ROOM_SPACING: number = 1;
+	/// The number of connections between rooms
+	private static readonly MIN_ROOM_CONNECTIONS: number = 1;
+	/// The number of connections between rooms
+	private static readonly MAX_ROOM_CONNECTIONS: number = 2;
 
 	/// The grid to generate rooms on.
 	grid: Grid;
@@ -63,10 +67,10 @@ export default class Generator {
 		}
 		/// For each room in the dungeon
 		for(let i = 0; i < this.rooms.length; i++) {
-			/// Connect this room and the next room.
-			this.connect(this.rooms[i], this.rooms[(i + 1) % this.rooms.length]);
-			/// Connect this room and the next next room.
-			this.connect(this.rooms[i], this.rooms[(i + 2) % this.rooms.length]);
+			const connections = random(Generator.MIN_ROOM_CONNECTIONS, Generator.MAX_ROOM_CONNECTIONS);
+			/// Connect this room and the other rooms.
+			for(let j = 0; j < connections; j++)
+				this.connect(this.rooms[i], this.rooms[(i + j) % this.rooms.length]);
 		}
 		/// Synchronise the new rooms with the grid's.
 		this.grid.rooms = this.rooms;
