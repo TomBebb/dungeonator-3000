@@ -55,7 +55,7 @@ export default class Map extends Container {
                 const s = new Sprite(textures[t]);
                 // Set the position appropriately.
                 s.position.set(x * TS, y * TS);
-                // Add it to the map.
+                // Add it as a child so it is drawn with the map.
                 this.addChild(s);
             }
     }

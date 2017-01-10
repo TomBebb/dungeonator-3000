@@ -4,6 +4,7 @@ import UIMap from "../ui/Map";
 import { GamepadControl, KeyboardControl } from "../control";
 import { Entity } from "../ui/entities";
 import { randomIn, Rectangle, pointEq, Point } from "../util/math";
+import FastInts from "../util/FastInts";
 import Container = PIXI.Container;
 import Text = PIXI.Text;
 import Main from "../main";
@@ -26,10 +27,11 @@ export default class PlayScene extends Container {
         fill: "white",
         align: "left"
     });
-    private movedEntities: Entity<any>[] = [];
-    private unmovedEntities: Entity<any>[] = [];
-    private inStep: boolean = false;
+    private movedEntities: FastInts = new FastInts();
+    private unmovedEntities: FastInts = new FastInts();
+    private inTurn: boolean = false;
     private readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
+    // The map.
     readonly map: UIMap;
     private addEntity(e: Entity<any>) {
         this.entities.push(e);
@@ -103,30 +105,42 @@ export default class PlayScene extends Container {
         p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
         p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
     }
-    startStep() {
+    /// Start a new turn
+    startTurn() {
+        /// Fill `unmovedEntities` with the entities from `entities`.
         for(let i = 0; i < this.entities.length; i++)
-            this.unmovedEntities[i] = this.entities[i];
-        this.inStep = true;
+            this.unmovedEntities.set(i, i);
+        this.inTurn = true;
     }
-    endStep() {
-        this.inStep = false;
+    /// End the current turn
+    endTurn() {
+        this.inTurn = false;
         this.movedEntities.splice(0);
     }
     update(dt: number): void {
+        // For each entity that hasn't moved ye
         for(let i = 0; i < this.unmovedEntities.length; i++) {
             const u = this.unmovedEntities[i];
+            // If it has moved...
             if (u.tryMove()) {
+                // Remove it from the `unmovedEntities` array for obvious reasons.
                 this.unmovedEntities.splice(i, 1);
+                // Add it to the `movedEntities` array.
                 this.movedEntities.push(u);
             }
         }
-        if(this.inStep && this.unmovedEntities.length === 0) {
-            this.endStep();
-        } else if(!this.inStep) {
+        // When it's still in a turn but there are no more entities that can be moved.
+        if(this.inTurn && this.unmovedEntities.length === 0)
+            // End the turn
+            this.endTurn();
+        // When it's not in a turn
+        else if(!this.inTurn) {
             this.sinceLast += dt;
+            // Once `delay` seconds have passed
             if (this.sinceLast > this.delay) {
                 this.sinceLast %= this.delay;
-                this.startStep();
+                // Start the turn
+                this.startTurn();
             }
         }
         const e = this.players[0];
