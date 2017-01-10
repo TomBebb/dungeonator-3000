@@ -8,6 +8,7 @@ import Container = PIXI.Container;
 import Text = PIXI.Text;
 import Main from "../main";
 
+/// The main scene
 export default class PlayScene extends Container {
     static readonly TILE_SIZE = 16;
     readonly delay: number = 0.15;
