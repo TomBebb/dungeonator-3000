@@ -11,13 +11,13 @@ export default class Generator {
 	/// The minimum room width / height
 	private static readonly MAX_ROOM_SIZE: number = 14;
 	/// The maximum number of rooms to generate in a dungeon 
-	private static readonly NUM_ROOMS: number = 5;
+	private static readonly NUM_ROOMS: number = 10;
 	/// The minimum number of tiles between one room's walls and another room's walls.
 	private static readonly ROOM_SPACING: number = 1;
 	/// The number of connections between rooms
 	private static readonly MIN_ROOM_CORRIDORS: number = 1;
 	/// The number of connections between rooms
-	private static readonly MAX_ROOM_CORRIDORS: number = 2;
+	private static readonly MAX_ROOM_CORRIDORS: number = 3;
 
 	/// The grid to generate rooms on.
 	grid: Grid;
@@ -80,6 +80,7 @@ export default class Generator {
 		}
 		// Synchronise the new rooms with the grid's.
 		this.grid.rooms = this.rooms;
+		console.log(this.rooms.length + " rooms");
 	}
 	/// Connect the rooms `a` and `b` with a corridor.
 	private connect(a: Rectangle, b: Rectangle) {

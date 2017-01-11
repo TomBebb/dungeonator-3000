@@ -13,11 +13,15 @@ import Main from "../main";
 export default class PlayScene extends Container {
     static readonly TILE_SIZE = 16;
     static readonly MAX_ENTITIES = 16;
-    readonly delay: number = 0.15;
+    readonly delay: number = 0.3;
+    /// The number of seconds since the last turn
     private sinceLast: number = 0;
+    /// The entities contained in the scene
     entities: Entity<any>[] = [];
-    enemies: Bits = new Bits(PlayScene.MAX_ENTITIES);
-    players: Bits = new Bits(PlayScene.MAX_ENTITIES);
+    /// The enemies, where each set bit is an index into `entities`.
+    readonly enemies = new Bits(PlayScene.MAX_ENTITIES);
+    /// The players, where each set bit is an index into `entities`.
+    readonly players = new Bits(PlayScene.MAX_ENTITIES);
     private floor: number = 0;
     private readonly top: PIXI.Container = new PIXI.Container();
     private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
@@ -26,7 +30,8 @@ export default class PlayScene extends Container {
         fill: "white",
         align: "left"
     });
-    private movedEntities: Bits = new Bits(PlayScene.MAX_ENTITIES);
+    /// The entities that have moved already in this turn, where every set bit is an index into `entities`.
+    private readonly movedEntities: Bits = new Bits(PlayScene.MAX_ENTITIES);
     private inTurn: boolean = false;
     private readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
     // The map.
@@ -48,7 +53,7 @@ export default class PlayScene extends Container {
         this.addChild(this.top);
         const r = Main.instance.renderer;
         this.position.set(r.width / 2, r.height / 2);
-        this.map = new UIMap(r.width / PlayScene.TILE_SIZE, r.height / PlayScene.TILE_SIZE);
+        this.map = new UIMap(64, 64);
         this.addChild(this.map);
         this.addEntity(Entity.defaultPlayer(this));
         // this.addEntity(Entity.defaultEnemy(this));
@@ -135,7 +140,8 @@ export default class PlayScene extends Container {
             this.sinceLast += dt;
             // Once `delay` seconds have passed
             if (this.sinceLast > this.delay) {
-                this.sinceLast %= this.delay;
+                this.sinceLast -= this.delay;
+                console.log(this.sinceLast)
                 // Start the turn
                 this.startTurn();
             }
