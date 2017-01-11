@@ -1,5 +1,6 @@
 import PlayScene from "./scene/PlayScene";
 import { Entity } from "./ui/entities";
+import Bits from "./util/Bits";
 import { Point } from "./util/math";
 
 /// 2D directions that entities can move in.
@@ -92,29 +93,36 @@ export class GamepadControl implements Control {
     }
 }
 export class KeyboardControl implements Control {
-    down: number[] = [];
+    _dir: Set<Direction> = new Set();
+    keys: Bits = new Bits(4);
     constructor() {
-        window.addEventListener("keydown", (e: KeyboardEvent) => this.down.push(e.keyCode), true);
+        window.addEventListener("keydown", (e: KeyboardEvent) => {
+            if(e.keyCode === 32)
+                this.keys.set(Button.Primary);
+            else {
+                const d = fromKey(e.keyCode);
+                if(d !== undefined)
+                    this._dir.add(d);
+            }
+        });
         window.addEventListener("keyup", (e: KeyboardEvent) => {
-            const i = this.down.indexOf(e.keyCode);
-            if(i >= 0)
-                this.down.splice(i);
-        }, true);
+            if(e.keyCode === 32)
+                this.keys.unset(Button.Primary);
+            else {
+                const d = fromKey(e.keyCode);
+                if(d !== undefined)
+                    this._dir.delete(d);
+            }
+        });
     }
 
     get dir(): Direction | undefined {
-        for(const key of this.down) {
-            const dir = fromKey(key);
-            if (dir !== undefined)
-                return dir;
-        }
-        return undefined;
+        const iter = this._dir.entries().next();
+        return iter.value == undefined ? undefined : iter.value[0];
     }
 
     button(b: Button): boolean {
-        if (b === Button.Primary)
-            return this.down.indexOf(32) >= 0;
-        else return false;
+        return this.keys.get(b);
     }
 
 }
