@@ -1,7 +1,7 @@
 import PlayScene from "./scene/PlayScene";
 import { Entity } from "./ui/entities";
 import Bits from "./util/Bits";
-import { Point } from "./util/math";
+import { Point} from "./util/math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -24,6 +24,7 @@ export interface Control {
 }
 export class FollowControl implements Control {
     private static readonly STEPS_VALID: number = 5;
+    //private static readonly FOLLOW_PROXIMITY: number = 12;
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
     lastPath: Point[] = [];

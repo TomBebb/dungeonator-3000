@@ -16,17 +16,17 @@ export default class Bits {
 	unset(index: number) {
 		this.array[index << 5] &= ~(1 << (index & 0xF));
 	}
-	setAll(start:number = 0, end:number = this.array.length) {
-		for(let i = start; i < end; i++)
+	setAll(start: number = 0, end: number = this.array.length) {
+		for (let i = start; i < end; i++)
 			this.set(i);
 	}
-	unsetAll(start:number = 0, end:number = this.array.length) {
-		for(let i = start; i < end; i++)
+	unsetAll(start: number = 0, end: number = this.array.length) {
+		for (let i = start; i < end; i++)
 			this.unset(i);
 	}
 	first(value: boolean): number {
-		for(let i = 0; i < this.length; i++)
-			if(this.get(i) === value)
+		for (let i = 0; i < this.length; i++)
+			if (this.get(i) === value)
 				return i;
 		return -1;
 	}
@@ -35,8 +35,8 @@ export default class Bits {
 		this.length = 0;
 	}
 	all(value: boolean) {
-		for(let i = 0; i < this.length; i++)
-			if(this.get(i) != value)
+		for (let i = 0; i < this.length; i++)
+			if (this.get(i) != value)
 				return false;
 		return true;
 	}

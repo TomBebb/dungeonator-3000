@@ -5,6 +5,7 @@ import { GamepadControl, KeyboardControl } from "../control";
 import { Entity } from "../ui/entities";
 import { randomIn, Rectangle, pointEq, Point } from "../util/math";
 import Bits from "../util/Bits";
+import Counter from "../util/Counter";
 import Container = PIXI.Container;
 import Text = PIXI.Text;
 import Main from "../main";
@@ -13,9 +14,10 @@ import Main from "../main";
 export default class PlayScene extends Container {
     static readonly TILE_SIZE = 16;
     static readonly MAX_ENTITIES = 16;
-    readonly delay: number = 0.3;
+    static readonly TURN_DELAY = 0.1;
+    readonly counter: Counter = new Counter();
     /// The number of seconds since the last turn
-    private sinceLast: number = 0;
+    // private sinceLast: number = 0;
     /// The entities contained in the scene
     entities: Entity<any>[] = [];
     /// The enemies, where each set bit is an index into `entities`.
@@ -40,7 +42,7 @@ export default class PlayScene extends Container {
     private addEntity(e: Entity<any>) {
         const index = this.entities.length;
         this.entities.push(e);
-        if(e.control instanceof GamepadControl || e.control instanceof KeyboardControl)
+        if (e.control instanceof GamepadControl || e.control instanceof KeyboardControl)
             this.players.set(index);
         else
             this.enemies.set(index);
@@ -58,9 +60,10 @@ export default class PlayScene extends Container {
         this.addEntity(Entity.defaultPlayer(this));
         // this.addEntity(Entity.defaultEnemy(this));
         this.addChild(this.floorLabel);
+        this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
-        for(const g of gamepads)
-            if(g !== undefined && g !== null)
+        for (const g of gamepads)
+            if (g !== undefined && g !== null)
                 this.connectGamepad(g);
         // Register an event handler for when gamepads are connected
         window.addEventListener("gamepadconnected", (ge: GamepadEvent) => {
@@ -68,13 +71,13 @@ export default class PlayScene extends Container {
         });
         // Register an event handler for when gamepads are disconnected
         window.addEventListener("gamepaddisconnected", (ge: GamepadEvent) => {
-            const e = this.gamepadEntities.get(ge.gamepad.index)!;
+            const e = this.gamepadEntities.get(ge.gamepad.index) !;
             this.entities.splice(this.entities.indexOf(e), 1);
             this.removeChild(e);
         });
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;
-        
+
         if (n.publishServer != null) {
             n.publishServer("Game session", {}).then((server: Server) => {
                 server.onfetch = (event: FetchEvent) => {
@@ -87,13 +90,12 @@ export default class PlayScene extends Container {
             });
         }
     }
+    /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
-        if(this.gamepadEntities.has(g.index))
+        if (this.gamepadEntities.has(g.index))
             return;
         const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(g));
-        this.entities.push(player);
-        this.place(player);
-        this.addChild(player);
+        this.addEntity(player);
         this.gamepadEntities.set(g.index, player);
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
@@ -107,7 +109,7 @@ export default class PlayScene extends Container {
     /// Attempt to place the point `p` in the game.
     private place(p: Point) {
         // Get a random room
-        const r: Rectangle = randomIn(this.map.grid.rooms)!;
+        const r: Rectangle = randomIn(this.map.grid.rooms) !;
         // Place p in the room
         p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
         p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
@@ -123,28 +125,24 @@ export default class PlayScene extends Container {
         this.movedEntities.clear();
     }
     update(dt: number): void {
-        // For each entity
-        for(let i = 0; i < this.entities.length; i++) {
-            if(this.movedEntities.get(i))
-                continue;
-            // If it could be moved
-            if (this.entities[i].tryMove())
-                this.movedEntities.unset(i);
-        }
-        // When it's still in a turn but there are no more entities that can be moved.
-        if(this.inTurn && !this.movedEntities.all(true))
-            // End the turn
-            this.endTurn();
-        // When it's not in a turn
-        else if(!this.inTurn) {
-            this.sinceLast += dt;
-            // Once `delay` seconds have passed
-            if (this.sinceLast > this.delay) {
-                this.sinceLast -= this.delay;
-                console.log(this.sinceLast)
-                // Start the turn
-                this.startTurn();
+        this.counter.update(dt);
+        // If it is in a turn
+        if (this.inTurn) {
+            let numMoved = 0;
+            // For each entity
+            for (let i = 0; i < this.entities.length; i++) {
+                // Ignore entities that have moved
+                if (this.movedEntities.get(i)) {
+                    numMoved += 1;
+                    continue;
+                }
+                // If it could be moved
+                if (this.entities[i].tryMove())
+                    this.movedEntities.set(i);
             }
+            if(numMoved === this.entities.length)
+                // End the turn
+                this.endTurn();
         }
         // Get the first player in entities.
         const e = this.entities[this.players.first(true)];

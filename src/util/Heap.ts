@@ -1,121 +1,76 @@
-/// A binary heap that sorts from lowest to highest
-/// based on pseudcode from tutorial
+/// A binary heap that sorts from lowest to highest based on tutorial
+/// AKA An array min-heap
+/// https://interactivepython.org/runestone/static/pythonds/Trees/BinaryHeapImplementation.html
 export default class Heap<T> {
-    readonly content: T[];
-    scoreFunction: (n: T) => number;
+    readonly heap: T[] = [];
+    size: number = 0;
+    score: (n: T) => number;
 
-    constructor(scoreFunction: (n: T) => number) {
-        this.content = [];
-        this.scoreFunction = scoreFunction;
+    constructor(score: (n: T) => number) {
+        this.score = score;
+        this.heap.push(null as any);
     }
-
-    push(n: T): void {
-        // Add the new node to the end of the array.
-        this.content.push(n);
-        // Allow it to sink down.
-        this.sinkDown(this.content.length - 1);
-    }
-
-    pop(): T | undefined {
-        // Store the first node so we can return it later.
-        const result = this.content[0];
-        // Get the node at the end of the array.
-        const end = this.content.pop();
-        // If there are any elements left, put the end node at the
-        // start, and let it bubble up.
-        if (this.content.length > 0) {
-            this.content[0] = end!;
-            this.bubbleUp(0);
+    /// Positions items correctly, moving down the tree
+    private percUp(i: number) {
+        while (i / 2 < 0) {
+            if(this.score(this.heap[i]) < this.score(this.heap[i / 2])) {
+                const tmp = this.heap[i / 2]!;
+                this.heap[i / 2] = this.heap[i];
+                this.heap[i] = tmp;
+            }
+            i /= 2;
         }
-        return result;
     }
-
-    allSatisfying(v: T, compare: (a:number, b:number) => boolean): T[] {
-        const score = this.scoreFunction(v);
-        const i = this.content.findIndex((v: T) => compare(score, this.scoreFunction(v)));
-        if(i < 0)
-            return [];
+    insert(v: T) {
+        this.heap.push(v);
+        this.size += 1;
+        this.percUp(this.size);
+    }
+    /// Positions items correctly, moving up the tree
+    private percDown(i: number) {
+        while(i * 2 <= this.size) {
+            const mc = this.minChild(i);
+            if(this.heap[i] > this.heap[mc]) {
+                const tmp = this.heap[i]!;
+                this.heap[i] = this.heap[mc];
+                this.heap[mc] = tmp;
+            }
+            i = mc;
+        }
+    }
+    /// Get the minimum child node in the tree of `index`
+    private minChild(i: number) {
+        if(i * 2 + 1 > this.size)
+            return i * 2;
+        else if(this.heap[i * 2] < this.heap[i * 2 + 1])
+            return i * 2;
         else
-            return this.content.slice(0, i);
+            return i * 2 + 1;
     }
+    private smallerThan(v: number, pos: number, arr: T[]) {
+        if(pos >= this.size || pos < 1)
+            return;
+        if(this.score(this.heap[pos]) >= v)
+            // Skip this node and its descendants, as they all >= x.
+            return;
+        arr.push(this.heap[pos]);
+        console.log(arr);
+        this.smallerThan(v, pos * 2, arr);
+        this.smallerThan(v, pos * 2 + 1, arr);
+    }
+
     allUnder(v: T): T[] {
-        return this.allSatisfying(v, (a, b) => a <= b);
+        const arr: T[] = [];
+        const pos = this.heap.indexOf(v, 1);
+        this.smallerThan(this.score(v), pos, arr);
+        return arr;
     }
-
-    remove(n: T): void {
-        const i = this.content.indexOf(n);
-
-        // When it is found, the process seen in 'pop' is repeated
-        // to fill up the hole.
-        const end = this.content.pop()!;
-        if (i !== this.content.length - 1) {
-            this.content[i] = end;
-            if (this.scoreFunction(end) < this.scoreFunction(n))
-                this.sinkDown(i);
-            else
-                this.bubbleUp(i);
-        }
-    }
-
-    get size(): number {
-        return this.content.length;
-    }
-
-    private sinkDown(n: number) {
-        // Fetch the element that has to be sunk.
-        const element = this.content[n];
-        // When at 0, an element can not sink any further.
-        while (n > 0) {
-            // Compute the parent element's index, and fetch it.
-            const parentN = ((n + 1) >> 1) - 1,
-            parent = this.content[parentN];
-            // Swap the elements if the parent is greater.
-            if (this.scoreFunction(element) < this.scoreFunction(parent)) {
-                this.content[parentN] = element;
-                this.content[n] = parent;
-                // Update 'n' to continue at the new position.
-                n = parentN;
-            }
-            // Found a parent that is less, no need to sink any further.
-            else
-                break;
-        }
-    }
-
-    private bubbleUp(n: number) {
-        // Look up the target element and its score.
-        const length = this.content.length,
-            element = this.content[n],
-            elemScore = this.scoreFunction(element);
-
-        while (true) {
-            // Compute the indices of the child elements.
-            const child2N = (n + 1) << 1;
-            const child1N = child2N - 1;
-            // This is used to store the new position of the element, if any.
-            let swap = null;
-            let child1Score;
-            // If the first child exists (is inside the array)...
-            if (child1N < length) {
-                // Look it up and compute its score.
-                const child1 = this.content[child1N];
-                child1Score = this.scoreFunction(child1);
-
-                // If the score is less than our element's, we need to swap.
-                if (child1Score < elemScore)
-                    swap = child1N;
-            }
-            if(child2N < length) {
-                const child2 = this.content[child2N];
-                const child2Score = this.scoreFunction(child2);
-                if(child2Score < (swap === null ? elemScore : child1Score))
-                    swap = child2N;
-            }
-            if(swap !== null) {
-                this.content[n] = this.content[swap];
-                this.content[swap] = element;
-                n = swap;
-            } else break;
-        }
+    delMin(): T | undefined {
+        const retVal = this.heap[1];
+        this.heap[1] = this.heap[this.size];
+        this.size -= 1;
+        this.heap.pop();
+        this.percDown(1);
+        return retVal;
     }
 }

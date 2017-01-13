@@ -79,7 +79,7 @@ export default class Grid {
         const closed: Heap<Node> = new Heap<Node>(p);
         // The list of nodes that should be processed.
         const open: Heap<Node> = new Heap<Node>(p);
-        open.push({
+        open.insert({
             g: 0,
             h: 0,
             f: 0,
@@ -89,9 +89,9 @@ export default class Grid {
         // While there are still nodes waiting to be processed
         while(open.size > 0) {
             // Find node with lowest f score, and remove from open list
-            const q: Node = open.pop()!;
+            const q: Node = open.delMin()!;
             // Push to closed list
-            closed.push(q);
+            closed.insert(q);
             // For each valid neighbour of the tile.
             for(const n of this.neighbors(q, isValid)) {
                 // If the neighbour is the goal point
@@ -102,15 +102,16 @@ export default class Grid {
                 n.h = manhattan(goal, n);
                 // Make score from combined distance to point and cost to get to it
                 n.f = n.g + n.h;
-                // Make a function that returns true when the node given is in the same place as the paramete.
-                const nEq = (v: Node) => pointEq(v, n);
                 // If the node is within a certain number of steps away, and there are no nodes in the open and closed lists with lower scores.
-                if(n.g < max && !open.allUnder(n).find(nEq) && !closed.allUnder(n).find(nEq))
+                if(n.g < max && !Grid.hasNodeUnder(open, n) && !Grid.hasNodeUnder(closed, n))
                     // Add the node to the open list, so the node can be processed by another iteration of the while loop
-                    open.push(n);
+                    open.insert(n);
             }
         }
         return [];
+    }
+    private static hasNodeUnder(h: Heap<Node>, n: Node): boolean {
+        return h.heap.slice(1).find((v: Node) => pointEq(v, n) && v.f < n.f) !== undefined;
     }
     /// Create a set containing each neighbour of the node.
     private neighbors(node: Node, isValid: (p: Point) => boolean): Node[] {
