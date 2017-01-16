@@ -117,6 +117,8 @@ export default class PlayScene extends Container {
     /// Start a new turn
     startTurn() {
         this.inTurn = true;
+        for(const c of this.entities)
+            c.visible = Math.abs(c.x - this.pivot.x) * 1.5 < Main.instance.renderer.width && Math.abs(c.y - this.pivot.y) * 1.5 < Main.instance.renderer.height;
     }
     /// End the current turn
     endTurn() {
