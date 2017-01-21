@@ -96,6 +96,7 @@ export class Entity<C extends Control> extends Dynamic {
     tryMove(): boolean {
         // Cache the result of the direction since it is computed each time it is accessed.
         const cdir = this.control.dir;
+        
         if (cdir === undefined)
             return false;
         else {
@@ -128,7 +129,7 @@ export class Entity<C extends Control> extends Dynamic {
         return new Entity(scene, new KeyboardControl(), undefined, 2 * PlayScene.TILE_SIZE, 2 * PlayScene.TILE_SIZE);
     }
     /// Create the default enemy
-    static defaultEnemy(scene: PlayScene): Entity<FollowControl> {
-        return new Entity(scene, new FollowControl(scene), undefined, 10 * PlayScene.TILE_SIZE, 10 * PlayScene.TILE_SIZE);
+    static defaultEnemy(scene: PlayScene, follow?: Entity<any>): Entity<FollowControl> {
+        return new Entity(scene, new FollowControl(scene, follow), undefined, 10 * PlayScene.TILE_SIZE, 10 * PlayScene.TILE_SIZE);
     }
 }

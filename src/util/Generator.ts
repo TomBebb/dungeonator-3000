@@ -7,9 +7,9 @@ export default class Generator {
 	/// The minimum number of tiles between a room's walls and the grid's edge
 	private static readonly EDGE_DISTANCE: number = 1;
 	/// The minimum room width / height
-	private static readonly MIN_ROOM_SIZE: number = 8;
+	private static readonly MIN_ROOM_SIZE: number = 10;
 	/// The minimum room width / height
-	private static readonly MAX_ROOM_SIZE: number = 14;
+	private static readonly MAX_ROOM_SIZE: number = 20;
 	/// The maximum number of rooms to generate in a dungeon 
 	private static readonly NUM_ROOMS: number = 10;
 	/// The minimum number of tiles between one room's walls and another room's walls.

@@ -20,10 +20,8 @@ export default class PlayScene extends Container {
     // private sinceLast: number = 0;
     /// The entities contained in the scene
     entities: Entity<any>[] = [];
-    /// The enemies, where each set bit is an index into `entities`.
-    readonly enemies = new Bits(PlayScene.MAX_ENTITIES);
     /// The players, where each set bit is an index into `entities`.
-    readonly players = new Bits(PlayScene.MAX_ENTITIES);
+    readonly players: Entity<any>[] = [];
     private floor: number = 0;
     private readonly top: PIXI.Container = new PIXI.Container();
     private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
@@ -40,12 +38,9 @@ export default class PlayScene extends Container {
     readonly map: UIMap;
     /// Add an entity
     private addEntity(e: Entity<any>) {
-        const index = this.entities.length;
         this.entities.push(e);
         if (e.control instanceof GamepadControl || e.control instanceof KeyboardControl)
-            this.players.set(index);
-        else
-            this.enemies.set(index);
+            this.players.push(e);
         this.place(e);
         this.addChild(e);
     }
@@ -55,10 +50,11 @@ export default class PlayScene extends Container {
         this.addChild(this.top);
         const r = Main.instance.renderer;
         this.position.set(r.width / 2, r.height / 2);
-        this.map = new UIMap(64, 64);
+        this.map = new UIMap(48, 48);
         this.addChild(this.map);
-        this.addEntity(Entity.defaultPlayer(this));
-        // this.addEntity(Entity.defaultEnemy(this));
+        const player = Entity.defaultPlayer(this);
+        this.addEntity(player);
+        this.addEntity(Entity.defaultEnemy(this, player));
         this.addChild(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
@@ -78,7 +74,7 @@ export default class PlayScene extends Container {
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;
 
-        if (n.publishServer != null) {
+        if (n.publishServer != null)
             n.publishServer("Game session", {}).then((server: Server) => {
                 server.onfetch = (event: FetchEvent) => {
                     const html = `<h1>Game controller</h1>
@@ -88,7 +84,6 @@ export default class PlayScene extends Container {
                     }));
                 };
             });
-        }
     }
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
@@ -139,16 +134,20 @@ export default class PlayScene extends Container {
                     continue;
                 }
                 // If it could be moved
-                if (this.entities[i].tryMove())
+                if (this.entities[i].tryMove()) {
+                    console.log(this.entities[i].control);
                     this.movedEntities.set(i);
+                }
             }
             if(numMoved === this.entities.length)
                 // End the turn
                 this.endTurn();
         }
         // Get the first player in entities.
-        const e = this.entities[this.players.first(true)];
-        this.pivot.set(e.x, e.y);
-        this.top.pivot.set(e.x, e.y);
+        const e = this.players[0];
+        if(e !== undefined) {
+            this.pivot.set(e.x, e.y);
+            this.top.pivot.set(e.x, e.y);
+        }
     }
 }

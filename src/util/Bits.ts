@@ -2,7 +2,7 @@ export default class Bits {
 	private array: Int32Array;
 	length: number;
 	constructor(capacity: number) {
-		this.array = new Int32Array(capacity << 5);
+		this.array = new Int32Array(capacity >> 5);
 		this.length = 0;
 	}
 	get(index: number): boolean {

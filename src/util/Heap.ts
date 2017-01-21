@@ -1,76 +1,123 @@
 /// A binary heap that sorts from lowest to highest based on tutorial
 /// AKA An array min-heap
-/// https://interactivepython.org/runestone/static/pythonds/Trees/BinaryHeapImplementation.html
+/// http://eloquentjavascript.net/1st_edition/appendix2.html
 export default class Heap<T> {
-    readonly heap: T[] = [];
-    size: number = 0;
-    score: (n: T) => number;
+    readonly content: T[] = [];
+    score: (v: T) => number;
 
-    constructor(score: (n: T) => number) {
+    constructor(score: (v: T) => number) {
         this.score = score;
-        this.heap.push(null as any);
     }
-    /// Positions items correctly, moving down the tree
-    private percUp(i: number) {
-        while (i / 2 < 0) {
-            if(this.score(this.heap[i]) < this.score(this.heap[i / 2])) {
-                const tmp = this.heap[i / 2]!;
-                this.heap[i / 2] = this.heap[i];
-                this.heap[i] = tmp;
-            }
-            i /= 2;
+    get size() {
+        return this.content.length;
+    }
+    clear() {
+        this.content.splice(0);
+    }
+    push(element: T): void {
+        this.content.push(element);
+        this.bubbleUp(this.content.length - 1);
+    }
+    pop(): T | undefined {
+        const result = this.content[0]!;
+        const end = this.content.pop()!;
+        if(this.content.length > 0) {
+            this.content[0] = end;
+            this.sinkDown(0);
+        }
+        return result;
+    }
+    private bubbleUp(n: number) {
+        const element = this.content[n];
+        const score = this.score(element);
+        while(n > 0) {
+            const parentN = Math.floor((n + 1) / 2) - 1;
+            const parent = this.content[parentN]!;
+            if(score >= this.score(parent))
+                break;
+            this.content[parentN] = element;
+            this.content[n] = parent;
+            n = parentN;
         }
     }
-    insert(v: T) {
-        this.heap.push(v);
-        this.size += 1;
-        this.percUp(this.size);
+    /*
+    private leftChild(i: number): T | undefined {
+        return this.content[Heap.leftChildIndex(i)];
     }
-    /// Positions items correctly, moving up the tree
-    private percDown(i: number) {
-        while(i * 2 <= this.size) {
-            const mc = this.minChild(i);
-            if(this.heap[i] > this.heap[mc]) {
-                const tmp = this.heap[i]!;
-                this.heap[i] = this.heap[mc];
-                this.heap[mc] = tmp;
+    private rightChild(i: number): T | undefined {
+        return this.content[Heap.rightChildIndex(i)];
+    }*/
+    private nextChild(i: number): number {
+        const leftIndex = Heap.leftChildIndex(i);
+        const rightIndex = Heap.rightChildIndex(i);
+        const left = this.content[leftIndex];
+        const right = this.content[rightIndex];
+        if(left === undefined && right == undefined)
+            return -1;
+        if(left === undefined || right < left)
+            return rightIndex;
+        else if(right === undefined || left < right)
+            return leftIndex;
+        else return -1;
+    }
+    private static leftChildIndex(i: number): number {
+        return (i + 1) * 2;
+    }
+    private static rightChildIndex(i: number): number {
+        return (i + 1) * 2 - 1;
+    }
+    forEach(): Iterator<T> {
+        let i = 0;
+        return {
+            next: (_) => {
+                const oi = i;
+                i = this.nextChild(i);
+                return {
+                    value: this.content[oi],
+                    done: oi === -1
+                };
             }
-            i = mc;
+        };
+    }
+    allUnder(score: number): Iterator<T> {
+        let i = 0;
+        return {
+            next: (_) => {
+                const oi = i;
+                i = this.nextChild(i);
+                return {
+                    value: this.content[oi],
+                    done: oi === -1 || this.score(this.content[oi]) > score
+                };
+            }
+        };
+    }
+    private sinkDown(n: number) {
+        const length = this.content.length;
+        const element = this.content[n];
+        const elemScore = this.score(element!);
+        while(true) {
+            const child2N = Heap.leftChildIndex(n);
+            const child1N = Heap.rightChildIndex(n);
+            let swap: number = -1;
+            let child1Score: number = -1;
+            if(child1N < length) {
+                const child = this.content[child1N]!;
+                child1Score = this.score(child);
+                if(child1Score < elemScore)
+                    swap = child1N;
+            }
+            if(child2N < length) {
+                const child = this.content[child2N]!;
+                const score = this.score(child);
+                if(score < (swap === -1 ? elemScore : child1Score))
+                    swap = child2N;
+            }
+            if(swap === -1)
+                break;
+            this.content[n] = this.content[swap];
+            this.content[swap!] = element;
+            n = swap!;
         }
-    }
-    /// Get the minimum child node in the tree of `index`
-    private minChild(i: number) {
-        if(i * 2 + 1 > this.size)
-            return i * 2;
-        else if(this.heap[i * 2] < this.heap[i * 2 + 1])
-            return i * 2;
-        else
-            return i * 2 + 1;
-    }
-    private smallerThan(v: number, pos: number, arr: T[]) {
-        if(pos >= this.size || pos < 1)
-            return;
-        if(this.score(this.heap[pos]) >= v)
-            // Skip this node and its descendants, as they all >= x.
-            return;
-        arr.push(this.heap[pos]);
-        console.log(arr);
-        this.smallerThan(v, pos * 2, arr);
-        this.smallerThan(v, pos * 2 + 1, arr);
-    }
-
-    allUnder(v: T): T[] {
-        const arr: T[] = [];
-        const pos = this.heap.indexOf(v, 1);
-        this.smallerThan(this.score(v), pos, arr);
-        return arr;
-    }
-    delMin(): T | undefined {
-        const retVal = this.heap[1];
-        this.heap[1] = this.heap[this.size];
-        this.size -= 1;
-        this.heap.pop();
-        this.percDown(1);
-        return retVal;
     }
 }

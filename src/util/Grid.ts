@@ -70,76 +70,77 @@ export default class Grid {
     }
     /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
     /// Based on the A* algorithm as detailed at http://web.mit.edu/eranki/www/tutorials/search/.
-    findPath(start: Point, goal: Point, max: number = 10, isValid: (p: Point) => boolean = (p) => this.isValidAt(p)): Node[] {
+    findPath(start: Point, goal: Point, isValid: (p: Point) => boolean = (p) => this.isValidAt(p)): Point[] {
         // If one of the start or end points is invalid or the start point is the goal point.
         if(!isValid(start) || !isValid(goal) || pointEq(start, goal))
             return [];
-        const p = (n: Node) => n.f || 0;
+        const p = (a: Node) => a.priority;
         // The list of nodes that have been processed.
-        const closed: Heap<Node> = new Heap<Node>(p);
-        // The list of nodes that should be processed.
-        const open: Heap<Node> = new Heap<Node>(p);
-        open.insert({
-            g: 0,
-            h: 0,
-            f: 0,
-            x: start.x,
-            y: start.y
-        });
+        const frontier: Heap<Node> = new Heap<Node>(p);
+        const startNode: Node = start as any as Node;
+        startNode.priority = 0;
+        frontier.push(startNode);
+        const costs = new Map<number, number>();
+        const cameFrom = new Map<number, Node>();
+        costs.set(Grid.hash(start), 0);
         // While there are still nodes waiting to be processed
-        while(open.size > 0) {
+        while(frontier.size > 0) {
             // Find node with lowest f score, and remove from open list
-            const q: Node = open.delMin()!;
-            // Push to closed list
-            closed.insert(q);
+            const current: Node = frontier.pop()!;
+            
+            // Calculate the new cost
+            //
+            // Because this works on a grid, this will always just add one.
+            const newCost = costs.get(Grid.hash(current)) + 1;
+            
             // For each valid neighbour of the tile.
-            for(const n of this.neighbors(q, isValid)) {
+            for(const next of Grid.neighbours(current)) {
+                if(!isValid(next))
+                    continue;
                 // If the neighbour is the goal point
-                if(pointEq(n, goal))
+                if(pointEq(next, goal)) {
                     // Make a path from the neighbour node
-                    return Grid.constructPath(n);
-                // Save result of heuristic
-                n.h = manhattan(goal, n);
-                // Make score from combined distance to point and cost to get to it
-                n.f = n.g + n.h;
-                // If the node is within a certain number of steps away, and there are no nodes in the open and closed lists with lower scores.
-                if(n.g < max && !Grid.hasNodeUnder(open, n) && !Grid.hasNodeUnder(closed, n))
-                    // Add the node to the open list, so the node can be processed by another iteration of the while loop
-                    open.insert(n);
+                    const path = [];
+                    let node = current, nodeHash = Grid.hash(node);
+                    while(cameFrom.has(nodeHash)) {
+                        const last = cameFrom.get(nodeHash)!;
+                        path.push(node);
+                        node = last;
+                        nodeHash = Grid.hash(node);
+                    }
+                    cameFrom.get(nodeHash);
+                    const p = path.reverse();
+                    /*
+                    console.log(`Path from ${start.x}, ${start.y} to ${goal.x}, ${goal.y}:`);
+                    for(const m of p)
+                        console.log(`\t${m.x}, ${m.y}`);*/
+                    return p;
+                }
+                const nextHash = Grid.hash(next);
+                if(!costs.has(nextHash) || newCost < costs.get(nextHash)) {
+                    costs.set(nextHash, newCost);
+                    next.priority = newCost + manhattan(goal, next);
+                    frontier.push(next);
+                    cameFrom.set(nextHash, current);
+                }
             }
         }
         return [];
     }
-    private static hasNodeUnder(h: Heap<Node>, n: Node): boolean {
-        return h.heap.slice(1).find((v: Node) => pointEq(v, n) && v.f < n.f) !== undefined;
-    }
-    /// Create a set containing each neighbour of the node.
-    private neighbors(node: Node, isValid: (p: Point) => boolean): Node[] {
+    /// Fill an array of 4 nodes with each neighbour of the node.
+    private static neighbours(node: Node): Node[] {
         return [
-            { parent: node, g: node.g + 1, x:  node.x - 1, y: node.y},
-            { parent: node, g: node.g + 1, x:  node.x + 1, y: node.y},
-            { parent: node, g: node.g + 1, x:  node.x, y: node.y - 1},
-            { parent: node, g: node.g + 1, x:  node.x, y: node.y + 1},
-        ].filter(isValid);
+            {x: node.x + 1, y: node.y, priority: 0},
+            {x: node.x - 1, y: node.y, priority: 0},
+            {x: node.x, y: node.y + 1, priority: 0},
+            {x: node.x, y: node.y - 1, priority: 0}
+        ];
     }
-    /// Make a path from the node by joining up its parent to its parent etc.
-    private static constructPath(node: Node): Node[] {
-        let path = [node];
-        while(node.parent !== undefined) {
-            node = node.parent!!;
-            path.push(node);
-        }
-        return path;
+    private static hash(p: Point): number {
+        return (p.x << 16) | (p.y & 0xFFFF);
     }
 }
 
-/// The structure points are extended with so each point stores the cost to get to it as well.
 interface Node extends Point {
-    readonly parent?: Node;
-    /// The cost to get to the node
-    g: number;
-    /// The guessed cost
-    h?: number;
-    /// The total cost i.e. g + h.
-    f?: number;
+    priority: number;
 }

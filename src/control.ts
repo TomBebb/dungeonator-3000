@@ -28,10 +28,11 @@ export class FollowControl implements Control {
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
     lastPath: Point[] = [];
-    private steps: number = 0;
     path: Promise<Point[]> | undefined = undefined;
-    constructor(scene: PlayScene) {
+    follow: Entity<any> | undefined;
+    constructor(scene: PlayScene, follow?: Entity<any>) {
         this.scene = scene;
+        this.follow = follow;
     }
 
     button(_: Button): boolean {
@@ -39,16 +40,13 @@ export class FollowControl implements Control {
     }
 
     get dir(): Direction | undefined {
-        const nearestEntity: Entity<any> = this.scene.entities[this.scene.players.first(true)];
-        if(this.lastPath.length === 0 || this.steps > FollowControl.STEPS_VALID) {
-            this.lastPath = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(nearestEntity));
+        if(this.follow !== undefined && this.lastPath.length === 0) {
+            this.lastPath = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow));
             this.lastPath.pop();
             this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
-            this.steps = 0;
         };
-        if (nearestEntity && this.lastPath.length > 0) {
+        if (this.follow !== undefined && this.lastPath.length > 0) {
             const p = this.lastPath.pop()!;
-            this.steps += 1;
             let [dx, dy] = [p.x * PlayScene.TILE_SIZE - this.entity.x, p.y * PlayScene.TILE_SIZE - this.entity.y];
             if (dx === 0 && dy === 0) // when there is no change.
                 return undefined;

@@ -18,6 +18,8 @@ export default class LoadingScene extends Container {
 		text.width = r.width;
 		text.height = r.height;
 		this.addChild(text);
+		this.width = r.width;
+		this.height = r.height;
 	}
 	update(_: number): void {
 	}
