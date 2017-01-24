@@ -74,19 +74,18 @@ export default class Grid {
         // If one of the start or end points is invalid or the start point is the goal point.
         if(!isValid(start) || !isValid(goal) || pointEq(start, goal))
             return [];
-        const p = (a: Node) => a.priority;
         // The list of nodes that have been processed.
-        const frontier: Heap<Node> = new Heap<Node>(p);
-        const startNode: Node = start as any as Node;
-        startNode.priority = 0;
-        frontier.push(startNode);
+        const frontier: Heap<Point> = new Heap<Point>();
+        frontier.put(start, 0);
         const costs = new Map<number, number>();
-        const cameFrom = new Map<number, Node>();
+        const cameFrom = new Map<number, Point>();
         costs.set(Grid.hash(start), 0);
         // While there are still nodes waiting to be processed
         while(frontier.size > 0) {
             // Find node with lowest f score, and remove from open list
-            const current: Node = frontier.pop()!;
+            const current: Point = frontier.pop()!;
+            if(pointEq(current, goal))
+                break;
             
             // Calculate the new cost
             //
@@ -100,7 +99,7 @@ export default class Grid {
                 // If the neighbour is the goal point
                 if(pointEq(next, goal)) {
                     // Make a path from the neighbour node
-                    const path = [];
+                    const path = [goal];
                     let node = current, nodeHash = Grid.hash(node);
                     while(cameFrom.has(nodeHash)) {
                         const last = cameFrom.get(nodeHash)!;
@@ -109,18 +108,13 @@ export default class Grid {
                         nodeHash = Grid.hash(node);
                     }
                     cameFrom.get(nodeHash);
-                    const p = path.reverse();
-                    /*
-                    console.log(`Path from ${start.x}, ${start.y} to ${goal.x}, ${goal.y}:`);
-                    for(const m of p)
-                        console.log(`\t${m.x}, ${m.y}`);*/
-                    return p;
+                    path.push(start);
+                    return path.reverse();
                 }
                 const nextHash = Grid.hash(next);
                 if(!costs.has(nextHash) || newCost < costs.get(nextHash)) {
                     costs.set(nextHash, newCost);
-                    next.priority = newCost + manhattan(goal, next);
-                    frontier.push(next);
+                    frontier.put(next, newCost + manhattan(goal, next));
                     cameFrom.set(nextHash, current);
                 }
             }
@@ -128,19 +122,18 @@ export default class Grid {
         return [];
     }
     /// Fill an array of 4 nodes with each neighbour of the node.
-    private static neighbours(node: Node): Node[] {
+    private static neighbours(p: Point): Point[] {
         return [
-            {x: node.x + 1, y: node.y, priority: 0},
-            {x: node.x - 1, y: node.y, priority: 0},
-            {x: node.x, y: node.y + 1, priority: 0},
-            {x: node.x, y: node.y - 1, priority: 0}
+            {x: p.x + 1, y: p.y},
+            {x: p.x - 1, y: p.y},
+            {x: p.x, y: p.y + 1},
+            {x: p.x, y: p.y - 1}
         ];
     }
+    /// Calculate a 32-bit number that can represent the point `p`.
+    ///
+    /// The nature of this means that `p`'s x and y values must be 16-bit integers.
     private static hash(p: Point): number {
         return (p.x << 16) | (p.y & 0xFFFF);
     }
-}
-
-interface Node extends Point {
-    priority: number;
 }

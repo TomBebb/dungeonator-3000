@@ -54,7 +54,6 @@ export default class PlayScene extends Container {
         this.addChild(this.map);
         const player = Entity.defaultPlayer(this);
         this.addEntity(player);
-        this.addEntity(Entity.defaultEnemy(this, player));
         this.addChild(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
@@ -70,6 +69,10 @@ export default class PlayScene extends Container {
             const e = this.gamepadEntities.get(ge.gamepad.index) !;
             this.entities.splice(this.entities.indexOf(e), 1);
             this.removeChild(e);
+        });
+        window.addEventListener("keydown", (e: KeyboardEvent) => {
+            if(e.keyCode === 32)
+                this.addEntity(Entity.defaultEnemy(this, player));
         });
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;

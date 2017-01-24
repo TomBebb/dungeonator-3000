@@ -23,12 +23,11 @@ export interface Control {
     button(_: Button): boolean;
 }
 export class FollowControl implements Control {
-    private static readonly STEPS_VALID: number = 5;
+    //private static readonly STEPS_VALID: number = 10;
     //private static readonly FOLLOW_PROXIMITY: number = 12;
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
-    lastPath: Point[] = [];
-    path: Promise<Point[]> | undefined = undefined;
+    lastPath: Direction[] = [];
     follow: Entity<any> | undefined;
     constructor(scene: PlayScene, follow?: Entity<any>) {
         this.scene = scene;
@@ -38,22 +37,32 @@ export class FollowControl implements Control {
     button(_: Button): boolean {
         return false;
     }
+    private static toDirs(points: Point[]): Direction[] {
+        let l:Point, r: Point;
+        let dx:number, dy:number;
+        const dirs: Direction[] = [];
+        for(let i = 0; i < points.length - 1; i++) {
+            l = points[i];
+            r = points[i + 1];
+            [dx, dy] = [r.x - l.x, r.y - l.y];
+            if (dx === 0 && dy === 0) // when there is no change.
+                break;
+            else if (Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
+                dirs.push(dx < 0 ? Direction.Left : Direction.Right);
+            else // when the vertical is bigger
+                dirs.push(dy < 0 ? Direction.Up : Direction.Down);
+        }
+        return dirs;
+    }
 
     get dir(): Direction | undefined {
         if(this.follow !== undefined && this.lastPath.length === 0) {
-            this.lastPath = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow));
-            this.lastPath.pop();
-            this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
+            this.lastPath = FollowControl.toDirs(this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow)));
+            console.log(this.lastPath.map(toString));
+            //this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
         };
         if (this.follow !== undefined && this.lastPath.length > 0) {
-            const p = this.lastPath.pop()!;
-            let [dx, dy] = [p.x * PlayScene.TILE_SIZE - this.entity.x, p.y * PlayScene.TILE_SIZE - this.entity.y];
-            if (dx === 0 && dy === 0) // when there is no change.
-                return undefined;
-            else if (Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
-                return dx < 0 ? Direction.Left : Direction.Right;
-            else // when the vertical is bigger
-                return dy < 0 ? Direction.Up : Direction.Down;
+            return this.lastPath.pop()!;
         } else
             return undefined;
     }
