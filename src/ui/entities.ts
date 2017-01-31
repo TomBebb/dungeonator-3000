@@ -1,12 +1,12 @@
 import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "../control";
 import PlayScene from "../scene/PlayScene";
-import { pointEq, Point } from "../util/math";
+import { Point } from "../util/math";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
 }
 export interface AnimationsDef {
-    [index: string]: Point[];
+    [index: string]: {x: number, y: number}[];
 }
 /// An animated sprite.
 export class Dynamic extends PIXI.extras.AnimatedSprite {
@@ -56,8 +56,10 @@ export class Entity<C extends Control> extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
     private lastDir: Direction = Direction.Down;
+    private point: Point = new Point();
 
     constructor(scene: PlayScene, control: C, source: string = "player", x: number = 0, y: number = 0) {
+        // Setup animations
         super(Dynamic.makeAnims(source, 16, 16, {
             stand_up: [ {x: 0, y: 0} ],
             stand_right: [ {x: 0, y: 18} ],
@@ -90,25 +92,31 @@ export class Entity<C extends Control> extends Dynamic {
         }), "stand_up", x, y);
         this.scene = scene;
         this.control = control;
+        // If the entity is following another (i.e. it is an enemy)
         if (this.control instanceof FollowControl)
+            // Let the entity's controller track the entity so it can resolve
+            // paths
             this.control.entity = this as Entity<any>;
     }
     tryMove(): boolean {
         // Cache the result of the direction since it is computed each time it is accessed.
         const cdir = this.control.dir;
         
+        // If no movement was made
         if (cdir === undefined)
             return false;
+        // If a movement was made
         else {
+            // Resolve the direction as a vector.
             let [nx, ny] = toVector(cdir);
-            const newPos: Point = {
-                x: this.x + PlayScene.TILE_SIZE * nx,
-                y: this.y + PlayScene.TILE_SIZE * ny
-            };
-            if (!this.scene.isEmptyAt(newPos))
+            // Calculate the new position based on this.
+            this.point.set(this.x + PlayScene.TILE_SIZE * nx, this.y + PlayScene.TILE_SIZE * ny);
+            if (!this.scene.isEmpty(this.point.x, this.point.y))
                 return false;
-            [this.x, this.y] = [newPos.x, newPos.y];
-            const anim = pointEq(this, newPos) ? "walk" : "stand";
+            // Set position to the new position
+            [this.x, this.y] = [this.point.x, this.point.y];
+            // Pick an animation based on if it is moving or not.
+            const anim = this.point.equals(this) ? "walk" : "stand";
             if (this.lastDir !== cdir || !this.animationName.startsWith(anim)) {
                 this.animation = `${anim}_${toString(cdir)}`;
                 this.lastDir = cdir;

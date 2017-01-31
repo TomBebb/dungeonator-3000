@@ -3,7 +3,7 @@
 import UIMap from "../ui/Map";
 import { GamepadControl, KeyboardControl } from "../control";
 import { Entity } from "../ui/entities";
-import { randomIn, Rectangle, pointEq, Point } from "../util/math";
+import { randomIn, Rectangle, BasePoint } from "../util/math";
 import Bits from "../util/Bits";
 import Counter from "../util/Counter";
 import Container = PIXI.Container;
@@ -97,15 +97,15 @@ export default class PlayScene extends Container {
         this.gamepadEntities.set(g.index, player);
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
-    isEmptyAt(p: Point): boolean {
-        return this.map.isEmptyAt(p) && this.entities.find((q) => pointEq(p, q)) == undefined;
+    isEmpty(x: number, y: number): boolean {
+        return this.map.isEmpty(x, y) && this.entities.find((q) => q.x === x && q.y === y) == undefined;
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
-    isNotEmptyAt(p: Point): boolean {
-        return this.map.isNotEmptyAt(p) || this.entities.find((q) => pointEq(p, q)) != undefined;
+    isNotEmpty(x: number, y: number): boolean {
+        return this.map.isNotEmpty(x, y) || this.entities.find((q) => q.x === x && q.y === y) != undefined;
     }
     /// Attempt to place the point `p` in the game.
-    private place(p: Point) {
+    private place(p: BasePoint) {
         // Get a random room
         const r: Rectangle = randomIn(this.map.grid.rooms) !;
         // Place p in the room
@@ -137,10 +137,8 @@ export default class PlayScene extends Container {
                     continue;
                 }
                 // If it could be moved
-                if (this.entities[i].tryMove()) {
-                    console.log(this.entities[i].control);
+                if (this.entities[i].tryMove())
                     this.movedEntities.set(i);
-                }
             }
             if(numMoved === this.entities.length)
                 // End the turn

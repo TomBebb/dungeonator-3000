@@ -8,7 +8,7 @@ export default class Main {
     /// How many seconds between updates.
     private static readonly DELTA = 1 / 30;
     /// The renderer
-    readonly renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer = PIXI.autoDetectRenderer(720, 480, {
+    readonly renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer = PIXI.autoDetectRenderer(1024, 640, {
         backgroundColor: 0x000000,
         antialias: false,
         roundPixels: true

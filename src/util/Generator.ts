@@ -1,6 +1,6 @@
 import Grid from "./Grid";
 import Tile from "./Tile";
-import {Size, Rectangle, centre, random, intersects} from "./math";
+import {Rectangle, random} from "./math";
 
 /// This is responsible for generating dungeons on a `Grid`.
 export default class Generator {
@@ -28,15 +28,6 @@ export default class Generator {
 	public Generator(grid: Grid) {
 		this.grid = grid;
 	}
-	/// Generate a random room size and set it on the `Size`
-	///
-	/// A cool thing about TypeScript is it has structural interfaces, so any Size must have `width` and `height` fields.
-	/// If this was in Java this would be the same as defining `getWidth` and `getHeight` methods in `Size` and using them here.
-	private generateRoomSize(size: Size) {
-		const roomSize = random.bind(null, Generator.MIN_ROOM_SIZE, Generator.MAX_ROOM_SIZE);
-		size.width = roomSize();
-		size.height = roomSize();
-	}
 	/// Attempt to place the room `room` on the grid a maximum of `numAttempts` times.
 	///
 	/// This returns true if the room could be placed i.e. it doesn't overlap with any other rectangles.
@@ -46,7 +37,7 @@ export default class Generator {
 			room.x = random(Generator.EDGE_DISTANCE, this.grid.width - room.width - Generator.EDGE_DISTANCE * 2);
 			room.y = random(Generator.EDGE_DISTANCE, this.grid.height - room.height - Generator.EDGE_DISTANCE * 2);
 			/// Repeat the above if there is a room with `room`.
-		} while(this.rooms.find((r: Rectangle) => intersects(r, room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
+		} while(this.rooms.find((r: Rectangle) => r.intersects(room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
 		return numAttempts > 0;
 	}
 	/// Generate a dungeon floor on the grid, attempting to generate a room a maximum of `numAttempts` times before giving up.
@@ -55,10 +46,10 @@ export default class Generator {
 		this.grid.clear(Tile.Wall);
 		let _num = numAttempts;
 		while(this.rooms.length < Generator.NUM_ROOMS && --_num > 0) {
-			// Make a rectangle with default values.
-			const room: Rectangle = {x: 0, y: 0, width: 0, height: 0};
 			// Generate a room size for the `room`
-			this.generateRoomSize(room);
+			const roomSize = random.bind(null, Generator.MIN_ROOM_SIZE, Generator.MAX_ROOM_SIZE);
+			// Make a rectangle with default values.
+			const room: Rectangle = new Rectangle(0, 0, roomSize(), roomSize());
 			// If the room could be placed in the dungeon, i.e. its position could be set randomly.
 			if(this.placeOnGrid(room)) {
 				// Set all the tiles inside `room` to empty ones.
@@ -85,9 +76,9 @@ export default class Generator {
 	/// Connect the rooms `a` and `b` with a corridor.
 	private connect(a: Rectangle, b: Rectangle) {
 		// Find the centre of a
-		const aMid = centre(a);
+		const aMid = a.centre;
 		// Find the centre of b
-		const bMid = centre(b);
+		const bMid = b.centre;
 		// Make a corridor connecting `aMid` and `bMid`
 		if(Math.random() > 0.5) {
 			this.grid.hline(bMid.x, aMid.x, bMid.y, Tile.Empty);

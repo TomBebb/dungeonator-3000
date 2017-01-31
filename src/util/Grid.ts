@@ -1,5 +1,6 @@
-import { Rectangle, Point, pointEq } from "../util/math"
-import { manhattan } from "../path/heuristic"; 
+import { Rectangle, Point, BasePoint } from "../util/math"
+import HashMap from "../util/HashMap";
+import HashSet from "../util/HashSet";
 import Heap from "./Heap";
 import Tile from "./Tile";
 /// A 2D Grid
@@ -37,12 +38,12 @@ export default class Grid {
     }
     /// Draw a horizontal line between (x1, y) and (x2, y)
     hline(x1: number, x2: number, y: number, t: Tile): void {
-        for(const tmp = {x: Math.min(x1, x2), y}; tmp.x <= Math.max(x1, x2); tmp.x++)
-            this.setTileAt(tmp, t);
+        for(let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++)
+            this.setTileAt(x, y, t);
     }
     vline(x: number, y1: number, y2: number, t: Tile): void {
-        for(const tmp = {x, y: Math.min(y1, y2)}; tmp.y <= Math.max(y1, y2); tmp.y++)
-            this.setTileAt(tmp, t);
+        for(let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++)
+            this.setTileAt(x, y, t);
     }
     clear(t: Tile = Tile.Empty): void {
         this.tiles.fill(t);
@@ -50,90 +51,94 @@ export default class Grid {
     private index(x: number, y: number): number {
         return x + y * this.width;
     }
-    tileAt(p: Point): Tile {
-        return this.tiles[this.index(p.x, p.y)];
+    tileAt(x: number, y: number): Tile {
+        return this.tiles[this.index(x, y)];
     }
-    setTileAt(p: Point, t: Tile) {
-        this.tiles[this.index(p.x, p.y)] = t;
+    setTileAt(x: number, y: number, t: Tile) {
+        this.tiles[this.index(x, y)] = t;
     }
     /// Returns true when the position `p` is in the grid
-    isValidAt(p: Point): boolean {
-        return p.x >= 0 && p.y >= 0 && p.x < this.width && p.y < this.height;
+    isValid(x: number, y: number): boolean {
+        return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
     /// Returns true when the position {x, y} is in the grid and empty
-    isEmptyAt(p :Point): boolean {
-        return this.isValidAt(p) && this.tileAt(p) == Tile.Empty;
+    isEmpty(x: number, y: number): boolean {
+        return this.isValid(x, y) && this.tileAt(x, y) === Tile.Empty;
     }
     /// Returns true when the position {x, y} is in the grid and not empty
-    isNotEmptyAt(p: Point): boolean {
-        return this.isValidAt(p) && this.tileAt(p) != Tile.Empty;
-    }
-    /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
-    /// Based on the A* algorithm as detailed at http://web.mit.edu/eranki/www/tutorials/search/.
-    findPath(start: Point, goal: Point, isValid: (p: Point) => boolean = (p) => this.isValidAt(p)): Point[] {
-        // If one of the start or end points is invalid or the start point is the goal point.
-        if(!isValid(start) || !isValid(goal) || pointEq(start, goal))
-            return [];
-        // The list of nodes that have been processed.
-        const frontier: Heap<Point> = new Heap<Point>();
-        frontier.put(start, 0);
-        const costs = new Map<number, number>();
-        const cameFrom = new Map<number, Point>();
-        costs.set(Grid.hash(start), 0);
-        // While there are still nodes waiting to be processed
-        while(frontier.size > 0) {
-            // Find node with lowest f score, and remove from open list
-            const current: Point = frontier.pop()!;
-            if(pointEq(current, goal))
-                break;
-            
-            // Calculate the new cost
-            //
-            // Because this works on a grid, this will always just add one.
-            const newCost = costs.get(Grid.hash(current)) + 1;
-            
-            // For each valid neighbour of the tile.
-            for(const next of Grid.neighbours(current)) {
-                if(!isValid(next))
+    isNotEmpty(x: number, y: number): boolean {
+        return this.isValid(x, y) && this.tileAt(x, y) !== Tile.Empty;
+    }    /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
+    /// Based on the A* algorithm as detailed at https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
+    findPath(s: BasePoint, g: BasePoint): Point[] {
+        // Make point objects from the structural interface points
+        const start = new Point(s.x, s.y);
+        const goal = new Point(g.x, g.y);
+        // Make a set to store point hashes that have been checked
+        const closed = new HashSet<Point>();
+        // Make a place to store f scores
+        const fScore = new HashMap<Point, number>();
+        // Store the purely heuristic part of the goal
+        fScore.set(start, start.manhattanDistance(goal));
+        // Make a set to store point hashes that need processing as well as a priority queue of them.
+        const open = new Heap<Point>((p) => fScore.get(p)!);
+        const openSet = new HashSet<Point>();
+        // Add the start point to this
+        open.put(start)
+        openSet.add(start);
+        // Associate points to their previous points.
+        const cameFrom = new HashMap<Point, Point>();
+        const gScore = new HashMap<Point, number>();
+        gScore.set(start, 0);
+        // While there are still points in the open set
+        while(open.size > 0) {
+            // Remove the point with the lowest f score.
+            const current = open.pop()!;
+            openSet.delete(current);
+            // If this is the goal point
+            if(current.equals(goal))
+                // Return the path from this to the goal point
+                return Grid.constructPath(cameFrom, current);
+            // Add to the closed set
+            closed.add(current);
+            // Compute the value of g for each of its neighbours
+            const g = gScore.get(current) + 1;
+            // For every neighbouring point
+            for(let n of Grid.neighbours(current)) {
+                // Skip it if it has already been processed or is invalid
+                if(closed.has(n) || !this.isValid(n.x, n.y))
                     continue;
-                // If the neighbour is the goal point
-                if(pointEq(next, goal)) {
-                    // Make a path from the neighbour node
-                    const path = [goal];
-                    let node = current, nodeHash = Grid.hash(node);
-                    while(cameFrom.has(nodeHash)) {
-                        const last = cameFrom.get(nodeHash)!;
-                        path.push(node);
-                        node = last;
-                        nodeHash = Grid.hash(node);
-                    }
-                    cameFrom.get(nodeHash);
-                    path.push(start);
-                    return path.reverse();
-                }
-                const nextHash = Grid.hash(next);
-                if(!costs.has(nextHash) || newCost < costs.get(nextHash)) {
-                    costs.set(nextHash, newCost);
-                    frontier.put(next, newCost + manhattan(goal, next));
-                    cameFrom.set(nextHash, current);
-                }
+                if(!openSet.has(n)) {
+                    // A new node has been found!
+                    // Add to the open set and heap
+                    open.put(n);
+                    openSet.add(n);
+                } else if(g >= gScore.get(n)!)
+                    continue;
+                cameFrom.set(n, current);
+                gScore.set(n, g);
+                fScore.set(n, g + n.manhattanDistance(goal));
+                
             }
         }
         return [];
     }
+    /// Make a 
+    private static constructPath(cameFrom: HashMap<Point, Point>, current: Point): Point[] {
+        const path = [current];
+        while(cameFrom.has(current)) {
+            current = cameFrom.get(current)!;
+            path.push(current);
+        };
+        return path.reverse();
+    }
     /// Fill an array of 4 nodes with each neighbour of the node.
     private static neighbours(p: Point): Point[] {
         return [
-            {x: p.x + 1, y: p.y},
-            {x: p.x - 1, y: p.y},
-            {x: p.x, y: p.y + 1},
-            {x: p.x, y: p.y - 1}
+            new Point(p.x + 1, p.y),
+            new Point(p.x - 1, p.y),
+            new Point(p.x, p.y + 1),
+            new Point(p.x, p.y - 1)
         ];
-    }
-    /// Calculate a 32-bit number that can represent the point `p`.
-    ///
-    /// The nature of this means that `p`'s x and y values must be 16-bit integers.
-    private static hash(p: Point): number {
-        return (p.x << 16) | (p.y & 0xFFFF);
     }
 }

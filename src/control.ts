@@ -1,7 +1,7 @@
 import PlayScene from "./scene/PlayScene";
 import { Entity } from "./ui/entities";
 import Bits from "./util/Bits";
-import { Point} from "./util/math";
+import { BasePoint } from "./util/math";
 
 /// 2D directions that entities can move in.
 export const enum Direction {
@@ -23,7 +23,8 @@ export interface Control {
     button(_: Button): boolean;
 }
 export class FollowControl implements Control {
-    //private static readonly STEPS_VALID: number = 10;
+    /// How many steps should be taken before re-calculating a path.
+    private static readonly STEPS_VALID: number = 4;
     //private static readonly FOLLOW_PROXIMITY: number = 12;
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
@@ -37,8 +38,9 @@ export class FollowControl implements Control {
     button(_: Button): boolean {
         return false;
     }
-    private static toDirs(points: Point[]): Direction[] {
-        let l:Point, r: Point;
+    /// Transverse an array of points as a path, returning each direction.
+    private static toDirs(points: BasePoint[]): Direction[] {
+        let l:BasePoint, r: BasePoint;
         let dx:number, dy:number;
         const dirs: Direction[] = [];
         for(let i = 0; i < points.length - 1; i++) {
@@ -58,15 +60,14 @@ export class FollowControl implements Control {
     get dir(): Direction | undefined {
         if(this.follow !== undefined && this.lastPath.length === 0) {
             this.lastPath = FollowControl.toDirs(this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow)));
-            console.log(this.lastPath.map(toString));
-            //this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
+            this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
         };
         if (this.follow !== undefined && this.lastPath.length > 0) {
             return this.lastPath.pop()!;
         } else
             return undefined;
     }
-    static map(p: Point):Point {
+    static map(p: BasePoint): BasePoint {
         return {
             x: p.x / PlayScene.TILE_SIZE,
             y: p.y / PlayScene.TILE_SIZE
