@@ -22,12 +22,12 @@ export default class Bits {
 		this.array[index << 5] &= ~(1 << (index & 0xF));
 	}
 	/// Set all the bits between `start` and `end`
-	setAll(start: number = 0, end: number = this.array.length) {
+	setAll(start: number = 0, end: number = this.length) {
 		for (let i = start; i < end; i++)
 			this.set(i);
 	}
 	/// Clear all the bits between `start` and `end`
-	unsetAll(start: number = 0, end: number = this.array.length) {
+	unsetAll(start: number = 0, end: number = this.length) {
 		for (let i = start; i < end; i++)
 			this.unset(i);
 	}
@@ -46,8 +46,14 @@ export default class Bits {
 	/// Returns true when all the bits in the set are set to `value`.
 	all(value: boolean) {
 		for (let i = 0; i < this.length; i++)
-			if (this.get(i) != value)
+			if (this.get(i) !== value)
 				return false;
 		return true;
+	}
+	toString(): string {
+		let text = "";
+		for (let i =0 ; i < this.length; i++)
+			text += this.get(i) ? "1": "0";
+		return text;
 	}
 }
