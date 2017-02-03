@@ -48,17 +48,20 @@ function gridTest() {
 }
 
 function heapTest() {
-    const heap = new Heap((x: number) => x);
+    const heap = new Heap((x: {score: number}) => x.score);
     console.assert(heap.size == 0);
-    heap.put(10);
-    heap.put(20);
-    heap.put(5);
+    heap.queue({ score: 10 });
+    const twenty = { score: 20 };
+    heap.queue(twenty);
+    heap.queue({ score: 5 });
     console.assert(heap.size == 3);
-    console.assert(heap.pop() == 5);
-    console.assert(heap.pop() == 10);
-    console.assert(heap.pop() == 20);
+    console.assert(heap.dequeue()!.score == 5);
+    twenty.score = 5;
+    heap.rescore(twenty);
+    console.assert(heap.dequeue()!.score == 5);
+    console.assert(heap.dequeue()!.score == 10);
     console.assert(heap.size == 0);
-    heap.put(4);
+    heap.queue({ score: 4 });
     heap.clear();
     console.assert(heap.size == 0);
 }
@@ -88,16 +91,25 @@ function pointTest() {
 
 function hashTest() {
 	const p = new Point(3, 3);
+	const p2 = new Point(3, 2);
 	const set = new HashSet<Point>();
 	const map = new HashMap<Point, number>();
+	console.assert(!set.has(p));
+	console.assert(!set.has(p2));
+	console.assert(!map.has(p));
+	console.assert(!map.has(p2));
 	set.add(p);
+	set.add(p2);
 	map.set(p, 3);
+	console.assert(!map.has(p2));
 	console.assert(set.has(p));
+	console.assert(set.has(p2));
 	console.assert(map.get(p) == 3);
 	set.delete(p);
 	map.delete(p);
 	console.assert(!set.has(p));
 	console.assert(!map.has(p));
+	console.assert(set.has(p2));
 }
 
 export default function test() {

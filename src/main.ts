@@ -3,6 +3,8 @@
 import LoadingScene from "./scene/LoadingScene";
 import PlayScene from "./scene/PlayScene";
 import Scene from "./scene/Scene";
+
+import test from "./test";
 export default class Main {
     static instance: Main;
     /// How many seconds between updates.
@@ -15,6 +17,7 @@ export default class Main {
     });
     scene: Scene;
     constructor() {
+        test();
         Main.instance = this;
         this.renderer.view.tabIndex = 1;
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;

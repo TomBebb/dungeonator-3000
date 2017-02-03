@@ -84,7 +84,7 @@ export default class Grid {
         const open = new Heap<Point>((p) => fScore.get(p)!);
         const openSet = new HashSet<Point>();
         // Add the start point to this
-        open.put(start)
+        open.queue(start);
         openSet.add(start);
         // Associate points to their previous points.
         const cameFrom = new HashMap<Point, Point>();
@@ -93,44 +93,42 @@ export default class Grid {
         // While there are still points in the open set
         while(open.size > 0) {
             // Remove the point with the lowest f score.
-            const current = open.pop()!;
+            const current = open.dequeue()!;
             openSet.delete(current);
-            // If this is the goal point
-            if(current.equals(goal))
-                // Return the path from this to the goal point
-                return Grid.constructPath(cameFrom, current);
             // Add to the closed set
             closed.add(current);
+            // If this is the goal point
+            if(current.equals(goal)) {
+                // Return the path from this to the goal point
+                let curr = current;
+                const path = [curr];
+                while(cameFrom.has(curr)) {
+                    curr = cameFrom.get(curr)!;
+                    path.push(curr);
+                };
+                return path.reverse();
+            }
             // Compute the value of g for each of its neighbours
             const g = gScore.get(current) + 1;
             // For every neighbouring point
             for(let n of Grid.neighbours(current)) {
                 // Skip it if it has already been processed or is invalid
-                if(closed.has(n) || !this.isValid(n.x, n.y))
+                if(closed.has(n) || !this.isEmpty(n.x, n.y))
                     continue;
                 if(!openSet.has(n)) {
                     // A new node has been found!
                     // Add to the open set and heap
-                    open.put(n);
+                    open.queue(n);
                     openSet.add(n);
                 } else if(g >= gScore.get(n)!)
                     continue;
                 cameFrom.set(n, current);
                 gScore.set(n, g);
                 fScore.set(n, g + n.manhattanDistance(goal));
-                
+                open.rescore(n);
             }
         }
         return [];
-    }
-    /// Make a 
-    private static constructPath(cameFrom: HashMap<Point, Point>, current: Point): Point[] {
-        const path = [current];
-        while(cameFrom.has(current)) {
-            current = cameFrom.get(current)!;
-            path.push(current);
-        };
-        return path.reverse();
     }
     /// Fill an array of 4 nodes with each neighbour of the node.
     private static neighbours(p: Point): Point[] {
