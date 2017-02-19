@@ -2,6 +2,10 @@
 export default class HashMap<K extends Hash, V> {
     _ = new Map<number, V>();
     readonly keys: K[] = [];
+    readonly _default: V | undefined;
+    constructor(_default: V | undefined = undefined) {
+        this._default = _default;
+    }
     clear() {
         this._.clear();
         this.keys.splice(0);
@@ -14,6 +18,8 @@ export default class HashMap<K extends Hash, V> {
         return this._.has(key.hash());
     }
     get(key: K): V | undefined {
+        if(!this.has(key))
+            return this._default;
         return this._.get(key.hash());
     }
     set(key: K, value: V) {
