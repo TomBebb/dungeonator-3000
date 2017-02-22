@@ -20,6 +20,10 @@ export class Point implements BasePoint {
     equals(other: BasePoint): boolean {
         return this.x === other.x && this.y === other.y;
     }
+    static from(p: BasePoint): Point {
+        Object.setPrototypeOf(p, Point.prototype);
+        return p as Point;
+    }
     /// Return the squared distance between this and another point.
     distSquared(other: BasePoint): number {
         return Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2);

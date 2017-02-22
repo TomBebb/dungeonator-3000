@@ -1,8 +1,8 @@
 import { Rectangle, Point, BasePoint } from "../util/math"
 import HashMap from "../util/HashMap";
-import HashSet from "../util/HashSet";
 import Heap from "./Heap";
 import Tile from "./Tile";
+
 /// A 2D Grid
 export default class Grid {
     /// The width of the grid in tiles.
@@ -13,6 +13,10 @@ export default class Grid {
     readonly tiles: Int8Array;
 
     rooms: Rectangle[] = [];
+
+    tracePaths: boolean = true;
+
+    readonly nodes: Point[] = [];
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
@@ -65,78 +69,63 @@ export default class Grid {
     isEmpty(x: number, y: number): boolean {
         return this.isValid(x, y) && this.tileAt(x, y) === Tile.Empty;
     }
+    /// Returns true when the position {x, y} is in the grid and empty
+    canWalk(x: number, y: number): boolean {
+        const can = this.isValid(x, y) && this.tileAt(x, y) != Tile.Wall;
+        if(this.tracePaths)
+            console.log(`${x}, ${y}, ${can} => ${this.tileAt(x, y)} = ${this.tileAt(x, y) == Tile.Wall ? 'wall' : 'empty'}`);
+        return can;
+    }
     /// Returns true when the position {x, y} is in the grid and not empty
     isNotEmpty(x: number, y: number): boolean {
         return this.isValid(x, y) && this.tileAt(x, y) !== Tile.Empty;
-    }    /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
-    /// Based on the A* algorithm as detailed at https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
-    findPath(s: BasePoint, g: BasePoint): Point[] {
-        // Make point objects from the structural interface points
-        const start = new Point(s.x, s.y);
-        const goal = new Point(g.x, g.y);
-        // Make a set to store point hashes that have been checked
-        const closed = new HashSet<Point>();
-        // Make a place to store f scores
-        const fScore = new HashMap<Point, number>();
-        // Store the purely heuristic part of the goal
-        fScore.set(start, start.manhattanDistance(goal));
-        // Make a set to store point hashes that need processing as well as a priority queue of them.
-        const open = new Heap<Point>((p) => fScore.get(p)!);
-        const openSet = new HashSet<Point>();
-        // Add the start point to this
-        open.queue(start);
-        openSet.add(start);
-        // Associate points to their previous points.
+    }
+    /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
+    /// Based on the A* algorithm as detailed at http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript
+    findPath(_start: BasePoint, _goal: BasePoint): Point[] {
+        const start = Point.from(_start);
+        const goal = Point.from(_goal);
+        const frontier = new Heap<Point>();
         const cameFrom = new HashMap<Point, Point>();
-        const gScore = new HashMap<Point, number>();
-        gScore.set(start, 0);
-        // While there are still points in the open set
-        while(open.size > 0) {
-            // Remove the point with the lowest f score.
-            const current = open.dequeue()!;
-            openSet.delete(current);
-            // Add to the closed set
-            closed.add(current);
-            // If this is the goal point
-            if(current.equals(goal)) {
-                // Return the path from this to the goal point
-                let curr = current;
-                const path = [curr];
-                while(cameFrom.has(curr)) {
-                    curr = cameFrom.get(curr)!;
-                    path.push(curr);
-                };
-                return path.reverse();
-            }
-            // Compute the value of g for each of its neighbours
-            const g = gScore.get(current) + 1;
-            // For every neighbouring point
-            for(let n of Grid.neighbours(current)) {
-                // Skip it if it has already been processed or is invalid
-                if(closed.has(n) || !this.isEmpty(n.x, n.y))
-                    continue;
-                if(!openSet.has(n)) {
-                    // A new node has been found!
-                    // Add to the open set and heap
-                    open.queue(n);
-                    openSet.add(n);
-                } else if(g >= gScore.get(n)!)
-                    continue;
-                cameFrom.set(n, current);
-                gScore.set(n, g);
-                fScore.set(n, g + n.manhattanDistance(goal));
-                open.rescore(n);
+        const cost = new HashMap<Point, number>();
+        frontier.push(start, 0);
+        cost.set(start, 0);
+        while(frontier.size > 0) {
+            const current = frontier.pop()!;
+            if(current.equals(goal))
+                return this.makePath(current, cameFrom);
+            for(const next of this.neighbours(current)) {
+                const newCost = cost.get(current)! + 1;
+                if(!cost.has(next) || newCost < cost.get(next)!) {
+                    if(this.tracePaths) 
+                        console.log(cost.get(current)!, current, next);
+                    cost.set(next, newCost);
+                    frontier.push(next, newCost + goal.manhattanDistance(next));
+                    cameFrom.set(next, current);
+                }
             }
         }
         return [];
     }
-    /// Fill an array of 4 nodes with each neighbour of the node.
-    private static neighbours(p: Point): Point[] {
-        return [
-            new Point(p.x + 1, p.y),
-            new Point(p.x - 1, p.y),
-            new Point(p.x, p.y + 1),
-            new Point(p.x, p.y - 1)
-        ];
+    /// Consturct a path from the current node
+    makePath(current: Point, cameFrom: HashMap<Point, Point>): Point[] {
+        const path = [current];
+        while(cameFrom.has(current)) {
+            current = cameFrom.get(current)!;
+            path.push(current);
+        }
+        return path.reverse();
+    }
+    neighbours(p: Point): Point[] {
+        const ns = [];
+        if(this.canWalk(p.x - 1, p.y))
+            ns.push(new Point(p.x - 1, p.y))
+        if(this.canWalk(p.x + 1, p.y))
+            ns.push(new Point(p.x + 1, p.y))
+        if(this.canWalk(p.x, p.y - 1))
+            ns.push(new Point(p.x, p.y - 1))
+        if(this.canWalk(p.x, p.y + 1))
+            ns.push(new Point(p.x, p.y + 1))
+        return ns;
     }
 }
