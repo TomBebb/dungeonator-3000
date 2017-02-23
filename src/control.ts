@@ -24,12 +24,13 @@ export interface Control {
 }
 export class FollowControl implements Control {
     /// How many steps should be taken before re-calculating a path.
-    private static readonly STEPS_VALID: number = 4;
+    // private static readonly STEPS_VALID: number = 4;
     //private static readonly FOLLOW_PROXIMITY: number = 12;
     public entity: Entity<FollowControl>;
     private scene: PlayScene;
     lastPath: Direction[] = [];
     follow: Entity<any> | undefined;
+    initial = false;
     constructor(scene: PlayScene, follow?: Entity<any>) {
         this.scene = scene;
         this.follow = follow;
@@ -38,34 +39,31 @@ export class FollowControl implements Control {
     button(_: Button): boolean {
         return false;
     }
-    /// Transverse an array of points as a path, returning each direction.
-    private static toDirs(points: BasePoint[]): Direction[] {
-        let l:BasePoint, r: BasePoint;
-        let dx:number, dy:number;
-        const dirs: Direction[] = [];
-        for(let i = 0; i < points.length - 1; i++) {
-            l = points[i];
-            r = points[i + 1];
-            [dx, dy] = [r.x - l.x, r.y - l.y];
-            if (dx === 0 && dy === 0) // when there is no change.
-                break;
-            else if (Math.abs(dx) > Math.abs(dy)) // when the horizontal is bigger
-                dirs.push(dx < 0 ? Direction.Left : Direction.Right);
-            else // when the vertical is bigger
-                dirs.push(dy < 0 ? Direction.Up : Direction.Down);
-        }
-        return dirs;
+
+    static asDir(dy: number, dx: number): Direction | undefined {
+        // If the entity has moved to the aim point
+        if(dx == 0 && dy == 0)
+            return undefined;
+        else if(Math.abs(dx) > Math.abs(dy))
+            return dx < 0 ? Direction.Left : Direction.Right;
+        else
+            return dy < 0 ? Direction.Up : Direction.Down;
     }
 
     get dir(): Direction | undefined {
-        if(this.follow !== undefined && this.lastPath.length === 0) {
-            this.lastPath = FollowControl.toDirs(this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow)));
-            this.lastPath.splice(0, this.lastPath.length - FollowControl.STEPS_VALID);
-        };
-        if (this.follow !== undefined && this.lastPath.length > 0) {
-            return this.lastPath.pop()!;
-        } else
-            return undefined;
+        if(this.follow == undefined) return undefined;
+
+
+        if(this.lastPath.length == 0) {
+            const path = this.scene.map.grid.findPath(FollowControl.map(this.entity), FollowControl.map(this.follow));
+            this.initial = true;
+            for(let i = 0; i < path.length - 1; i++) {
+                const a = path[i], b = path[i + 1];
+                this.lastPath[i] = FollowControl.asDir(b.y - a.y, b.x - a.x)!;
+            }
+            this.lastPath = this.lastPath.reverse();
+        }
+        return this.lastPath.pop();
     }
     static map(p: BasePoint): BasePoint {
         return {

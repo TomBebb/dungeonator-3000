@@ -19,6 +19,7 @@ function gridTest() {
     console.assert(grid.tileAt(0, 8) == Tile.Empty);
     const start = {x: 8, y: 0};
     const goal = {x: 8, y: 15};
+    grid.preparePathfinding();
     const path = grid.findPath(start, goal);
     for(let y = 0; y < grid.height; y++) {
         let t = "";
@@ -35,8 +36,11 @@ function gridTest() {
         console.log(t);
     }
     console.assert(path.length > 0);
-    console.assert(path[0].distSquared(start) == 0);
-    console.assert(path[path.length - 1].distSquared(goal) == 0);
+    console.log(path.findIndex((p) => goal.x == p.x && goal.y == p.y), path.length);
+    console.assert(Point.from(goal).distSquared(path[path.length - 1]) == 0);
+    for(let i = 1; i < path.length; i++)
+        console.assert(Math.abs(path[i].x - path[i - 1].x) <= 1 && Math.abs(path[i].y - path[i - 1].y) <= 1)
+    console.assert(Point.from(start).distSquared(path[0]) <= 1);
 }
 
 function heapTest() {

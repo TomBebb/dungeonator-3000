@@ -71,7 +71,6 @@ export default class Generator {
 		}
 		// Synchronise the new rooms with the grid's.
 		this.grid.rooms = this.rooms;
-		console.log(this.rooms.length + " rooms");
 	}
 	/// Connect the rooms `a` and `b` with a corridor.
 	private connect(a: Rectangle, b: Rectangle) {

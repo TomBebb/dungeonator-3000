@@ -1,10 +1,12 @@
-///<reference path='./pixi.js.d.ts'/>
+///<reference path='./astar.d.ts'/>
+///<reference path='./pixi.d.ts'/>
 
 import LoadingScene from "./scene/LoadingScene";
 import PlayScene from "./scene/PlayScene";
 import Scene from "./scene/Scene";
 
 import test from "./test";
+import PIXI = require("pixi.js");
 export default class Main {
     static instance: Main;
     /// How many seconds between updates.

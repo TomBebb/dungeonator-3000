@@ -1,7 +1,8 @@
+///<reference path='../astar.d.ts'/>
 import { Rectangle, Point, BasePoint } from "../util/math"
 import HashMap from "../util/HashMap";
-import Heap from "./Heap";
 import Tile from "./Tile";
+import astar = require("astar.js");
 
 /// A 2D Grid
 export default class Grid {
@@ -17,11 +18,23 @@ export default class Grid {
     tracePaths: boolean = true;
 
     readonly nodes: Point[] = [];
+
+    graph: astar.Graph;
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
         this.tiles = new Int8Array(width * height);
         this.clear();
+    }
+    /// Prepeare this grid for pathfinding, by constructing a graph to find paths on
+    preparePathfinding(): void {
+        let weights = new Array(this.height);
+        for(let x = 0; x < this.width; x++) {
+            weights[x] = [];
+            for(let y = 0; y < this.height; y++)
+                weights[x][y] = this.canWalk(x, y) ? 1 : 0;
+        }
+        this.graph = new astar.Graph(weights, {}, false);
     }
     /// Fill the rectangle `r` with the tile `c`
     fill(r: Rectangle, t: Tile): void {
@@ -71,10 +84,7 @@ export default class Grid {
     }
     /// Returns true when the position {x, y} is in the grid and empty
     canWalk(x: number, y: number): boolean {
-        const can = this.isValid(x, y) && this.tileAt(x, y) != Tile.Wall;
-        if(this.tracePaths)
-            console.log(`${x}, ${y}, ${can} => ${this.tileAt(x, y)} = ${this.tileAt(x, y) == Tile.Wall ? 'wall' : 'empty'}`);
-        return can;
+        return this.isValid(x, y) && this.tileAt(x, y) != Tile.Wall;
     }
     /// Returns true when the position {x, y} is in the grid and not empty
     isNotEmpty(x: number, y: number): boolean {
@@ -82,30 +92,12 @@ export default class Grid {
     }
     /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
     /// Based on the A* algorithm as detailed at http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript
-    findPath(_start: BasePoint, _goal: BasePoint): Point[] {
-        const start = Point.from(_start);
-        const goal = Point.from(_goal);
-        const frontier = new Heap<Point>();
-        const cameFrom = new HashMap<Point, Point>();
-        const cost = new HashMap<Point, number>();
-        frontier.push(start, 0);
-        cost.set(start, 0);
-        while(frontier.size > 0) {
-            const current = frontier.pop()!;
-            if(current.equals(goal))
-                return this.makePath(current, cameFrom);
-            for(const next of this.neighbours(current)) {
-                const newCost = cost.get(current)! + 1;
-                if(!cost.has(next) || newCost < cost.get(next)!) {
-                    if(this.tracePaths) 
-                        console.log(cost.get(current)!, current, next);
-                    cost.set(next, newCost);
-                    frontier.push(next, newCost + goal.manhattanDistance(next));
-                    cameFrom.set(next, current);
-                }
-            }
-        }
-        return [];
+    ///
+    /// INVESTIGATE FRINGE SEARCH
+    /// returns in order goal -> start
+    findPath(start: BasePoint, goal: BasePoint): BasePoint[] {
+        const a: BasePoint[] = astar.astar.search(this.graph, this.graph.grid[start.x][start.y], this.graph.grid[goal.x][goal.y]);
+        return a;
     }
     /// Consturct a path from the current node
     makePath(current: Point, cameFrom: HashMap<Point, Point>): Point[] {

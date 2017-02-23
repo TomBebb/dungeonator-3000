@@ -125,6 +125,8 @@ export default class PlayScene extends Container {
         this.movedEntities.clear();
     }
     update(dt: number): void {
+        dt;
+        /*
         this.counter.update(dt);
         // If it is in a turn
         if (this.inTurn) {
@@ -132,18 +134,18 @@ export default class PlayScene extends Container {
             // For each entity
             for (let i = 0; i < this.entities.length; i++) {
                 // Ignore entities that have moved
-                if (this.movedEntities.get(i)) {
+                if (this.movedEntities.get(i))
                     numMoved += 1;
-                    continue;
-                }
                 // If it could be moved
-                if (this.entities[i].tryMove())
+                else if (this.entities[i].tryMove())
                     this.movedEntities.set(i);
             }
             if(numMoved === this.entities.length)
                 // End the turn
                 this.endTurn();
-        }
+        }*/
+        for(const e of this.entities)
+            e.tryMove();
         // Get the first player in entities.
         const e = this.players[0];
         if(e !== undefined) {
