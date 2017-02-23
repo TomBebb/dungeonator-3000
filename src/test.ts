@@ -1,8 +1,8 @@
-import Bits from "./util/Bits";
-import Heap from "./util/Heap";
+import Bits from "./util/ds/Bits";
+import Heap from "./util/ds/Heap";
 import { Point } from "./util/math";
-import HashMap from "./util/HashMap";
-import HashSet from "./util/HashSet";
+import HashMap from "./util/ds/HashMap";
+import HashSet from "./util/ds/HashSet";
 import Grid from "./util/Grid";
 import Tile from "./util/Tile";
 

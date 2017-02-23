@@ -1,6 +1,6 @@
 ///<reference path='../astar.d.ts'/>
 import { Rectangle, Point, BasePoint } from "../util/math"
-import HashMap from "../util/HashMap";
+import HashMap from "../util/ds/HashMap";
 import Tile from "./Tile";
 import astar = require("astar.js");
 

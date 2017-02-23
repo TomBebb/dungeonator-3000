@@ -3,7 +3,7 @@
 import UIMap from "../ui/Map";
 import { Entity, KeyboardPlayer, Player, Enemy } from "../ui/entities";
 import { randomIn, Rectangle, BasePoint } from "../util/math";
-import Bits from "../util/Bits";
+import Bits from "../util/ds/Bits";
 import Counter from "../util/Counter";
 import Container = PIXI.Container;
 import Text = PIXI.Text;
