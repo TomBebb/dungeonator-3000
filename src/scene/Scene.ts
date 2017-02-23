@@ -1,8 +1,14 @@
 /// A common interface for scenes.
 ///
 /// The PIXI layer takes care of rendering.
-interface Scene extends PIXI.Container {
+class Scene extends PIXI.Container {
+	constructor(bg: number) {
+		super();
+		bg;
+	}
 	/// Update this scene with the delta time `dt` (in seconds).
-	update(dt: number): void;
+	update(dt: number): void {
+		dt;
+	}
 }
 export default Scene;

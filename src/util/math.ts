@@ -20,8 +20,13 @@ export class Point implements BasePoint {
     equals(other: BasePoint): boolean {
         return this.x === other.x && this.y === other.y;
     }
-    static from(p: BasePoint): Point {
-        Object.setPrototypeOf(p, Point.prototype);
+    static from(p: BasePoint, copy: boolean = false, scale: number = 1): Point {
+        if(copy)
+            p = new Point(p.x, p.y);
+        else
+            Object.setPrototypeOf(p, Point.prototype);
+        p.x *= scale;
+        p.y *= scale;
         return p as Point;
     }
     /// Return the squared distance between this and another point.

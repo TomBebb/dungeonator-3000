@@ -5,3 +5,4 @@ define(["require", "exports"], function (require, exports) {
     }
     exports.manhattan = manhattan;
 });
+//# sourceMappingURL=heuristic.js.map

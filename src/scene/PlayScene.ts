@@ -1,8 +1,7 @@
 /// <reference path="../extra.d.ts" />
 
 import UIMap from "../ui/Map";
-import { GamepadControl, KeyboardControl } from "../control";
-import { Entity } from "../ui/entities";
+import { Entity, KeyboardPlayer, Player, Enemy } from "../ui/entities";
 import { randomIn, Rectangle, BasePoint } from "../util/math";
 import Bits from "../util/Bits";
 import Counter from "../util/Counter";
@@ -19,9 +18,9 @@ export default class PlayScene extends Container {
     /// The number of seconds since the last turn
     // private sinceLast: number = 0;
     /// The entities contained in the scene
-    entities: Entity<any>[] = [];
+    entities: Entity[] = [];
     /// The players, where each set bit is an index into `entities`.
-    readonly players: Entity<any>[] = [];
+    readonly players: KeyboardPlayer[] = [];
     private floor: number = 0;
     private readonly top: PIXI.Container = new PIXI.Container();
     private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
@@ -33,14 +32,14 @@ export default class PlayScene extends Container {
     /// The entities that have moved already in this turn, where every set bit is an index into `entities`.
     private readonly movedEntities: Bits = new Bits(PlayScene.MAX_ENTITIES);
     private inTurn: boolean = false;
-    private readonly gamepadEntities = new Map<number, Entity<GamepadControl>>();
+    // private readonly gamepadEntities = new Map<number, GamepadEntity>();
     // The map.
     readonly map: UIMap;
     /// Add an entity
-    private addEntity(e: Entity<any>) {
+    private addEntity(e: Entity) {
         this.entities.push(e);
-        if (e.control instanceof GamepadControl || e.control instanceof KeyboardControl)
-            this.players.push(e);
+        if (e instanceof KeyboardPlayer)
+            this.players.push(e as Player);
         this.place(e);
         this.addChild(e);
     }
@@ -52,10 +51,11 @@ export default class PlayScene extends Container {
         this.position.set(r.width / 2, r.height / 2);
         this.map = new UIMap(48, 48);
         this.addChild(this.map);
-        const player = Entity.defaultPlayer(this);
+        const player = new KeyboardPlayer(this);
         this.addEntity(player);
         this.addChild(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
+        /*
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for (const g of gamepads)
             if (g !== undefined && g !== null)
@@ -69,10 +69,10 @@ export default class PlayScene extends Container {
             const e = this.gamepadEntities.get(ge.gamepad.index) !;
             this.entities.splice(this.entities.indexOf(e), 1);
             this.removeChild(e);
-        });
+        });*/
         window.addEventListener("keydown", (e: KeyboardEvent) => {
             if(e.keyCode === 32)
-                this.addEntity(Entity.defaultEnemy(this, player));
+                this.addEntity(new Enemy(this, player));
         });
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;
@@ -88,6 +88,7 @@ export default class PlayScene extends Container {
                 };
             });
     }
+    /*
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
         if (this.gamepadEntities.has(g.index))
@@ -95,7 +96,7 @@ export default class PlayScene extends Container {
         const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(g));
         this.addEntity(player);
         this.gamepadEntities.set(g.index, player);
-    }
+    }*/
     /// Check if the position `x`, `y` is clear of entities and tiles
     isEmpty(x: number, y: number): boolean {
         return this.map.isEmpty(x, y) && this.entities.find((q) => q.x === x && q.y === y) == undefined;
@@ -125,27 +126,18 @@ export default class PlayScene extends Container {
         this.movedEntities.clear();
     }
     update(dt: number): void {
-        dt;
-        /*
         this.counter.update(dt);
         // If it is in a turn
         if (this.inTurn) {
             let numMoved = 0;
-            // For each entity
-            for (let i = 0; i < this.entities.length; i++) {
-                // Ignore entities that have moved
-                if (this.movedEntities.get(i))
-                    numMoved += 1;
-                // If it could be moved
-                else if (this.entities[i].tryMove())
-                    this.movedEntities.set(i);
-            }
+            for(const e of this.entities)
+                if(e.moved || e.tryMove())
+                    numMoved++;
             if(numMoved === this.entities.length)
                 // End the turn
-                this.endTurn();
-        }*/
-        for(const e of this.entities)
-            e.tryMove();
+                for(const e of this.entities)
+                    e.moved = false;
+        }
         // Get the first player in entities.
         const e = this.players[0];
         if(e !== undefined) {

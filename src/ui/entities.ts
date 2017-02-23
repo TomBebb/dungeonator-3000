@@ -1,6 +1,5 @@
-import { toString, Direction, KeyboardControl, FollowControl, Control, toVector } from "../control";
 import PlayScene from "../scene/PlayScene";
-import { Point } from "../util/math";
+import { BasePoint, Point } from "../util/math";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
@@ -49,16 +48,13 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
 
 /// A sprite that can move.
 ///
-/// This uses generics to make it able to use any control (such as gamepad or chase).
-export class Entity<C extends Control> extends Dynamic {
-    /// The source of input that controls this entity.
-    readonly control: C;
+/// This has a generic implementation that is easy to derive from.
+export class Entity extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
-    private lastDir: Direction = Direction.Down;
-    private point: Point = new Point();
+    moved: boolean = false;
 
-    constructor(scene: PlayScene, control: C, source: string = "player", x: number = 0, y: number = 0) {
+    constructor(scene: PlayScene, source: string = "player", x: number = 0, y: number = 0) {
         // Setup animations
         super(Dynamic.makeAnims(source, 16, 16, {
             stand_up: [ {x: 0, y: 0} ],
@@ -91,53 +87,60 @@ export class Entity<C extends Control> extends Dynamic {
             ]
         }), "stand_up", x, y);
         this.scene = scene;
-        this.control = control;
-        // If the entity is following another (i.e. it is an enemy)
-        if (this.control instanceof FollowControl)
-            // Let the entity's controller track the entity so it can resolve
-            // paths
-            this.control.entity = this as Entity<any>;
+    }
+    nextPoint(): Point | undefined {
+        return undefined;
     }
     tryMove(): boolean {
-        // Cache the result of the direction since it is computed each time it is accessed.
-        const cdir = this.control.dir;
-        
-        // If no movement was made
-        if (cdir === undefined)
-            return false;
-        // If a movement was made
-        else {
-            // Resolve the direction as a vector.
-            let [nx, ny] = toVector(cdir);
-            // Calculate the new position based on this.
-            this.point.set(this.x + PlayScene.TILE_SIZE * nx, this.y + PlayScene.TILE_SIZE * ny);
-            if (!this.scene.isEmpty(this.point.x, this.point.y))
-                return false;
-            // Set position to the new position
-            [this.x, this.y] = [this.point.x, this.point.y];
-            // Pick an animation based on if it is moving or not.
-            const anim = this.point.equals(this) ? "walk" : "stand";
-            if (this.lastDir !== cdir || !this.animationName.startsWith(anim)) {
-                this.animation = `${anim}_${toString(cdir)}`;
-                this.lastDir = cdir;
-            }
+        const p = this.nextPoint();
+        if(p != undefined && this.scene.isEmpty(p.x, p.y)) {
+            this.x = p.x;
+            this.y = p.y;
+            this.moved = true;
             return true;
-        }
+        } else return false;
     }
-    update(dt: number) {
-        super.update(dt);
-        const cdir = this.control.dir || this.lastDir;
-        const scdir = toString(cdir);
-        if(!this.animation.endsWith(scdir)) {
-            this.animation = `${this.animation.split("_")[0]}_${scdir}`;
-        }
+}
+export class KeyboardPlayer extends Entity {
+    private buttons = new Set<number>();
+    
+    constructor(scene: PlayScene) {
+        super(scene);
+        window.addEventListener("keydown", (e: KeyboardEvent) => {
+            this.buttons.add(e.keyCode);
+        });
+        window.addEventListener("keyup", (e: KeyboardEvent) => {
+            this.buttons.delete(e.keyCode);
+        });
     }
-    /// Create the default player, using a keyboard control
-    static defaultPlayer(scene: PlayScene): Entity<KeyboardControl> {
-        return new Entity(scene, new KeyboardControl(), undefined, 2 * PlayScene.TILE_SIZE, 2 * PlayScene.TILE_SIZE);
+    nextPoint(): Point | undefined {
+        if(this.buttons.has(37)) {
+            return new Point(this.x - PlayScene.TILE_SIZE, this.y);
+        } else if(this.buttons.has(38))
+            return new Point(this.x, this.y - PlayScene.TILE_SIZE);
+        else if(this.buttons.has(39))
+            return new Point(this.x + PlayScene.TILE_SIZE, this.y);
+        else if(this.buttons.has(40))
+            return new Point(this.x, this.y + PlayScene.TILE_SIZE);
+        else return undefined;
     }
-    /// Create the default enemy
-    static defaultEnemy(scene: PlayScene, follow?: Entity<any>): Entity<FollowControl> {
-        return new Entity(scene, new FollowControl(scene, follow), undefined, 10 * PlayScene.TILE_SIZE, 10 * PlayScene.TILE_SIZE);
+}
+export type Player = KeyboardPlayer;
+export class Enemy extends Entity {
+    path: BasePoint[] = [];
+    follow: Entity;
+    constructor(scene: PlayScene, follow: Entity) {
+        super(scene);
+        this.follow = follow;
+    }
+    nextPoint(): Point | undefined {
+        if(this.x - this.follow.x == 0 && this.y - this.follow.y == 0)
+            return this
+        else if(this.path.length == 0)
+            this.path = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(this.follow, true, 1/16)).reverse();
+        if(this.path.length > 0) {
+            return Point.from(this.path.pop()!, true, 16);
+        } else
+            return undefined;
     }
 }
