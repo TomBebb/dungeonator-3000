@@ -78,7 +78,7 @@ export default class Heap<T> {
             if(child2N < length) {
                 const child = this.content[child2N];
                 const score = child.score;
-                if(score < (swap == -1 ? elemScore : child1Score))
+                if(score < (swap == -1 ? elemScore : child1Score!))
                     swap = child2N;
             }
             if(swap != -1) {

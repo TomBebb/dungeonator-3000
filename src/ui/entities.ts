@@ -88,7 +88,7 @@ export class Entity extends Dynamic {
         }), "stand_up", x, y);
         this.scene = scene;
     }
-    nextPoint(): Point | undefined {
+    nextPoint(): BasePoint | undefined {
         return undefined;
     }
     tryMove(): boolean {
@@ -113,15 +113,15 @@ export class KeyboardPlayer extends Entity {
             this.buttons.delete(e.keyCode);
         });
     }
-    nextPoint(): Point | undefined {
-        if(this.buttons.has(37)) {
-            return new Point(this.x - PlayScene.TILE_SIZE, this.y);
-        } else if(this.buttons.has(38))
-            return new Point(this.x, this.y - PlayScene.TILE_SIZE);
+    nextPoint(): BasePoint | undefined {
+        if(this.buttons.has(37))
+            return { x: this.x - PlayScene.TILE_SIZE, y: this.y};
+        else if(this.buttons.has(38))
+            return { x: this.x, y: this.y - PlayScene.TILE_SIZE};
         else if(this.buttons.has(39))
-            return new Point(this.x + PlayScene.TILE_SIZE, this.y);
+            return { x: this.x + PlayScene.TILE_SIZE, y: this.y};
         else if(this.buttons.has(40))
-            return new Point(this.x, this.y + PlayScene.TILE_SIZE);
+            return { x: this.x, y: this.y + PlayScene.TILE_SIZE};
         else return undefined;
     }
 }
@@ -133,7 +133,7 @@ export class Enemy extends Entity {
         super(scene);
         this.follow = follow;
     }
-    nextPoint(): Point | undefined {
+    nextPoint(): BasePoint | undefined {
         if(this.x - this.follow.x == 0 && this.y - this.follow.y == 0)
             return this
         else if(this.path.length == 0)
