@@ -24,7 +24,3 @@ interface WebSocketEvent extends Event {
     accept(protocol: string): WebSocket;
     respondWith(r: Response): void;
 }
-
-declare class Response {
-    constructor(html: string, headers: any);
-}
