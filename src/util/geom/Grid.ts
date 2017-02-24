@@ -113,7 +113,7 @@ export default class Grid {
             const g = gScores.get(current)! + 1;
             const neighbours = this.neighbours(current);
             for(const n of neighbours) {
-                if(!closed.has(n) && !this.canWalk(n.x, n.y))
+                if(closed.has(n) || !this.canWalk(n.x, n.y))
                     continue;
                 if(!openSet.has(n)) {
                     openSet.add(n);
