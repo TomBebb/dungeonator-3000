@@ -54,6 +54,7 @@ export class Entity extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
     moved: boolean = false;
+    lastPoint: BasePoint;
 
     constructor(scene: PlayScene, source: string = "player", x: number = 0, y: number = 0) {
         // Setup animations
@@ -88,6 +89,7 @@ export class Entity extends Dynamic {
             ]
         }), "stand_up", x, y);
         this.scene = scene;
+        this.lastPoint = new Point(x, y);
     }
     nextPoint(): BasePoint | undefined {
         return undefined;
@@ -98,8 +100,18 @@ export class Entity extends Dynamic {
             this.x = p.x;
             this.y = p.y;
             this.moved = true;
+            const dy = p.y - this.lastPoint.y, dx = p.x - this.lastPoint.x;
+            if(Math.abs(dy) > Math.abs(dx))
+                this.animation = 'walk_' + (dy > 0 ? 'down' : 'up');
+            else
+                this.animation = 'walk_' + (dx > 0 ? 'right' : 'left');
+            this.lastPoint = p;
             return true;
-        } else return false;
+        } else {
+            if(this.animation.startsWith('walk_'))
+                this.animation = this.animation.replace('walk_', 'stand_');
+            return false;
+        }
     }
 }
 export class KeyboardPlayer extends Entity {
