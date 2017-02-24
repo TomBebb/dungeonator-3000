@@ -1,11 +1,2 @@
-src/*.js
-src/*.js.map
-src/scene/*.js
-src/scene/*.js.map
-src/util/*.js
-src/util/*.js.map
-src/path/*.js
-src/path/*.js.map
-
-src/ui/*.js
-src/ui/*.js.map
+**.js
+**.js.map

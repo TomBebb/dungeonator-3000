@@ -1,9 +1,9 @@
+import Grid from "./util/geom/Grid";
+import Point from "./util/geom/Point";
 import Bits from "./util/ds/Bits";
 import Heap from "./util/ds/Heap";
-import { Point } from "./util/math";
 import HashMap from "./util/ds/HashMap";
 import HashSet from "./util/ds/HashSet";
-import Grid from "./util/Grid";
 import Tile from "./util/Tile";
 
 function gridTest() {
@@ -19,7 +19,6 @@ function gridTest() {
     console.assert(grid.tileAt(0, 8) == Tile.Empty);
     const start = {x: 8, y: 0};
     const goal = {x: 8, y: 15};
-    grid.preparePathfinding();
     const path = grid.findPath(start, goal);
     for(let y = 0; y < grid.height; y++) {
         let t = "";
@@ -44,16 +43,16 @@ function gridTest() {
 }
 
 function heapTest() {
-    const heap = new Heap<{score: number}>();
+    const heap = new Heap<number>((v) => v);
     console.assert(heap.size == 0);
     const count = 10;
     for(let n = 0; n < count; n++) {
         console.assert(heap.size == n);
-        heap.push({score: n}, n);
+        heap.push(n);
     }
     for(let n = 0; n < count; n++) {
         const p = heap.pop()!;
-        console.assert(p.score == n);
+        console.assert(p == n);
     }
     console.assert(heap.size == 0);
 }

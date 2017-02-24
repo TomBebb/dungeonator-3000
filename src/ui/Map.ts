@@ -1,5 +1,5 @@
-import Grid from "../util/Grid";
 import PlayScene from "../scene/PlayScene";
+import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
@@ -18,7 +18,6 @@ export default class Map extends Container {
         const g = new Generator();
         g.grid = this.grid;
         g.generate();
-        g.grid.preparePathfinding();
         const TS = PlayScene.TILE_SIZE;
         // Compute the absolute width
         this.width = tileWidth * TS;

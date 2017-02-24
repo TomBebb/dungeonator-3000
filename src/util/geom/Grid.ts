@@ -1,8 +1,10 @@
-///<reference path='../astar.d.ts'/>
-import { Rectangle, Point, BasePoint } from "../util/math"
-import HashMap from "../util/ds/HashMap";
-import Tile from "./Tile";
-import astar = require("astar.js");
+import BasePoint from "./BasePoint";
+import Point from "./Point";
+import Rectangle from "./Rectangle";
+import HashMap from "../ds/HashMap";
+import HashSet from "../ds/HashSet";
+import Heap from "../ds/Heap";
+import Tile from "../Tile";
 
 /// A 2D Grid
 export default class Grid {
@@ -19,22 +21,11 @@ export default class Grid {
 
     readonly nodes: Point[] = [];
 
-    graph: astar.Graph;
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
         this.tiles = new Int8Array(width * height);
         this.clear();
-    }
-    /// Prepeare this grid for pathfinding, by constructing a graph to find paths on
-    preparePathfinding(): void {
-        let weights = new Array(this.height);
-        for(let x = 0; x < this.width; x++) {
-            weights[x] = [];
-            for(let y = 0; y < this.height; y++)
-                weights[x][y] = this.canWalk(x, y) ? 1 : 0;
-        }
-        this.graph = new astar.Graph(weights, {}, false);
     }
     /// Fill the rectangle `r` with the tile `c`
     fill(r: Rectangle, t: Tile): void {
@@ -95,29 +86,53 @@ export default class Grid {
     ///
     /// INVESTIGATE FRINGE SEARCH
     /// returns in order goal -> start
-    findPath(start: BasePoint, goal: BasePoint): BasePoint[] {
-        const a: BasePoint[] = astar.astar.search(this.graph, this.graph.grid[start.x][start.y], this.graph.grid[goal.x][goal.y]);
-        return a;
-    }
-    /// Consturct a path from the current node
-    makePath(current: Point, cameFrom: HashMap<Point, Point>): Point[] {
-        const path = [current];
-        while(cameFrom.has(current)) {
-            current = cameFrom.get(current)!;
-            path.push(current);
+    findPath(_start: BasePoint, goal: BasePoint): BasePoint[] {
+        const start = Point.from(_start);
+        const fScores = new HashMap<Point, number>();
+        const gScores = new HashMap<Point, number>();
+        const parents = new HashMap<Point, Point>();
+        const closed = new HashSet<Point>();
+        const open = new Heap<Point>((p) => fScores.get(p)!);
+        const openSet = new HashSet<Point>();
+        gScores.set(start, 0);
+        fScores.set(start, start.manhattanDistance(goal));
+        open.push(start);
+        openSet.add(start);
+        while(open.size > 0) {
+            let current = open.pop()!;
+            openSet.delete(current);
+            closed.add(current);
+            if(current.equals(goal)) {
+                const path = [current];
+                while(parents.has(current)) {
+                    current = parents.get(current)!;
+                    path.push(current);
+                }
+                return path.reverse();
+            }
+            const g = gScores.get(current)! + 1;
+            const neighbours = this.neighbours(current);
+            for(const n of neighbours) {
+                if(!closed.has(n) && !this.canWalk(n.x, n.y))
+                    continue;
+                if(!openSet.has(n)) {
+                    openSet.add(n);
+                    open.push(n);
+                } else if(g >= gScores.get(n)!)
+                    continue;
+                parents.set(n, current);
+                gScores.set(n, g);
+                fScores.set(n, g + n.manhattanDistance(goal));
+            }
         }
-        return path.reverse();
+        return [];
     }
     neighbours(p: Point): Point[] {
-        const ns = [];
-        if(this.canWalk(p.x - 1, p.y))
-            ns.push(new Point(p.x - 1, p.y))
-        if(this.canWalk(p.x + 1, p.y))
-            ns.push(new Point(p.x + 1, p.y))
-        if(this.canWalk(p.x, p.y - 1))
-            ns.push(new Point(p.x, p.y - 1))
-        if(this.canWalk(p.x, p.y + 1))
-            ns.push(new Point(p.x, p.y + 1))
-        return ns;
+        return [
+            new Point(p.x - 1, p.y),
+            new Point(p.x + 1, p.y),
+            new Point(p.x, p.y - 1),
+            new Point(p.x, p.y + 1)
+        ];
     }
 }

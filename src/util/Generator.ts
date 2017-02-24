@@ -1,6 +1,7 @@
-import Grid from "./Grid";
+import Grid from "./geom/Grid";
+import Rectangle from "./geom/Rectangle";
 import Tile from "./Tile";
-import {Rectangle, random} from "./math";
+import {random} from "./math";
 
 /// This is responsible for generating dungeons on a `Grid`.
 export default class Generator {

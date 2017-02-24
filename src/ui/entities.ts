@@ -1,5 +1,6 @@
 import PlayScene from "../scene/PlayScene";
-import { BasePoint, Point } from "../util/math";
+import BasePoint from "../util/geom/BasePoint";
+import Point from "../util/geom/Point";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];

@@ -1,4 +1,3 @@
-///<reference path='./astar.d.ts'/>
 ///<reference path='./pixi.d.ts'/>
 
 import LoadingScene from "./scene/LoadingScene";

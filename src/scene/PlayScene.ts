@@ -2,7 +2,9 @@
 
 import UIMap from "../ui/Map";
 import { Entity, KeyboardPlayer, Player, Enemy } from "../ui/entities";
-import { randomIn, Rectangle, BasePoint } from "../util/math";
+import { randomIn } from "../util/math";
+import BasePoint from "../util/geom/BasePoint";
+import Rectangle from "../util/geom/Rectangle";
 import Bits from "../util/ds/Bits";
 import Counter from "../util/Counter";
 import Container = PIXI.Container;
