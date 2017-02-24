@@ -1,4 +1,5 @@
 import Point from "./Point";
+import {intersects} from "../math";
 
 /// A 2d point and set of dimensions.
 export default class Rectangle extends Point {
@@ -20,7 +21,6 @@ export default class Rectangle extends Point {
     }
     /// Check if the rectangles `s` and `r` intersect with `spacing` needed between them to be considered intersecting.
     intersects(other: Rectangle, spacing: number): boolean {
-        return Math.abs((this.x + this.width / 2) - (other.x + other.width / 2)) < (this.width + other.width) / 2 + spacing
-        && Math.abs((this.y + this.height / 2) - (other.y + other.height / 2)) < (this.height + other.height) / 2 + spacing;
+        return intersects(this.x, this.y, this.width, this.height, other.x, other.y, other.width, other.height, spacing);
     }
 }

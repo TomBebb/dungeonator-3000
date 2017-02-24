@@ -1,6 +1,7 @@
 import PlayScene from "../scene/PlayScene";
 import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";
+import Item from "./Item";
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
 
@@ -12,6 +13,8 @@ export default class Map extends Container {
     readonly tileHeight: number;
     /// The grid which will be displayed.
     readonly grid: Grid;
+    
+    readonly items: Item[] = [];
     constructor(tileWidth: number, tileHeight: number) {
         super();
         this.grid = new Grid(tileWidth, tileHeight);
@@ -25,6 +28,8 @@ export default class Map extends Container {
         // Initialise the grid
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
+        for(const item of this.items)
+            this.addChild(item);
         this.redraw();
     }
     /// Returns true when `p` is a valid point on the underlying `grid`.

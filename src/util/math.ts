@@ -17,3 +17,9 @@ export function round(num: number, inc: number): number {
 export function randomStep(min: number, max: number, inc: number): number {
     return min + round(random(min, max) - min, inc);
 }
+
+/// Check if rectangles intersecty
+export function intersects(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number, spacing:number): boolean {
+    return Math.abs((x1 + w1 / 2) - (x2 + w2 / 2)) < (w1 + w2) / 2 + spacing
+        && Math.abs((y1 + h1 / 2) - (y2 + h2 / 2)) < (h1 + h2) / 2 + spacing;
+}
