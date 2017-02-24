@@ -113,16 +113,15 @@ export default class Grid {
             const g = gScores.get(current)! + 1;
             const neighbours = this.neighbours(current);
             for(const n of neighbours) {
-                if(closed.has(n) || !this.canWalk(n.x, n.y))
-                    continue;
-                if(!openSet.has(n)) {
-                    openSet.add(n);
-                    open.push(n);
-                } else if(g >= gScores.get(n)!)
-                    continue;
-                parents.set(n, current);
-                gScores.set(n, g);
-                fScores.set(n, g + n.manhattanDistance(goal));
+                if(!closed.has(n) && this.canWalk(n.x, n.y) && (!openSet.has(n) || g < gScores.get(n)!)) {
+                    if(!openSet.has(n)) {
+                        openSet.add(n);
+                        open.push(n);
+                    }
+                    parents.set(n, current);
+                    gScores.set(n, g);
+                    fScores.set(n, g + n.manhattanDistance(goal));
+                }
             }
         }
         return [];
