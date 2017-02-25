@@ -1,5 +1,6 @@
 /// <reference path="../extra.d.ts" />
 
+import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
 import { Entity, KeyboardPlayer, Player, Enemy } from "../ui/entities";
 import { randomIn } from "../util/math";
@@ -22,7 +23,8 @@ export default class PlayScene extends Scene {
     entities: Entity[] = [];
     /// The players, where each set bit is an index into `entities`.
     readonly players: KeyboardPlayer[] = [];
-    private floor: number = 0;
+    private floor: number = 1;
+    private ladder:Ladder = new Ladder();
     private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
         fontFamily: "sans",
         fontSize: 12,
@@ -46,11 +48,13 @@ export default class PlayScene extends Scene {
     constructor() {
         super(0xcccccc);
         this.addUi(this.floorLabel);
-        this.map = new UIMap(48, 48);
+        this .map = new UIMap(48, 48);
         this.addNonUi(this.map);
+        this.addNonUi(this.ladder);
         const player = new KeyboardPlayer(this);
         this.addEntity(player);
         this.addUi(this.floorLabel);
+        this.place(this.ladder);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         /*
         const gamepads: Gamepad[] = navigator.getGamepads() || [];

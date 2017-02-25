@@ -20,6 +20,7 @@
         "src/util/Tile.ts",
         "src/ui/entities.ts",
         "src/ui/Item.ts",
+        "src/ui/Ladder.ts",
         "src/ui/Map.ts"
     ],
     "compilerOptions": {

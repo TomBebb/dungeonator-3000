@@ -22,12 +22,15 @@ export default class Main {
         Main.instance = this;
         this.renderer.view.tabIndex = 1;
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+        // Set which assets should be loaded by PIXI
         PIXI.loader.baseUrl = 'assets/';
         PIXI.loader
             .add("blank", "blank.png")
             .add("player", "player.png")
             .add("wall1", "wall1.png")
             .add("wall2", "wall2.png")
+            .add("ladder", "ladder.png")
+            // make the scene a play scene once everything has loaded
             .load((_) => this.scene = new PlayScene());
         this.scene = new LoadingScene();
         setInterval(() => this.scene.update(Main.DELTA), Main.DELTA * 1000);
