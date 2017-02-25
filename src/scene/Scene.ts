@@ -1,5 +1,6 @@
 import Container = PIXI.Container;
 import DisplayObject = PIXI.DisplayObject;
+import BasePoint from '../util/geom/BasePoint';
 import Main from "../main";
 /// A common interface for scenes.
 ///
@@ -7,9 +8,8 @@ import Main from "../main";
 class Scene extends PIXI.Container {
 	ui: Container = new Container();
 	nonUi: Container = new Container();
-	constructor(bg: number) {
+	constructor() {
 		super();
-		bg;
 		this.addChild(this.nonUi);
 		this.addChild(this.ui);
 		const r = Main.instance.renderer;
@@ -26,6 +26,9 @@ class Scene extends PIXI.Container {
 	}
 	setCamera(x: number, y: number) {
 		this.nonUi.pivot.set(x, y);
+	}
+	getCamera(): BasePoint {
+		return this.nonUi.pivot;
 	}
 	/// Update this scene with the delta time `dt` (in seconds).
 	update(dt: number): void {

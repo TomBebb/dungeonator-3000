@@ -19,6 +19,7 @@
         "src/util/math.ts",
         "src/util/Tile.ts",
         "src/ui/entities.ts",
+        "src/ui/Button.ts",
         "src/ui/Ladder.ts",
         "src/ui/Map.ts"
     ],

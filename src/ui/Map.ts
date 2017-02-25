@@ -24,6 +24,7 @@ export default class Map extends Container {
         // Initialise the grid
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
+        this.cacheAsBitmap = true;
         this.reset();
     }
     reset() {

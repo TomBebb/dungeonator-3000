@@ -44,7 +44,7 @@ export default class PlayScene extends Scene {
     readonly map: UIMap;
     /// Add an entity
     constructor() {
-        super(0xcccccc);
+        super();
         this.addUi(this.floorLabel);
         this.map = new UIMap(48, 48);
         this.addNonUi(this.map);

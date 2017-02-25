@@ -7,7 +7,7 @@ export default class LoadingScene extends Scene {
 	static readonly TEXT = "Loading";
 	readonly graphics: Graphics;
 	constructor() {
-		super(0xcccccc);
+		super();
 		const r = Main.instance.renderer;
 		const text = new Text(LoadingScene.TEXT, {
 			align: 'center',

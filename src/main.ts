@@ -1,7 +1,7 @@
 ///<reference path='./pixi.d.ts'/>
 
 import LoadingScene from "./scene/LoadingScene";
-import PlayScene from "./scene/PlayScene";
+import TitleScene from "./scene/TitleScene";
 import Scene from "./scene/Scene";
 
 import test from "./test";
@@ -32,7 +32,7 @@ export default class Main {
             .add("wall2", "wall2.png")
             .add("ladder", "ladder.png")
             // make the scene a play scene once everything has loaded
-            .load((_) => this.scene = new PlayScene());
+            .load((_) => this.scene = new TitleScene());
         this.scene = new LoadingScene();
         setInterval(() => this.scene.update(Main.DELTA), Main.DELTA * 1000);
         document.body.appendChild(this.renderer.view);
