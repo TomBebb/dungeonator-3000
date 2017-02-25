@@ -49,7 +49,7 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
 
 /// A sprite that can move.
 ///
-/// This has a generic implementation that is easy to derive from.
+/// This has a generic implementation that is easy to extend from.
 export class Entity extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
@@ -58,7 +58,7 @@ export class Entity extends Dynamic {
 
     constructor(scene: PlayScene, source: string = "player", x: number = 0, y: number = 0) {
         // Setup animations
-        super(Dynamic.makeAnims(source, 16, 16, {
+        super(Dynamic.makeAnims(source, 16, 18, {
             stand_up: [ {x: 0, y: 0} ],
             stand_right: [ {x: 0, y: 18} ],
             stand_down: [ {x: 0, y: 36} ],
@@ -88,6 +88,7 @@ export class Entity extends Dynamic {
                 {x: 48, y: 54},
             ]
         }), "stand_up", x, y);
+        this.pivot.set(0, 2);
         this.scene = scene;
         this.lastPoint = new Point(x, y);
     }
