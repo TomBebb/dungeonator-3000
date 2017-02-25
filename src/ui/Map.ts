@@ -1,7 +1,6 @@
 import PlayScene from "../scene/PlayScene";
 import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";
-import Item from "./Item";
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
 
@@ -14,13 +13,10 @@ export default class Map extends Container {
     /// The grid which will be displayed.
     readonly grid: Grid;
     
-    readonly items: Item[] = [];
     constructor(tileWidth: number, tileHeight: number) {
         super();
         this.grid = new Grid(tileWidth, tileHeight);
-        const g = new Generator();
-        g.grid = this.grid;
-        g.generate();
+
         const TS = PlayScene.TILE_SIZE;
         // Compute the absolute width
         this.width = tileWidth * TS;
@@ -28,8 +24,12 @@ export default class Map extends Container {
         // Initialise the grid
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
-        for(const item of this.items)
-            this.addChild(item);
+        this.reset();
+    }
+    reset() {
+        const g = new Generator();
+        g.grid = this.grid;
+        g.generate();
         this.redraw();
     }
     /// Returns true when `p` is a valid point on the underlying `grid`.
@@ -49,6 +49,7 @@ export default class Map extends Container {
             PIXI.loader.resources["blank"].texture,
             PIXI.loader.resources["wall1"].texture
         ];
+        this.removeChildren();
         const TS = PlayScene.TILE_SIZE;
         // For each tile in the grid
         for(let x = 0; x < this.tileWidth; x++)

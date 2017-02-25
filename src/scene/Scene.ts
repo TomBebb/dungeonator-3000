@@ -21,6 +21,9 @@ class Scene extends PIXI.Container {
 	addNonUi(elem: DisplayObject) {
 		this.nonUi.addChild(elem);
 	}
+	removeNonUi(elem: DisplayObject) {
+		this.nonUi.removeChild(elem);
+	}
 	setCamera(x: number, y: number) {
 		this.nonUi.pivot.set(x, y);
 	}

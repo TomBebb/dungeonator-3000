@@ -141,16 +141,15 @@ export class KeyboardPlayer extends Entity {
 export type Player = KeyboardPlayer;
 export class Enemy extends Entity {
     path: BasePoint[] = [];
-    follow: Entity;
-    constructor(scene: PlayScene, follow: Entity) {
-        super(scene);
-        this.follow = follow;
-    }
     nextPoint(): BasePoint | undefined {
-        if(this.x - this.follow.x == 0 && this.y - this.follow.y == 0)
+        // The player to follow
+        const f = this.scene.players[0];
+        // If there is no difference
+        if(this.x - f.x == 0 && this.y - f.y == 0)
             return this
+        // If the cached path is empty
         else if(this.path.length == 0)
-            this.path = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(this.follow, true, 1/16)).reverse();
+            this.path = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(f, true, 1/16)).reverse();
         if(this.path.length > 0) {
             return Point.from(this.path.pop()!, true, 16);
         } else

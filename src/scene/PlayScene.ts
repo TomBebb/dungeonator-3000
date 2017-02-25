@@ -2,11 +2,10 @@
 
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
-import { Entity, KeyboardPlayer, Player, Enemy } from "../ui/entities";
+import { KeyboardPlayer, Player, Enemy, Entity } from "../ui/entities";
 import { randomIn } from "../util/math";
 import BasePoint from "../util/geom/BasePoint";
 import Rectangle from "../util/geom/Rectangle";
-import Bits from "../util/ds/Bits";
 import Counter from "../util/Counter";
 import Scene from "./Scene";
 import Text = PIXI.Text;
@@ -14,45 +13,48 @@ import Text = PIXI.Text;
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
-    static readonly MAX_ENTITIES = 16;
+    static readonly NUM_ENEMIES = 2;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
     /// The number of seconds since the last turn
     // private sinceLast: number = 0;
     /// The entities contained in the scene
-    entities: Entity[] = [];
+    readonly enemies: Enemy[] = [];
     /// The players, where each set bit is an index into `entities`.
-    readonly players: KeyboardPlayer[] = [];
-    private floor: number = 1;
+    readonly players: Player[] = [];
+    private _floor: number = 1;
+    
+    set floor(v: number) {
+        this._floor = v;
+        this.floorLabel.text = `Floor: ${this.floor}`;
+    }
+    get floor(): number {
+        return this._floor;
+    }
     private ladder:Ladder = new Ladder();
-    private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
+    private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
         fontFamily: "sans",
         fontSize: 12,
         fill: "white",
         align: "left"
     });
-    /// The entities that have moved already in this turn, where every set bit is an index into `entities`.
-    private readonly movedEntities: Bits = new Bits(PlayScene.MAX_ENTITIES);
     private inTurn: boolean = false;
     // private readonly gamepadEntities = new Map<number, GamepadEntity>();
-    // The map.
+    /// The grid as a displayable object.
     readonly map: UIMap;
     /// Add an entity
-    private addEntity(e: Entity) {
-        this.entities.push(e);
-        if (e instanceof KeyboardPlayer)
-            this.players.push(e as Player);
-        this.place(e);
-        this.addNonUi(e);
-    }
     constructor() {
         super(0xcccccc);
         this.addUi(this.floorLabel);
-        this .map = new UIMap(48, 48);
+        this.map = new UIMap(48, 48);
         this.addNonUi(this.map);
         this.addNonUi(this.ladder);
         const player = new KeyboardPlayer(this);
-        this.addEntity(player);
+        this.addNonUi(player);
+        this.place(player);
+        this.players.push(player);
+        for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
+            this.makeEnemy();
         this.addUi(this.floorLabel);
         this.place(this.ladder);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
@@ -73,7 +75,8 @@ export default class PlayScene extends Scene {
         });*/
         window.addEventListener("keydown", (e: KeyboardEvent) => {
             if(e.keyCode === 32)
-                this.addEntity(new Enemy(this, player));
+                this.makeEnemy();
+
         });
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;
@@ -89,6 +92,30 @@ export default class PlayScene extends Scene {
                 };
             });
     }
+    private makeEnemy(): Enemy {
+        const e = new Enemy(this);
+        this.addNonUi(e);
+        this.place(e);
+        this.enemies.push(e);
+        return e;
+    }
+    /// Advance to the next floor
+    private advanceFloor() {
+        this.endTurn();
+        // Increment the floor number
+        this.floor++;
+        // Reset the map (clear, then generate on it)
+        this.map.reset();
+        // Place the ladder
+        this.place(this.ladder);
+        // Place the entities
+        for(const p of this.players)
+            this.place(p);
+        for(const e of this.enemies) {
+            e.path.splice(0);
+            this.place(e);
+        }
+    }
     /*
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
@@ -100,44 +127,56 @@ export default class PlayScene extends Scene {
     }*/
     /// Check if the position `x`, `y` is clear of entities and tiles
     isEmpty(x: number, y: number): boolean {
-        return this.map.isEmpty(x, y) && this.entities.find((q) => q.x === x && q.y === y) == undefined;
+        const q = (q:Entity) => q.x === x && q.y === y;
+        return this.map.isEmpty(x, y) && this.players.find(q) == undefined && this.enemies.find(q) == undefined;
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
     isNotEmpty(x: number, y: number): boolean {
-        return this.map.isNotEmpty(x, y) || this.entities.find((q) => q.x === x && q.y === y) != undefined;
+        const q = (q:Entity) => q.x === x && q.y === y;
+        return this.map.isNotEmpty(x, y) || this.players.find(q) != undefined || this.enemies.find(q) != undefined;
     }
     /// Attempt to place the point `p` in the game.
-    private place(p: BasePoint) {
-        // Get a random room
-        const r: Rectangle = randomIn(this.map.grid.rooms) !;
-        // Place p in the room
-        p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
-        p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
+    private place(p: BasePoint, numAttempts: number = 5): boolean {
+        do {
+            // Get a random room
+            const r: Rectangle = randomIn(this.map.grid.rooms) !;
+            // Place p in the room
+            p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
+            p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
+        } while(this.isNotEmpty(p.x, p.y) && --numAttempts > 0)
+        return numAttempts > 0;
     }
     /// Start a new turn
     startTurn() {
         this.inTurn = true;
-        //for(const c of this.entities)
-        //    c.visible = Math.abs(c.x - this.pivot.x) * 1.5 < Main.instance.renderer.width && Math.abs(c.y - this.pivot.y) * 1.5 < Main.instance.renderer.height;
     }
-    /// End the current turn
     endTurn() {
         this.inTurn = false;
-        // Remove all the entities
-        this.movedEntities.clear();
+        // End the turn
+        for(const e of this.enemies)
+            e.moved = false;
+        for(const e of this.players)
+            e.moved = false;
+    }
+    tryMoveEntity(e: Entity): boolean {
+        return e.moved || e.tryMove();
     }
     update(dt: number): void {
         this.counter.update(dt);
         // If it is in a turn
         if (this.inTurn) {
             let numMoved = 0;
-            for(const e of this.entities)
-                if(e.moved || e.tryMove())
+            for(const p of this.players)
+                if(this.tryMoveEntity(p)) {
                     numMoved++;
-            if(numMoved === this.entities.length)
-                // End the turn
-                for(const e of this.entities)
-                    e.moved = false;
+                    if(this.ladder.x == p.x && this.ladder.y == p.y)
+                        this.advanceFloor();
+                }
+            for(const e of this.enemies)
+                if(this.tryMoveEntity(e))
+                    numMoved++;
+            if(numMoved == this.enemies.length + this.players.length)
+                this.endTurn();
         }
         // Get the first player in entities.
         const e = this.players[0];
