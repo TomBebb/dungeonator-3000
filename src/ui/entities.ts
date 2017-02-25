@@ -1,6 +1,7 @@
 import PlayScene from "../scene/PlayScene";
 import BasePoint from "../util/geom/BasePoint";
 import Point from "../util/geom/Point";
+import {manhattanDistance} from "../util/math";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
@@ -92,12 +93,17 @@ export class Entity extends Dynamic {
         this.scene = scene;
         this.lastPoint = new Point(x, y);
     }
+    distanceFrom(p: BasePoint) {
+        return manhattanDistance(this.x, this.y, p.x, p.y);
+    }
     nextPoint(): BasePoint | undefined {
         return undefined;
     }
     tryMove(): boolean {
         const p = this.nextPoint();
-        if(p != undefined && this.scene.isEmpty(p.x, p.y)) {
+        if(p != undefined && p == this)
+            return true;
+        else if(p != undefined && this.scene.isEmpty(p.x, p.y)) {
             this.x = p.x;
             this.y = p.y;
             this.moved = true;
@@ -141,10 +147,39 @@ export class KeyboardPlayer extends Entity {
 }
 export type Player = KeyboardPlayer;
 export class Enemy extends Entity {
+    /// The player to follow
+    follow: Player | undefined;
+    /// The cache of the path found using A*
     path: BasePoint[] = [];
+
+    sightDist: number = 5 * PlayScene.TILE_SIZE;
+    startFollowing(e: Player) {
+        this.follow = e;
+        const text = new PIXI.Text("!", {
+            fill: "white"
+        });
+        text.position.set(this.x - text.width / 2, this.y - text.height);
+        let frame: () => void;
+        frame = () => {
+            text.alpha -= 0.1;
+            if(text.alpha <= 0) {
+                this.scene.removeNonUi(text);
+                this.scene.counter.unregister(frame);
+            }
+        }
+        this.scene.counter.register(0.03, frame);
+        this.scene.addNonUi(text);
+    }
+    canSee(p: Player): boolean {
+        return this.distanceFrom(p) < 2 * this.sightDist;
+    }
+
+
     nextPoint(): BasePoint | undefined {
+        if(this.follow == undefined)
+            return this;
         // The player to follow
-        const f = this.scene.players[0];
+        const f = this.follow!;
         // If there is no difference
         if(this.x - f.x == 0 && this.y - f.y == 0)
             return this
@@ -154,6 +189,6 @@ export class Enemy extends Entity {
         if(this.path.length > 0) {
             return Point.from(this.path.pop()!, true, 16);
         } else
-            return undefined;
+            return undefined
     }
 }

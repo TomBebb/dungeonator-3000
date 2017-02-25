@@ -27,6 +27,10 @@ export default class Counter {
 			callback: cb
 		})
 	}
+	unregister(cb: () => void) {
+		const i = this.callbacks.findIndex((v) => v.callback == cb);
+		this.callbacks.splice(i, 1);
+	}
 }
 
 /// A registered callback

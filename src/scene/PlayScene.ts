@@ -112,6 +112,8 @@ export default class PlayScene extends Scene {
         for(const p of this.players)
             this.place(p);
         for(const e of this.enemies) {
+            // Make it not follow anything
+            e.follow = undefined;
             e.path.splice(0);
             this.place(e);
         }
@@ -159,7 +161,13 @@ export default class PlayScene extends Scene {
             e.moved = false;
     }
     tryMoveEntity(e: Entity): boolean {
-        return e.moved || e.tryMove();
+        return e.moved || e.tryMove()
+    }    
+    private enemySees(p: Player): Enemy | undefined {
+        for(const e of this.enemies)
+            if(e.canSee(p))
+                return e;
+        return undefined;
     }
     update(dt: number): void {
         this.counter.update(dt);
@@ -168,6 +176,9 @@ export default class PlayScene extends Scene {
             let numMoved = 0;
             for(const p of this.players)
                 if(this.tryMoveEntity(p)) {
+                    const e:Enemy | undefined = this.enemySees(p);
+                    if(e != undefined && e.follow == undefined)
+                        e.startFollowing(p);
                     numMoved++;
                     if(this.ladder.x == p.x && this.ladder.y == p.y)
                         this.advanceFloor();

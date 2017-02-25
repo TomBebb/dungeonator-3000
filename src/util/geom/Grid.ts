@@ -17,10 +17,6 @@ export default class Grid {
 
     rooms: Rectangle[] = [];
 
-    tracePaths: boolean = true;
-
-    readonly nodes: Point[] = [];
-
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
