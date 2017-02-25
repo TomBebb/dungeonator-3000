@@ -1,13 +1,13 @@
 import Main from '../main';
-import Container = PIXI.Container;
+import Scene from './Scene';
 import Graphics = PIXI.Graphics;
 import Text = PIXI.Text;
 
-export default class LoadingScene extends Container {
+export default class LoadingScene extends Scene {
 	static readonly TEXT = "Loading";
 	readonly graphics: Graphics;
 	constructor() {
-		super();
+		super(0xcccccc);
 		const r = Main.instance.renderer;
 		const text = new Text(LoadingScene.TEXT, {
 			align: 'center',
@@ -17,10 +17,8 @@ export default class LoadingScene extends Container {
 		});
 		text.width = r.width;
 		text.height = r.height;
-		this.addChild(text);
+		this.addUi(text);
 		this.width = r.width;
 		this.height = r.height;
-	}
-	update(_: number): void {
 	}
 }

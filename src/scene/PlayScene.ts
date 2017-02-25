@@ -7,12 +7,11 @@ import BasePoint from "../util/geom/BasePoint";
 import Rectangle from "../util/geom/Rectangle";
 import Bits from "../util/ds/Bits";
 import Counter from "../util/Counter";
-import Container = PIXI.Container;
+import Scene from "./Scene";
 import Text = PIXI.Text;
-import Main from "../main";
 
 /// The main scene
-export default class PlayScene extends Container {
+export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
     static readonly MAX_ENTITIES = 16;
     static readonly TURN_DELAY = 0.1;
@@ -24,7 +23,6 @@ export default class PlayScene extends Container {
     /// The players, where each set bit is an index into `entities`.
     readonly players: KeyboardPlayer[] = [];
     private floor: number = 0;
-    private readonly top: PIXI.Container = new PIXI.Container();
     private readonly floorLabel: Text = new Text(`Floor: ${this.floor}`, {
         fontFamily: "sans",
         fontSize: 12,
@@ -43,19 +41,16 @@ export default class PlayScene extends Container {
         if (e instanceof KeyboardPlayer)
             this.players.push(e as Player);
         this.place(e);
-        this.addChild(e);
+        this.addNonUi(e);
     }
     constructor() {
-        super();
-        this.top.addChild(this.floorLabel);
-        this.addChild(this.top);
-        const r = Main.instance.renderer;
-        this.position.set(r.width / 2, r.height / 2);
+        super(0xcccccc);
+        this.addUi(this.floorLabel);
         this.map = new UIMap(48, 48);
-        this.addChild(this.map);
+        this.addNonUi(this.map);
         const player = new KeyboardPlayer(this);
         this.addEntity(player);
-        this.addChild(this.floorLabel);
+        this.addUi(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         /*
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
@@ -118,8 +113,8 @@ export default class PlayScene extends Container {
     /// Start a new turn
     startTurn() {
         this.inTurn = true;
-        for(const c of this.entities)
-            c.visible = Math.abs(c.x - this.pivot.x) * 1.5 < Main.instance.renderer.width && Math.abs(c.y - this.pivot.y) * 1.5 < Main.instance.renderer.height;
+        //for(const c of this.entities)
+        //    c.visible = Math.abs(c.x - this.pivot.x) * 1.5 < Main.instance.renderer.width && Math.abs(c.y - this.pivot.y) * 1.5 < Main.instance.renderer.height;
     }
     /// End the current turn
     endTurn() {
@@ -142,9 +137,8 @@ export default class PlayScene extends Container {
         }
         // Get the first player in entities.
         const e = this.players[0];
-        if(e !== undefined) {
-            this.pivot.set(e.x, e.y);
-            this.top.pivot.set(e.x, e.y);
-        }
+        // Set the camera
+        if(e !== undefined)
+            this.setCamera(e.x, e.y);
     }
 }
