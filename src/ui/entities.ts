@@ -67,26 +67,22 @@ export class Entity extends Dynamic {
             walk_up: [
                 {x: 0, y: 0},
                 {x: 16, y: 0},
-                {x: 32, y: 0},
-                {x: 48, y: 0},
+                {x: 32, y: 0}
             ],
             walk_right: [
                 {x: 0, y: 18},
                 {x: 16, y: 18},
-                {x: 32, y: 18},
-                {x: 48, y: 18},
+                {x: 32, y: 18}
             ],
             walk_down: [
                 {x: 0, y: 36},
                 {x: 16, y: 36},
-                {x: 32, y: 36},
-                {x: 48, y: 36},
+                {x: 32, y: 36}
             ],
             walk_left: [
                 {x: 0, y: 54},
                 {x: 16, y: 54},
-                {x: 32, y: 54},
-                {x: 48, y: 54},
+                {x: 32, y: 54}
             ]
         }), "stand_up", x, y);
         this.pivot.set(0, 2);
@@ -153,6 +149,9 @@ export class Enemy extends Entity {
     path: BasePoint[] = [];
 
     sightDist: number = 5 * PlayScene.TILE_SIZE;
+    constructor(scene:PlayScene) {
+        super(scene, "zombie")
+    }
     startFollowing(e: Player) {
         this.follow = e;
         const text = new PIXI.Text("!", {

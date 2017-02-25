@@ -27,6 +27,7 @@ export default class Main {
         PIXI.loader
             .add("blank", "blank.png")
             .add("player", "player.png")
+            .add("zombie", "zombies.png")
             .add("wall1", "wall1.png")
             .add("wall2", "wall2.png")
             .add("ladder", "ladder.png")
