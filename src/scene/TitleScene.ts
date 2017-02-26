@@ -34,6 +34,10 @@ export default class TitleScene extends Scene {
 		this.addUi(this.play);
 		this.title.position.set(r.width / 2 - this.title.width / 2, r.height / 4 - this.title.height / 2);
 		this.setCamera(this.map.width / 2, this.map.height / 2);
+		r.view.onkeydown = (e: KeyboardEvent) => {
+			if(e.keyCode == 32)
+				this.advance();
+		};
 		// register click handler for play button
 		r.view.onmousedown = (e: MouseEvent) => {
 			if(this.play.containsPoint(e))
@@ -45,6 +49,7 @@ export default class TitleScene extends Scene {
 	}
 	advance() {
 		const r = Main.instance.renderer;
+		r.view.onkeydown = undefined as any;
 		r.view.onmousedown = undefined as any;
 		r.view.onmousemove = undefined as any;
 		r.view.style.cursor = 'default';
