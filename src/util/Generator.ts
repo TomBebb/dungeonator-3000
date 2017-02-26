@@ -1,5 +1,6 @@
 import Grid from "./geom/Grid";
 import Rectangle from "./geom/Rectangle";
+import QuadTree from "./geom/QuadTree";
 import Tile from "./Tile";
 import {random} from "./math";
 
@@ -25,21 +26,27 @@ export default class Generator {
 	grid: Grid;
 	/// The array of rooms, which is needed post-gen for fast spawning.
 	private rooms: Rectangle[] = [];
+	/// The quad tree, used to quickly guess if rooms are in area
+
+	private quadTree: QuadTree<Rectangle>;
 
 	/// Create a generator on `grid`
-	public Generator(grid: Grid) {
+	constructor(grid: Grid) {
 		this.grid = grid;
+		this.quadTree = new QuadTree<Rectangle>(new Rectangle(0, 0, grid.width, grid.height));
 	}
 	/// Attempt to place the room `room` on the grid a maximum of `numAttempts` times.
 	///
 	/// This returns true if the room could be placed i.e. it doesn't overlap with any other rectangles.
 	private placeOnGrid(room: Rectangle, numAttempts: number = 5): boolean {
+		let maybeRooms: Rectangle[] = [];
 		do {
 			/// Generate a random position that should be valid.
 			room.x = random(Generator.EDGE_DISTANCE, this.grid.width - room.width - Generator.EDGE_DISTANCE * 2);
 			room.y = random(Generator.EDGE_DISTANCE, this.grid.height - room.height - Generator.EDGE_DISTANCE * 2);
+			this.quadTree.retrieve(maybeRooms, room);
 			/// Repeat the above if there is a room with `room`.
-		} while(this.rooms.find((r: Rectangle) => r.intersects(room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
+		} while(maybeRooms.find((r: Rectangle) => r.intersects(room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
 		return numAttempts > 0;
 	}
 	/// Generate a dungeon floor on the grid, attempting to generate a room a maximum of `numAttempts` times before giving up.
@@ -61,6 +68,7 @@ export default class Generator {
 				_num = numAttempts;
 				// Add the room to the `rooms` array.
 				this.rooms.push(room);
+				this.quadTree.insert(room);
 			}
 		}
 		// For each room in the dungeon

@@ -29,8 +29,7 @@ export default class Map extends Container {
     }
     reset() {
         this.grid.rooms = [];
-        const g = new Generator();
-        g.grid = this.grid;
+        const g = new Generator(this.grid);
         g.generate();
         this.redraw();
     }
