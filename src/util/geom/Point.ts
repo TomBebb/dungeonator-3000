@@ -25,8 +25,8 @@ export class Point implements BasePoint {
             p = new Point(p.x, p.y);
         else
             Object.setPrototypeOf(p, Point.prototype);
-        p.x *= scale;
-        p.y *= scale;
+        p.x = Math.floor(p.x * scale);
+        p.y = Math.floor(p.y * scale);
         return p as Point;
     }
     /// Return the squared distance between this and another point.

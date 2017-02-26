@@ -170,7 +170,34 @@ export class GamepadPlayer extends Entity {
             return { x: this.x + Math.round(dx) * PlayScene.TILE_SIZE, y: this.y + Math.round(dy) * PlayScene.TILE_SIZE};
     }
 }
-export type Player = KeyboardPlayer | GamepadPlayer;
+
+export class MousePlayer extends Entity {
+    /// The cache of the path found using A*
+    private path: BasePoint[] = [];
+    constructor(scene: PlayScene) {
+        super(scene);
+        window.onmousedown = (e: MouseEvent) => {
+            const TS = PlayScene.TILE_SIZE;
+            const p = this.scene.fromGlobal(new Point(e.x, e.y));
+            const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/TS), Point.from(p, false, 1/TS));
+            this.path = revPath.reverse();
+        };
+    }
+    destroy() {
+        super.destroy();
+        delete window.onmousedown;
+    }
+    clearPath() {
+        this.path.splice(0);
+    }
+    nextPoint(): BasePoint | undefined {
+        if(this.path.length > 0) {
+            return Point.from(this.path.pop()!, true, 16);
+        } else
+            return undefined;
+    }
+}
+export type Player = KeyboardPlayer | GamepadPlayer | MousePlayer;
 export class Enemy extends Entity {
     /// How many steps to cache a path for
     private static readonly MAX_PATH_LENGTH = 4;
@@ -227,6 +254,6 @@ export class Enemy extends Entity {
         if(this.path.length > 0) {
             return Point.from(this.path.pop()!, true, 16);
         } else
-            return undefined
+            return this
     }
 }

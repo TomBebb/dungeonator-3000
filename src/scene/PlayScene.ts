@@ -2,7 +2,7 @@
 
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
-import { KeyboardPlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
+import { MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
 import { randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
 import { Rectangle } from "../util/geom/Rectangle";
@@ -60,7 +60,7 @@ export default class PlayScene extends Scene {
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
         if(this.players.length == 0) {
-            const player = new KeyboardPlayer(this);
+            const player = new MousePlayer(this);
             this.addNonUi(player);
             player.room = this.place(player);
             this.players.push(player);
