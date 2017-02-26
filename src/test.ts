@@ -20,20 +20,6 @@ function gridTest() {
     const start = {x: 8, y: 0};
     const goal = {x: 8, y: 15};
     const path = grid.findPath(start, goal);
-    for(let y = 0; y < grid.height; y++) {
-        let t = "";
-        for(let x = 0; x < grid.width; x++) {
-            let tile;
-            if(path.find((p) => p.x == x && p.y == y))
-                tile = " ";
-            else if(grid.tileAt(x, y) == Tile.Empty)
-                tile = "░";
-            else
-                tile = "█";
-            t += tile;
-        }
-        console.log(t);
-    }
     console.assert(path.length > 0);
     console.log(path.findIndex((p) => goal.x == p.x && goal.y == p.y), path.length);
     console.assert(Point.from(goal).distSquared(path[path.length - 1]) == 0);

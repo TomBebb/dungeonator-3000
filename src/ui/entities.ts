@@ -1,7 +1,7 @@
 import PlayScene from "../scene/PlayScene";
 import BasePoint from "../util/geom/BasePoint";
 import Point from "../util/geom/Point";
-import {manhattanDistance} from "../util/math";
+import {manhattanDistance, rectContains} from "../util/math";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
@@ -99,7 +99,7 @@ export class Entity extends Dynamic {
         const p = this.nextPoint();
         if(p != undefined && p == this)
             return true;
-        else if(p != undefined && this.scene.isEmpty(p.x, p.y)) {
+        else if(p != undefined && this.scene.canWalk(p.x, p.y)) {
             this.x = p.x;
             this.y = p.y;
             this.moved = true;
@@ -170,7 +170,13 @@ export class Enemy extends Entity {
         this.scene.addNonUi(text);
     }
     canSee(p: Player): boolean {
-        return this.distanceFrom(p) < 2 * this.sightDist;
+        if(this.distanceFrom(p) < 2 * this.sightDist)
+            return true;
+        const TS = PlayScene.TILE_SIZE;
+        for(const r of this.scene.map.grid.rooms)
+            if(rectContains(r.x, r.y, r.width, r.height, p.x / TS, p.y / TS) && rectContains(r.x, r.y, r.width, r.height, this.x / TS, this.y / TS))
+                return true;
+        return false;
     }
 
 

@@ -28,6 +28,7 @@ export default class Map extends Container {
         this.reset();
     }
     reset() {
+        this.grid.rooms = [];
         const g = new Generator();
         g.grid = this.grid;
         g.generate();
@@ -35,13 +36,13 @@ export default class Map extends Container {
     }
     /// Returns true when `p` is a valid point on the underlying `grid`.
     isValid(x: number, y: number): boolean {
-        return this.grid.isValid(x / PlayScene.TILE_SIZE, y / PlayScene.TILE_SIZE);
+        return this.grid.isValid((x - this.x) / PlayScene.TILE_SIZE, (y - this.y) / PlayScene.TILE_SIZE);
     }
-    isEmpty(x: number, y: number): boolean {
-        return this.grid.isEmpty(x / PlayScene.TILE_SIZE, y / PlayScene.TILE_SIZE);
+    canWalk(x: number, y: number): boolean {
+        return this.grid.canWalk((x - this.x) / PlayScene.TILE_SIZE, (y - this.y) / PlayScene.TILE_SIZE);
     }
     isNotEmpty(x: number, y: number): boolean {
-        return this.grid.isNotEmpty(x / PlayScene.TILE_SIZE, y / PlayScene.TILE_SIZE);
+        return this.grid.isNotEmpty((x - this.x) / PlayScene.TILE_SIZE, (y - this.y) / PlayScene.TILE_SIZE);
     }
     /// Makes sprites for each individual tile.
     redraw() {
@@ -51,6 +52,8 @@ export default class Map extends Container {
             PIXI.loader.resources["wall1"].texture
         ];
         this.removeChildren();
+        // Delete cached bitmap
+        this.cacheAsBitmap = false;
         const TS = PlayScene.TILE_SIZE;
         // For each tile in the grid
         for(let x = 0; x < this.tileWidth; x++)
@@ -64,5 +67,7 @@ export default class Map extends Container {
                 // Add it as a child so it is drawn with the map.
                 this.addChild(s);
             }
+        // Done drawing, cache as bitmap
+        this.cacheAsBitmap = false;
     }
 }
