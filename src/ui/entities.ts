@@ -1,7 +1,8 @@
 import PlayScene from "../scene/PlayScene";
 import BasePoint from "../util/geom/BasePoint";
+import Rectangle from "../util/geom/Rectangle";
 import Point from "../util/geom/Point";
-import {manhattanDistance, rectContains} from "../util/math";
+import {manhattanDistance} from "../util/math";
 
 export interface Animations {
     [index: string]: PIXI.Texture[];
@@ -57,6 +58,8 @@ export class Entity extends Dynamic {
     moved: boolean = false;
     lastPoint: BasePoint;
 
+    room: Rectangle | undefined;
+
     constructor(scene: PlayScene, source: string = "player", x: number = 0, y: number = 0) {
         // Setup animations
         super(Dynamic.makeAnims(source, 16, 18, {
@@ -100,6 +103,11 @@ export class Entity extends Dynamic {
         if(p != undefined && p == this)
             return true;
         else if(p != undefined && this.scene.canWalk(p.x, p.y)) {
+            const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
+            if(this.room == undefined || !this.room.contains(x, y))
+                for(const r of this.scene.map.grid.rooms)
+                    if(r.contains(x, y))
+                        this.room = r;
             this.x = p.x;
             this.y = p.y;
             this.moved = true;
@@ -170,13 +178,7 @@ export class Enemy extends Entity {
         this.scene.addNonUi(text);
     }
     canSee(p: Player): boolean {
-        if(this.distanceFrom(p) < 2 * this.sightDist)
-            return true;
-        const TS = PlayScene.TILE_SIZE;
-        for(const r of this.scene.map.grid.rooms)
-            if(rectContains(r.x, r.y, r.width, r.height, p.x / TS, p.y / TS) && rectContains(r.x, r.y, r.width, r.height, this.x / TS, this.y / TS))
-                return true;
-        return false;
+        return this.distanceFrom(p) < 2 * this.sightDist || (p.room != undefined && this.room == p.room);
     }
 
 

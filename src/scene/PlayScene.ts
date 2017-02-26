@@ -51,7 +51,7 @@ export default class PlayScene extends Scene {
         this.addNonUi(this.ladder);
         const player = new KeyboardPlayer(this);
         this.addNonUi(player);
-        this.place(player);
+        player.room = this.place(player);
         this.players.push(player);
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
             this.makeEnemy();
@@ -95,7 +95,7 @@ export default class PlayScene extends Scene {
     private makeEnemy(): Enemy {
         const e = new Enemy(this);
         this.addNonUi(e);
-        this.place(e);
+        e.room = this.place(e);
         this.enemies.push(e);
         return e;
     }
@@ -138,15 +138,16 @@ export default class PlayScene extends Scene {
         return this.map.isNotEmpty(x, y) || this.players.find(q) != undefined || this.enemies.find(q) != undefined;
     }
     /// Attempt to place the point `p` in the game.
-    private place(p: BasePoint, numAttempts: number = 5): boolean {
+    private place(p: BasePoint, numAttempts: number = 5): Rectangle | undefined {
+        let r: Rectangle;
         do {
             // Get a random room
-            const r: Rectangle = randomIn(this.map.grid.rooms) !;
+            r = randomIn(this.map.grid.rooms) !;
             // Place p in the room
             p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
             p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
         } while(this.isNotEmpty(p.x, p.y) && --numAttempts > 0)
-        return numAttempts > 0;
+        return numAttempts > 0 ? r : undefined;
     }
     /// Start a new turn
     startTurn() {

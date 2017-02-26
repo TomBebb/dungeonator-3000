@@ -1,5 +1,5 @@
 import Point from "./Point";
-import {intersects} from "../math";
+import {intersects, rectContains} from "../math";
 
 /// A 2d point and set of dimensions.
 export default class Rectangle extends Point {
@@ -18,6 +18,9 @@ export default class Rectangle extends Point {
             this.x + Math.floor(this.width / 2),
             this.y + Math.floor(this.height / 2)
         );
+    }
+    contains(x: number, y: number): boolean {
+        return rectContains(this.x, this.y, this.width, this.height, x, y);
     }
     /// Check if the rectangles `s` and `r` intersect with `spacing` needed between them to be considered intersecting.
     intersects(other: Rectangle, spacing: number): boolean {
