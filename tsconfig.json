@@ -16,6 +16,7 @@
         "src/util/geom/Rectangle.ts",
         "src/util/Counter.ts",
         "src/util/Generator.ts",
+        "src/util/save.ts",
         "src/util/math.ts",
         "src/util/Tile.ts",
         "src/ui/entities.ts",

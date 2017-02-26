@@ -7,6 +7,7 @@ import { randomIn } from "../util/math";
 import BasePoint from "../util/geom/BasePoint";
 import Rectangle from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
+import {Save, save} from "../util/save";
 import Scene from "./Scene";
 import Text = PIXI.Text;
 
@@ -98,8 +99,11 @@ export default class PlayScene extends Scene {
     /// Advance to the next floor
     private advanceFloor() {
         this.endTurn();
+        const saveData: Save = {
+            maxFloor: ++this.floor
+        };
         // Increment the floor number
-        this.floor++;
+        save(saveData);
         // Reset the map (clear, then generate on it)
         this.map.reset();
         // Place the ladder

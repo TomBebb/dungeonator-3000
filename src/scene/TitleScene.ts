@@ -3,6 +3,7 @@ import Scene from './Scene';
 import Button from '../ui/Button';
 import Map from '../ui/Map';
 import PlayScene from './PlayScene';
+import {Save, load} from '../util/save';
 import Text = PIXI.Text;
 /// The title scene, shown when the game loads
 export default class TitleScene extends Scene {
@@ -34,6 +35,15 @@ export default class TitleScene extends Scene {
 		this.addUi(this.play);
 		this.title.position.set(r.width / 2 - this.title.width / 2, r.height / 4 - this.title.height / 2);
 		this.setCamera(this.map.width / 2, this.map.height / 2);
+		const data: Save | undefined = load();
+		if(data != undefined) {
+			const t = new Text(`Highest floor: ${data.maxFloor}`, {
+				fontSize: 40,
+				fill: 'white'
+			});
+			t.position.set((r.width - t.width) / 2, (r.height - t.height) / 2);
+			this.addUi(t);
+		}
 		r.view.onkeydown = (e: KeyboardEvent) => {
 			if(e.keyCode == 32)
 				this.advance();
