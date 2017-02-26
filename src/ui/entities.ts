@@ -158,6 +158,8 @@ export class GamepadPlayer extends Entity {
     }
     nextPoint(): BasePoint | undefined {
         const gp = navigator.getGamepads()[this.index];
+        if(gp == null)
+            return this;
         const dx = gp.axes[0], dy = gp.axes[1];
         if(dx == 0 && dy == 0)
             return undefined;

@@ -7,7 +7,7 @@ import { randomIn } from "../util/math";
 import BasePoint from "../util/geom/BasePoint";
 import Rectangle from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
-import {Save, save} from "../util/save";
+import {Save, save, load} from "../util/save";
 import Scene from "./Scene";
 import Text = PIXI.Text;
 
@@ -99,9 +99,14 @@ export default class PlayScene extends Scene {
     /// Advance to the next floor
     private advanceFloor() {
         this.endTurn();
-        const saveData: Save = {
-            maxFloor: ++this.floor
-        };
+        let saveData: Save | undefined = load();
+        const f = ++this.floor;
+        if(saveData == undefined)
+            saveData = {
+                maxFloor: f
+            };
+        else if(f > saveData.maxFloor)
+            saveData.maxFloor = f;
         // Increment the floor number
         save(saveData);
         // Reset the map (clear, then generate on it)
@@ -206,6 +211,10 @@ export default class PlayScene extends Scene {
     }
     update(dt: number): void {
         this.counter.update(dt);
+        const gamepads: Gamepad[] = navigator.getGamepads() || [];
+        for (const g of gamepads)
+            if (g != undefined && !this.gamepadPlayers.has(g.index))
+                this.connectGamepad(g);
         // If it is in a turn
         if (this.inTurn) {
             let enemies: Enemy[] = [];
@@ -227,10 +236,12 @@ export default class PlayScene extends Scene {
             if(numMoved == this.enemies.length + this.players.length)
                 this.endTurn();
         }
+        let tx = 0, ty = 0;
         // Get the first player in entities.
-        const e = this.players[0];
-        // Set the camera
-        if(e !== undefined)
-            this.setCamera(e.x, e.y);
+        for(const p of this.players) {
+            tx += p.x;
+            ty += p.y;
+        }
+        this.setCamera(tx / this.players.length, ty / this.players.length);
     }
 }

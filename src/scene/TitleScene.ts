@@ -26,6 +26,7 @@ export default class TitleScene extends Scene {
 		const r = Main.instance.renderer;
 		this.title.width = r.width;
 		this.title.height = r.height;
+		this.title.cacheAsBitmap = true;
 		// Set up buttons and label
 		this.addNonUi(this.map);
 		this.title.scale.set(1, 1);
@@ -42,6 +43,7 @@ export default class TitleScene extends Scene {
 				fill: 'white'
 			});
 			t.position.set((r.width - t.width) / 2, (r.height - t.height) / 2);
+			t.cacheAsBitmap = true;
 			this.addUi(t);
 		}
 		r.view.onkeydown = (e: KeyboardEvent) => {
@@ -80,7 +82,10 @@ export default class TitleScene extends Scene {
 			this.vel[1] = -Math.abs(this.vel[1])
 		const gs = navigator.getGamepads();
 		// Advance on any button.
-		if(gs.findIndex((g) => g.buttons.findIndex((b) => b.pressed) != -1) != -1)
-			this.advance();
+		for(const g of gs)
+			if(g && g.buttons)
+				for(let b = 0; b < g.buttons.length; b++)
+					if(g.buttons[b].pressed)
+						this.advance();
 	}
 }
