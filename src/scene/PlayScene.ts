@@ -128,9 +128,9 @@ export default class PlayScene extends Scene {
         this.gamepadEntities.set(g.index, player);
     }*/
     /// Check if the position `x`, `y` is clear of entities and tiles
-    isEmpty(x: number, y: number): boolean {
+    canWalk(x: number, y: number): boolean {
         const q = (q:Entity) => q.x === x && q.y === y;
-        return this.map.isEmpty(x, y) && this.players.find(q) == undefined && this.enemies.find(q) == undefined;
+        return this.map.canWalk(x, y) && this.players.find(q) == undefined && this.enemies.find(q) == undefined;
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
     isNotEmpty(x: number, y: number): boolean {
@@ -163,22 +163,24 @@ export default class PlayScene extends Scene {
     tryMoveEntity(e: Entity): boolean {
         return e.moved || e.tryMove()
     }    
-    private enemySees(p: Player): Enemy | undefined {
+    private enemiesSeeing(arr: Enemy[], p: Player) {
         for(const e of this.enemies)
             if(e.canSee(p))
-                return e;
-        return undefined;
+                arr.push(e);
     }
     update(dt: number): void {
         this.counter.update(dt);
         // If it is in a turn
         if (this.inTurn) {
+            let enemies: Enemy[] = [];
             let numMoved = 0;
             for(const p of this.players)
                 if(this.tryMoveEntity(p)) {
-                    const e:Enemy | undefined = this.enemySees(p);
-                    if(e != undefined && e.follow == undefined)
-                        e.startFollowing(p);
+                    enemies.splice(0);
+                    this.enemiesSeeing(enemies, p);
+                    for(const e of enemies)
+                        if(e.follow != p)
+                            e.startFollowing(p);
                     numMoved++;
                     if(this.ladder.x == p.x && this.ladder.y == p.y)
                         this.advanceFloor();
