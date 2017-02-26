@@ -49,7 +49,7 @@ export default class TitleScene extends Scene {
 			t.cacheAsBitmap = true;
 			this.addUi(t);
 		}
-		r.view.onkeydown = (e: KeyboardEvent) => {
+		window.onkeydown = (e: KeyboardEvent) => {
 			if(e.keyCode == 32)
 				this.advance();
 		};
@@ -64,9 +64,9 @@ export default class TitleScene extends Scene {
 	}
 	advance() {
 		const r = Main.instance.renderer;
-		r.view.onkeydown = undefined as any;
-		r.view.onmousedown = undefined as any;
-		r.view.onmousemove = undefined as any;
+		delete window.onkeydown;
+		delete r.view.onmousedown;
+		delete r.view.onmousemove;
 		r.view.style.cursor = 'default';
 		Main.instance.scene = new PlayScene();
 	}
