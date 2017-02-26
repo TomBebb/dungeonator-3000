@@ -2,6 +2,7 @@ import Container = PIXI.Container;
 import PText = PIXI.Text;
 import Graphics = PIXI.Graphics;
 import BasePoint from '../util/geom/BasePoint';
+import {rectContains} from '../util/math';
 export default class Button extends Container {
     private bg: Graphics = new Graphics();
     private label: PText = new PText("", {
@@ -26,7 +27,6 @@ export default class Button extends Container {
     }
 
     containsPoint(p: BasePoint) {
-        return Math.abs(this.x + this.width / 2 - p.x) < this.width / 2 &&
-            Math.abs(this.y + this.height / 2 - p.y) < this.height / 2;
+        return rectContains(this.x, this.y, this.width, this.height, p.x, p.y);
     }
 }

@@ -27,3 +27,6 @@ export function intersects(x1: number, y1: number, w1: number, h1: number, x2: n
 export function manhattanDistance(x1: number, y1: number, x2: number, y2: number): number {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 }
+export function rectContains(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number): boolean {
+    return Math.abs(x1 + w1 / 2 - x2) < w1 / 2 && Math.abs(y1 + h1 / 2 - y2) < h1;
+}
