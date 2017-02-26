@@ -172,14 +172,19 @@ export class GamepadPlayer extends Entity {
 }
 export type Player = KeyboardPlayer | GamepadPlayer;
 export class Enemy extends Entity {
+    /// How many steps to cache a path for
+    private static readonly MAX_PATH_LENGTH = 4;
     /// The player to follow
     follow: Player | undefined;
     /// The cache of the path found using A*
-    path: BasePoint[] = [];
+    private path: BasePoint[] = [];
 
-    sightDist: number = 5 * PlayScene.TILE_SIZE;
+    private sightDist: number = 6 * PlayScene.TILE_SIZE;
     constructor(scene:PlayScene) {
         super(scene, "zombie")
+    }
+    clearPath() {
+        this.path.splice(0);
     }
     startFollowing(e: Player) {
         this.follow = e;
@@ -212,8 +217,13 @@ export class Enemy extends Entity {
         if(this.x - f.x == 0 && this.y - f.y == 0)
             return this
         // If the cached path is empty
-        else if(this.path.length == 0)
-            this.path = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(f, true, 1/16)).reverse();
+        else if(this.path.length == 0) {
+            // The path from start to finish
+            const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(f, true, 1/16));
+            revPath.splice(Enemy.MAX_PATH_LENGTH);
+            this.path = revPath.reverse();
+        }
+            // order from method: first is start, last is goal
         if(this.path.length > 0) {
             return Point.from(this.path.pop()!, true, 16);
         } else

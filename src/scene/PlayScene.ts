@@ -119,7 +119,7 @@ export default class PlayScene extends Scene {
         for(const e of this.enemies) {
             // Make it not follow anything
             e.follow = undefined;
-            e.path.splice(0);
+            e.clearPath();
             this.place(e);
         }
     }
