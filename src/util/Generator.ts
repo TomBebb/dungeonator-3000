@@ -19,6 +19,7 @@ export default class Generator {
 	private static readonly MIN_ROOM_CORRIDORS: number = 1;
 	/// The number of connections between rooms
 	private static readonly MAX_ROOM_CORRIDORS: number = 3;
+	private static readonly CORRIDOR_WIDTH: number = 2;
 
 	/// The grid to generate rooms on.
 	grid: Grid;
@@ -81,11 +82,15 @@ export default class Generator {
 		const bMid = b.centre;
 		// Make a corridor connecting `aMid` and `bMid`
 		if(Math.random() > 0.5) {
-			this.grid.hline(bMid.x, aMid.x, bMid.y, Tile.Empty);
-			this.grid.vline(aMid.x, bMid.y, aMid.y, Tile.Empty);
+			for(let o = 0; o < Generator.CORRIDOR_WIDTH; o++) {
+				this.grid.hline(bMid.x, aMid.x, bMid.y + o, Tile.Empty);
+				this.grid.vline(aMid.x + o, bMid.y, aMid.y, Tile.Empty);
+			}
 		} else {
-			this.grid.vline(bMid.x, bMid.y, aMid.y, Tile.Empty);
-			this.grid.hline(bMid.x, aMid.x, aMid.y, Tile.Empty);
+			for(let o = 0; o < Generator.CORRIDOR_WIDTH; o++) {
+				this.grid.vline(bMid.x + o, bMid.y, aMid.y, Tile.Empty);
+				this.grid.hline(bMid.x, aMid.x, aMid.y + o, Tile.Empty);
+			}
 		}
 	}
 }
