@@ -178,7 +178,7 @@ export class MousePlayer extends Entity {
         super(scene);
         window.onmousedown = (e: MouseEvent) => {
             const TS = PlayScene.TILE_SIZE;
-            const p = this.scene.fromGlobal(new Point(e.x, e.y));
+            const p = this.scene.fromGlobal(new Point(e.offsetX, e.offsetY));
             const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/TS), Point.from(p, false, 1/TS));
             this.path = revPath.reverse();
         };
