@@ -149,7 +149,23 @@ export class KeyboardPlayer extends Entity {
         else return undefined;
     }
 }
-export type Player = KeyboardPlayer;
+export class GamepadPlayer extends Entity {
+    readonly index: number;
+    
+    constructor(scene: PlayScene, index: number) {
+        super(scene);
+        this.index = index;
+    }
+    nextPoint(): BasePoint | undefined {
+        const gp = navigator.getGamepads()[this.index];
+        const dx = gp.axes[0], dy = gp.axes[1];
+        if(dx == 0 && dy == 0)
+            return undefined;
+        else
+            return { x: this.x + Math.round(dx) * PlayScene.TILE_SIZE, y: this.y + Math.round(dy) * PlayScene.TILE_SIZE};
+    }
+}
+export type Player = KeyboardPlayer | GamepadPlayer;
 export class Enemy extends Entity {
     /// The player to follow
     follow: Player | undefined;

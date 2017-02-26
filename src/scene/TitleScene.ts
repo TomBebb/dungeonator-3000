@@ -36,16 +36,19 @@ export default class TitleScene extends Scene {
 		this.setCamera(this.map.width / 2, this.map.height / 2);
 		// register click handler for play button
 		r.view.onmousedown = (e: MouseEvent) => {
-			if(this.play.containsPoint(e)) {
-				r.view.onmousedown = undefined as any;
-				r.view.onmousemove = undefined as any;
-				r.view.style.cursor = 'default';
-				Main.instance.scene = new PlayScene();
-			}
+			if(this.play.containsPoint(e))
+				this.advance();
 		};
 		r.view.onmousemove = (e: MouseEvent) => {
 			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
 		}
+	}
+	advance() {
+		const r = Main.instance.renderer;
+		r.view.onmousedown = undefined as any;
+		r.view.onmousemove = undefined as any;
+		r.view.style.cursor = 'default';
+		Main.instance.scene = new PlayScene();
 	}
 	update(dt: number) {
 		const c = this.getCamera();
@@ -60,5 +63,9 @@ export default class TitleScene extends Scene {
 			this.vel[1] = Math.abs(this.vel[1])
 		else if(c.y > this.map.height - r.height / 2)
 			this.vel[1] = -Math.abs(this.vel[1])
+		const gs = navigator.getGamepads();
+		// Advance on a 'start' or 'a' button.
+		if(gs.find((g) => g.buttons[0].pressed || g.buttons[9].pressed))
+			this.advance();
 	}
 }

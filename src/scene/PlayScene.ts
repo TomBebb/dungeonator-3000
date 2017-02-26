@@ -2,7 +2,7 @@
 
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
-import { KeyboardPlayer, Player, Enemy, Entity } from "../ui/entities";
+import { KeyboardPlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
 import { randomIn } from "../util/math";
 import BasePoint from "../util/geom/BasePoint";
 import Rectangle from "../util/geom/Rectangle";
@@ -39,7 +39,7 @@ export default class PlayScene extends Scene {
         align: "left"
     });
     private inTurn: boolean = false;
-    // private readonly gamepadEntities = new Map<number, GamepadEntity>();
+    private readonly gamepadPlayers = new Map<number, GamepadPlayer>();
     /// The grid as a displayable object.
     readonly map: UIMap;
     /// Add an entity
@@ -49,34 +49,30 @@ export default class PlayScene extends Scene {
         this.map = new UIMap(48, 48);
         this.addNonUi(this.map);
         this.addNonUi(this.ladder);
-        const player = new KeyboardPlayer(this);
-        this.addNonUi(player);
-        player.room = this.place(player);
-        this.players.push(player);
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
             this.makeEnemy();
         this.addUi(this.floorLabel);
         this.place(this.ladder);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
-        /*
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for (const g of gamepads)
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
+        if(this.players.length == 0) {
+            const player = new KeyboardPlayer(this);
+            this.addNonUi(player);
+            player.room = this.place(player);
+            this.players.push(player);
+        }
         // Register an event handler for when gamepads are connected
         window.addEventListener("gamepadconnected", (ge: GamepadEvent) => {
             this.connectGamepad(ge.gamepad);
         });
         // Register an event handler for when gamepads are disconnected
         window.addEventListener("gamepaddisconnected", (ge: GamepadEvent) => {
-            const e = this.gamepadEntities.get(ge.gamepad.index) !;
-            this.entities.splice(this.entities.indexOf(e), 1);
-            this.removeChild(e);
-        });*/
-        window.addEventListener("keydown", (e: KeyboardEvent) => {
-            if(e.keyCode === 32)
-                this.makeEnemy();
-
+            const e = this.gamepadPlayers.get(ge.gamepad.index) !;
+            this.players.splice(this.players.indexOf(e));
+            this.removeNonUi(e);
         });
         // Add experimental functions to navigator.
         const n: FlyNavigator = navigator as FlyNavigator;
@@ -118,15 +114,16 @@ export default class PlayScene extends Scene {
             this.place(e);
         }
     }
-    /*
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
-        if (this.gamepadEntities.has(g.index))
+        if (this.gamepadPlayers.has(g.index))
             return;
-        const player: Entity<GamepadControl> = new Entity(this, new GamepadControl(g));
-        this.addEntity(player);
-        this.gamepadEntities.set(g.index, player);
-    }*/
+        const player: GamepadPlayer = new GamepadPlayer(this, g.index);
+        this.addNonUi(player);
+        this.players.push(player);
+        this.gamepadPlayers.set(g.index, player);
+        this.placeNear(this.players[0], player);
+    }
     /// Check if the position `x`, `y` is clear of entities and tiles
     canWalk(x: number, y: number): boolean {
         const q = (q:Entity) => q.x === x && q.y === y;
@@ -144,10 +141,44 @@ export default class PlayScene extends Scene {
             // Get a random room
             r = randomIn(this.map.grid.rooms) !;
             // Place p in the room
-            p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
-            p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
+            if(this.placeIn(p, r, numAttempts))
+                return r;
         } while(this.isNotEmpty(p.x, p.y) && --numAttempts > 0)
         return numAttempts > 0 ? r : undefined;
+    }
+    private placeIn(p: BasePoint, r: Rectangle, numAttempts: number = 5): boolean {
+        do {
+            p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
+            p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
+        } while(this.isNotEmpty(p.x, p.y) && --numAttempts >= 0)
+        return numAttempts < 0;
+    }
+    private placeNear(t: Entity, n: Entity, numAttempts: number = 5): boolean {
+        if(n.room != null)
+            while(numAttempts-- > 0) {
+                const r = randomIn(this.map.grid.rooms);
+                if(this.placeIn(t, r!, numAttempts)) {
+                    t.room = r;
+                    return true;
+                }
+            }
+        const TS = PlayScene.TILE_SIZE;
+        if(this.canWalk(n.x - TS, n.y)) {
+            t.x = n.x - TS;
+            return true;
+        } else if(this.canWalk(n.x + TS, n.y)) {
+            t.x = n.x + TS;
+            return true;
+        } else if(this.canWalk(n.x, n.y - TS)) {
+            t.y = n.x - TS;
+            return true;
+        } else if(this.canWalk(n.x, n.y + TS)) {
+            t.y = n.x + TS;
+            return true;
+        }
+        const r = this.place(t, numAttempts);
+        t.room = r;
+        return r != undefined;
     }
     /// Start a new turn
     startTurn() {
