@@ -1,7 +1,7 @@
 import PlayScene from "../scene/PlayScene";
-import BasePoint from "../util/geom/BasePoint";
-import Rectangle from "../util/geom/Rectangle";
-import Point from "../util/geom/Point";
+import { Room } from "./Map"; 
+import { Rectangle } from "../util/geom/Rectangle";
+import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
 
 export interface Animations {
@@ -104,10 +104,13 @@ export class Entity extends Dynamic {
             return true;
         else if(p != undefined && this.scene.canWalk(p.x, p.y)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
-            if(this.room == undefined || !this.room.contains(x, y))
-                for(const r of this.scene.map.grid.rooms)
+            if(this.room == undefined || !this.room.contains(x, y)) {
+                let rooms: Room[] = [];
+                this.scene.map.retrieve(rooms, this);
+                for(const r of rooms)
                     if(r.contains(x, y))
-                        this.room = r;
+                        this.room = this.scene.map.grid.rooms[r.index];
+            }
             this.x = p.x;
             this.y = p.y;
             this.moved = true;

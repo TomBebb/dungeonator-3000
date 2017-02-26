@@ -1,8 +1,13 @@
-import Point from "./Point";
+import {BasePoint, Point} from "./Point";
 import {intersects, rectContains} from "../math";
 
+export interface BaseRectangle extends BasePoint {
+    width: number,
+    height: number
+}
+
 /// A 2d point and set of dimensions.
-export default class Rectangle extends Point {
+export class Rectangle extends Point implements BaseRectangle {
     width: number;
     height: number;
     constructor(x: number, y: number, w: number, h: number) {

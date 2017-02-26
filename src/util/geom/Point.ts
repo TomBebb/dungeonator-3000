@@ -1,7 +1,10 @@
-import BasePoint from "./BasePoint";
+export interface BasePoint {
+    x: number;
+    y: number;
+}
 
 /// A 2d point.
-export default class Point implements BasePoint {
+export class Point implements BasePoint {
     x: number;
     y: number;
     constructor(x: number = 0, y: number = 0) {

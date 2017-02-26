@@ -1,6 +1,5 @@
-import BasePoint from "./BasePoint";
-import Point from "./Point";
-import Rectangle from "./Rectangle";
+import { BasePoint, Point } from "./Point";
+import { Rectangle } from "./Rectangle";
 import HashMap from "../ds/HashMap";
 import HashSet from "../ds/HashSet";
 import Heap from "../ds/Heap";

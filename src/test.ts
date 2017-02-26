@@ -1,5 +1,5 @@
 import Grid from "./util/geom/Grid";
-import Point from "./util/geom/Point";
+import { Point } from "./util/geom/Point";
 import Bits from "./util/ds/Bits";
 import Heap from "./util/ds/Heap";
 import HashMap from "./util/ds/HashMap";

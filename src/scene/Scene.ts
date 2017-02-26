@@ -1,6 +1,6 @@
 import Container = PIXI.Container;
 import DisplayObject = PIXI.DisplayObject;
-import BasePoint from '../util/geom/BasePoint';
+import { BasePoint } from '../util/geom/Point';
 import Main from "../main";
 /// A common interface for scenes.
 ///

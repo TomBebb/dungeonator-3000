@@ -14,6 +14,7 @@
         "src/util/geom/Grid.ts",
         "src/util/geom/Point.ts",
         "src/util/geom/Rectangle.ts",
+        "src/util/geom/QuadTree.ts",
         "src/util/Counter.ts",
         "src/util/Generator.ts",
         "src/util/save.ts",

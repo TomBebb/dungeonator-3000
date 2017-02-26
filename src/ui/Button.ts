@@ -1,7 +1,7 @@
 import Container = PIXI.Container;
 import PText = PIXI.Text;
 import Graphics = PIXI.Graphics;
-import BasePoint from '../util/geom/BasePoint';
+import { BasePoint } from '../util/geom/Point';
 import {rectContains} from '../util/math';
 export default class Button extends Container {
     private bg: Graphics = new Graphics();

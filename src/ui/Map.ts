@@ -1,8 +1,14 @@
 import PlayScene from "../scene/PlayScene";
 import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";
+import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
+import QuadTree from "../util/geom/QuadTree";
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
+
+export class Room extends Rectangle {
+    index: number;
+}
 
 /// Displays a `Grid` by associating each byte with a kind of tile.
 export default class Map extends Container {
@@ -12,6 +18,8 @@ export default class Map extends Container {
     readonly tileHeight: number;
     /// The grid which will be displayed.
     readonly grid: Grid;
+
+    readonly quadTree: QuadTree<Room>;
     
     constructor(tileWidth: number, tileHeight: number) {
         super();
@@ -25,13 +33,29 @@ export default class Map extends Container {
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
         this.cacheAsBitmap = true;
+        const bounds = new Rectangle(0, 0, this.width, this.height);
+        this.quadTree = new QuadTree<Room>(bounds);
         this.reset();
     }
     reset() {
-        this.grid.rooms = [];
+        // Clear the rooms
+        this.grid.rooms.splice(0);
         const g = new Generator(this.grid);
         g.generate();
+        const TS = PlayScene.TILE_SIZE;
+        this.quadTree.clear();
+        // Add rooms to quad tree
+        for(let i = 0; i < this.grid.rooms.length; i++) {
+            const r = this.grid.rooms[i];
+            const rm = new Room(r.x * TS, r.y * TS, r.width * TS, r.height * TS);
+            rm.index = i;
+            this.quadTree.insert(rm);
+        }
+        // Redraw this map
         this.redraw();
+    }
+    retrieve(arr: Room[], r: BaseRectangle) {
+        this.quadTree.retrieve(arr, r);
     }
     /// Returns true when `p` is a valid point on the underlying `grid`.
     isValid(x: number, y: number): boolean {

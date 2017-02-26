@@ -1,5 +1,5 @@
 import Grid from "./geom/Grid";
-import Rectangle from "./geom/Rectangle";
+import { Rectangle } from "./geom/Rectangle";
 import QuadTree from "./geom/QuadTree";
 import Tile from "./Tile";
 import {random} from "./math";

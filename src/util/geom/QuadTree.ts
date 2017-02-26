@@ -1,6 +1,11 @@
-import Rectangle from './Rectangle';
+import { BaseRectangle, Rectangle } from './Rectangle';
+/// A quad tree, a kind of tree where each node has exactly 4 children, and is used
+/// here to split up a grid into 4 quartiles repeatedly.
+///
 /// Based on https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-export default class QuadTree<R extends Rectangle> {
+/// But ported to TypeScript and given descriptive generic
+export default class QuadTree<R extends BaseRectangle> {
+    /// The maximum number of objects each node can contain before being split up.
     private static readonly MAX_OBJECTS: number = 10;
     private static readonly MAX_LEVELS: number = 5;
 
@@ -11,7 +16,6 @@ export default class QuadTree<R extends Rectangle> {
     constructor(bounds: Rectangle, level: number = 0) {
         this.bounds = bounds;
         this.level = level;
-        
     }
     /// Clear the quad tree
     clear(): void {
@@ -33,7 +37,7 @@ export default class QuadTree<R extends Rectangle> {
         this.nodes[3] = new QuadTree<R>(new Rectangle(x + subW, y + subH, subW, subH), l);
     }
     /// Determine which node `rect` belongs to
-    private indexOf(r: R): number {
+    private indexOf(r: BaseRectangle): number {
         let index = -1;
         const c = this.bounds.centre;
         const vMid = c.x, hMid = c.y;
@@ -77,7 +81,7 @@ export default class QuadTree<R extends Rectangle> {
         }
     }
     /// Retrieve objects that might be colliding with the given objects
-    retrieve(objects: R[], obj: R) {
+    retrieve(objects: R[], obj: BaseRectangle) {
         objects.splice(0);
         const i = this.indexOf(obj);
         if(i != -1 && this.nodes[0] != null)
