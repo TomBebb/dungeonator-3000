@@ -35,7 +35,7 @@ export default class PlayScene extends Scene {
     private ladder:Ladder = new Ladder();
     private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
         fontFamily: "sans",
-        fontSize: 12,
+        fontSize: 20,
         fill: "white",
         align: "left"
     });

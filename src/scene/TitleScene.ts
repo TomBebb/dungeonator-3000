@@ -20,13 +20,16 @@ export default class TitleScene extends Scene {
 	/// The map, that is scrolled past
 	readonly map: Map = new Map(128, 128);
 	/// Velocity of the camera per second
-	readonly vel: [number, number] = [128, -32];
+	readonly vel: [number, number] = [0, 0];
 	constructor() {
 		super();
 		const r = Main.instance.renderer;
 		this.title.width = r.width;
 		this.title.height = r.height;
 		this.title.cacheAsBitmap = true;
+		const speed = 169;
+		this.vel[0] = Math.random() * speed;
+		this.vel[1] = Math.sqrt(speed * speed - this.vel[0] * this.vel[0]);
 		// Set up buttons and label
 		this.addNonUi(this.map);
 		this.title.scale.set(1, 1);
