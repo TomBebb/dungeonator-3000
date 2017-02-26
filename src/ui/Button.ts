@@ -1,6 +1,7 @@
 import Container = PIXI.Container;
 import PText = PIXI.Text;
 import Graphics = PIXI.Graphics;
+import BasePoint from '../util/geom/BasePoint';
 export default class Button extends Container {
     private bg: Graphics = new Graphics();
     private label: PText = new PText("", {
@@ -22,5 +23,10 @@ export default class Button extends Container {
         this.label.y = (h - this.label.height) / 2;
         this.addChild(this.label);
         this.cacheAsBitmap = true;
+    }
+
+    containsPoint(p: BasePoint) {
+        return Math.abs(this.x + this.width / 2 - p.x) < this.width / 2 &&
+            Math.abs(this.y + this.height / 2 - p.y) < this.height / 2;
     }
 }

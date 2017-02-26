@@ -25,6 +25,7 @@ export default class TitleScene extends Scene {
 		const r = Main.instance.renderer;
 		this.title.width = r.width;
 		this.title.height = r.height;
+		// Set up buttons and label
 		this.addNonUi(this.map);
 		this.title.scale.set(1, 1);
 		this.addUi(this.title);
@@ -33,13 +34,18 @@ export default class TitleScene extends Scene {
 		this.addUi(this.play);
 		this.title.position.set(r.width / 2 - this.title.width / 2, r.height / 4 - this.title.height / 2);
 		this.setCamera(this.map.width / 2, this.map.height / 2);
+		// register click handler for play button
 		r.view.onmousedown = (e: MouseEvent) => {
-			const p = this.play;
-			if(e.x >= p.x && e.y >= p.y && e.x < p.x + p.width && e.y < p.y + p.height) {
+			if(this.play.containsPoint(e)) {
 				r.view.onmousedown = undefined as any;
+				r.view.onmousemove = undefined as any;
+				r.view.style.cursor = 'default';
 				Main.instance.scene = new PlayScene();
 			}
 		};
+		r.view.onmousemove = (e: MouseEvent) => {
+			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
+		}
 	}
 	update(dt: number) {
 		const c = this.getCamera();
