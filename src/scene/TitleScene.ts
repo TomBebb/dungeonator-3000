@@ -64,8 +64,8 @@ export default class TitleScene extends Scene {
 		else if(c.y > this.map.height - r.height / 2)
 			this.vel[1] = -Math.abs(this.vel[1])
 		const gs = navigator.getGamepads();
-		// Advance on a 'start' or 'a' button.
-		if(gs.find((g) => g.buttons[0].pressed || g.buttons[9].pressed))
+		// Advance on any button.
+		if(gs.findIndex((g) => g.buttons.findIndex((b) => b.pressed) != -1) != -1)
 			this.advance();
 	}
 }

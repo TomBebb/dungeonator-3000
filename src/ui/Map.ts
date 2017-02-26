@@ -68,6 +68,6 @@ export default class Map extends Container {
                 this.addChild(s);
             }
         // Done drawing, cache as bitmap
-        this.cacheAsBitmap = false;
+        this.cacheAsBitmap = true;
     }
 }
