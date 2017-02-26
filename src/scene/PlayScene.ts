@@ -14,7 +14,7 @@ import Text = PIXI.Text;
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
-    static readonly NUM_ENEMIES = 2;
+    static readonly NUM_ENEMIES = 20;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
     /// The number of seconds since the last turn
@@ -47,7 +47,7 @@ export default class PlayScene extends Scene {
     constructor() {
         super();
         this.addUi(this.floorLabel);
-        this.map = new UIMap(48, 48);
+        this.map = new UIMap(128, 128);
         this.addNonUi(this.map);
         this.addNonUi(this.ladder);
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)

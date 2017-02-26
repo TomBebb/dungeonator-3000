@@ -12,7 +12,7 @@ export default class Generator {
 	/// The minimum room width / height
 	private static readonly MAX_ROOM_SIZE: number = 20;
 	/// The maximum number of rooms to generate in a dungeon 
-	private static readonly NUM_ROOMS: number = 10;
+	private static readonly NUM_ROOMS: number = 20;
 	/// The minimum number of tiles between one room's walls and another room's walls.
 	private static readonly ROOM_SPACING: number = 1;
 	/// The number of connections between rooms
