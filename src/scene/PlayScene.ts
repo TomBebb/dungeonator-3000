@@ -50,7 +50,7 @@ export default class PlayScene extends Scene {
         this.addUi(this.floorLabel);
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
-        this.minimap = new Minimap(this.map.grid);
+        this.minimap = new Minimap(this.map.grid, this.players, this.ladder);
         this.minimap.position.set(r.width - this.minimap.width - 5, 5);
         this.addUi(this.minimap);
         this.addNonUi(this.map);
@@ -103,6 +103,7 @@ export default class PlayScene extends Scene {
         save(saveData);
         // Reset the map (clear, then generate on it)
         this.map.reset();
+        this.minimap.redraw();
         // Place the ladder
         this.place(this.ladder);
         // Place the entities
@@ -192,6 +193,7 @@ export default class PlayScene extends Scene {
             e.moved = false;
         for(const e of this.players)
             e.moved = false;
+        this.minimap.redraw();
     }
     tryMoveEntity(e: Entity): boolean {
         return e.moved || e.tryMove()
