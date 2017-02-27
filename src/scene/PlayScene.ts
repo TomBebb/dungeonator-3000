@@ -1,5 +1,3 @@
-/// <reference path="../extra.d.ts" />
-
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
 import { MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
@@ -75,19 +73,6 @@ export default class PlayScene extends Scene {
             this.players.splice(this.players.indexOf(e));
             this.removeNonUi(e);
         });
-        // Add experimental functions to navigator.
-        const n: FlyNavigator = navigator as FlyNavigator;
-
-        if (n.publishServer != null)
-            n.publishServer("Game session", {}).then((server: Server) => {
-                server.onfetch = (event: FetchEvent) => {
-                    const html = `<h1>Game controller</h1>
-                        '<h3>You requested ${event.request.url} </h3>`;
-                    event.respondWith(new Response(html, {
-                        headers: { "Content-Type": "text/html" }
-                    }));
-                };
-            });
     }
     private makeEnemy(): Enemy {
         const e = new Enemy(this);
