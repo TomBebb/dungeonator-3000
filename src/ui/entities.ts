@@ -63,8 +63,10 @@ export class Entity extends Dynamic {
     lastPoint: BasePoint;
 
     room: Rectangle | undefined;
+    moveInterval: number;
+    private moves: number = 0;
 
-    constructor(scene: PlayScene, source: string = "player", x: number = 0, y: number = 0) {
+    constructor(scene: PlayScene, source: string = "player", moveInterval: number = 1, x: number = 0, y: number = 0) {
         // Setup animations
         super(Dynamic.makeAnims(source, 16, 18, {
             stand_up: [ {x: 0, y: 0} ],
@@ -95,6 +97,7 @@ export class Entity extends Dynamic {
         this.pivot.set(0, 2);
         this.scene = scene;
         this.lastPoint = new Point(x, y);
+        this.moveInterval = moveInterval;
     }
     /// Find the (manhattan) distancce between this and p
     distanceFrom(p: BasePoint) {
@@ -108,6 +111,10 @@ export class Entity extends Dynamic {
     ///
     /// This will be called at least once a turn.
     tryMove(): boolean {
+        this.moves++;
+        if(this.moves < this.moveInterval) 
+            return true;
+        this.moves -= this.moveInterval;
         const p = this.nextPoint();
         // If the next point is this point i.e. no movement
         if(p == this)
@@ -218,7 +225,7 @@ export class Enemy extends Entity {
 
     private sightDist: number = 6 * PlayScene.TILE_SIZE;
     constructor(scene:PlayScene) {
-        super(scene, "zombie")
+        super(scene, "zombie", 2)
     }
     clearPath() {
         this.path.splice(0);
