@@ -50,7 +50,7 @@ export default class TitleScene extends Scene {
 			this.addUi(t);
 		}
 		window.onkeydown = (e: KeyboardEvent) => {
-			if(e.keyCode == 32)
+			if(e.keyCode == 32 || e.keyCode == 13)
 				this.advance();
 		};
 		// register click handler for play button
@@ -62,13 +62,14 @@ export default class TitleScene extends Scene {
 			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
 		}
 	}
-	advance() {
+	/// Advance to a scene (play scene by default)
+	advance(scene: Scene = new PlayScene()) {
 		const r = Main.instance.renderer;
 		delete window.onkeydown;
 		delete r.view.onmousedown;
 		delete r.view.onmousemove;
 		r.view.style.cursor = 'default';
-		Main.instance.scene = new PlayScene();
+		Main.instance.scene = scene;
 	}
 	update(dt: number) {
 		const c = this.getCamera();

@@ -4,15 +4,19 @@ import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
 
+/// Loaded animations
 export interface Animations {
     [index: string]: PIXI.Texture[];
 }
+/// Animation definitions i.e. represents animations before they are loaded
 export interface AnimationsDef {
     [index: string]: {x: number, y: number}[];
 }
 /// An animated sprite.
 export class Dynamic extends PIXI.extras.AnimatedSprite {
+    /// Width of each frame in pixels
     readonly frameWidth: number;
+    /// Height of each frame in pixels
     readonly frameHeight: number;
     private readonly _animations: Animations;
     protected animationName: string;
@@ -92,15 +96,21 @@ export class Entity extends Dynamic {
         this.scene = scene;
         this.lastPoint = new Point(x, y);
     }
+    /// Find the (manhattan) distancce between this and p
     distanceFrom(p: BasePoint) {
         return manhattanDistance(this.x, this.y, p.x, p.y);
     }
+    /// Returns the point this entity should try moving to.
     nextPoint(): BasePoint | undefined {
         return undefined;
     }
+    /// Try to move this entitiy, by querying its `nextPoint` method.
+    ///
+    /// This will be called at least once a turn.
     tryMove(): boolean {
         const p = this.nextPoint();
-        if(p != undefined && p == this)
+        // If the next point is this point i.e. no movement
+        if(p == this)
             return true;
         else if(p != undefined && this.scene.canWalk(p.x, p.y)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;

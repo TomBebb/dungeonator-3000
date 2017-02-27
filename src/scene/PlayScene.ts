@@ -14,7 +14,7 @@ import Text = PIXI.Text;
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
-    static readonly NUM_ENEMIES = 40;
+    static readonly NUM_ENEMIES = 0;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
     /// The number of seconds since the last turn

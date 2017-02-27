@@ -15,9 +15,11 @@ class Scene extends PIXI.Container {
 		const r = Main.instance.renderer;
 		this.nonUi.position.set(r.width / 2, r.height / 2);
 	}
+	/// Add a 'ui' child (that isn't affected by the camera)
 	addUi(elem: DisplayObject) {
 		this.ui.addChild(elem);
 	}
+	/// Add a 'non ui' child (that is affected by the camera)
 	addNonUi(elem: DisplayObject) {
 		this.nonUi.addChild(elem);
 	}
