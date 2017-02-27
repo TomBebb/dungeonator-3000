@@ -50,15 +50,15 @@ export default class PlayScene extends Scene {
         this.addUi(this.floorLabel);
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
-        this.minimap = new Minimap(this.map.grid, this.players, this.ladder);
-        this.minimap.position.set(r.width - this.minimap.width - 5, 5);
-        this.addUi(this.minimap);
         this.addNonUi(this.map);
         this.addNonUi(this.ladder);
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
             this.makeEnemy();
         this.addUi(this.floorLabel);
         this.place(this.ladder);
+        this.minimap = new Minimap(this.map.grid, this.players, this.ladder);
+        this.minimap.position.set(r.width - this.minimap.width - 5, 5);
+        this.addUi(this.minimap);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for (const g of gamepads)
