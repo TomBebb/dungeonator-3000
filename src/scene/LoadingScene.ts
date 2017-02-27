@@ -1,24 +1,35 @@
 import Main from '../main';
 import Scene from './Scene';
-import Graphics = PIXI.Graphics;
 import Text = PIXI.Text;
 
 export default class LoadingScene extends Scene {
-	static readonly TEXT = "Loading";
-	readonly graphics: Graphics;
+	private static readonly DOT_INTERVAL = 0.01;
+	private static readonly TEXT = "Loading";
+	private sinceAddDot: number = 0;
+	private text: Text;
 	constructor() {
 		super();
 		const r = Main.instance.renderer;
-		const text = new Text(LoadingScene.TEXT, {
-			align: 'center',
+		this.text = new Text(LoadingScene.TEXT, {
+			align: 'left',
 			fontFamily: 'sans',
-			fontSize: r.height / 16,
+			fontSize: r.height / 2,
 			fill: 'white'
 		});
-		text.width = r.width;
-		text.height = r.height;
-		this.addUi(text);
-		this.width = r.width;
-		this.height = r.height;
+		this.text.x = (r.width - this.text.width) / 2;
+		this.text.y = (r.height - this.text.height) / 2;
+		this.text.scale.set(1, 1);
+		this.text.cacheAsBitmap = true;
+		this.ui.scale.set(1, 1);
+		this.addUi(this.text);
+	}
+	update(dt: number) {
+		this.sinceAddDot += dt;
+		if(this.sinceAddDot >= LoadingScene.DOT_INTERVAL) {
+			this.sinceAddDot -= LoadingScene.DOT_INTERVAL;
+			this.text.cacheAsBitmap = false;
+			this.text.text += ".";
+			this.text.cacheAsBitmap = true;
+		}
 	}
 }
