@@ -1,5 +1,6 @@
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
+import Minimap from "../ui/Minimap";
 import { MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
 import { randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
@@ -7,12 +8,13 @@ import { Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
 import {Save, save, load} from "../util/save";
 import Scene from "./Scene";
+import Main from "../main";
 import Text = PIXI.Text;
 
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
-    static readonly NUM_ENEMIES = 0;
+    static readonly NUM_ENEMIES = 20;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
     /// The number of seconds since the last turn
@@ -41,11 +43,16 @@ export default class PlayScene extends Scene {
     private readonly gamepadPlayers = new Map<number, GamepadPlayer>();
     /// The grid as a displayable object.
     readonly map: UIMap;
+    readonly minimap: Minimap;
     /// Add an entity
     constructor() {
         super();
         this.addUi(this.floorLabel);
+        const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
+        this.minimap = new Minimap(this.map.grid);
+        this.minimap.position.set(r.width - this.minimap.width - 5, 5);
+        this.addUi(this.minimap);
         this.addNonUi(this.map);
         this.addNonUi(this.ladder);
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
