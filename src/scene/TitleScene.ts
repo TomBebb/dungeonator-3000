@@ -1,7 +1,7 @@
 import Main from '../main';
 import Scene from './Scene';
 import Button from '../ui/Button';
-import Map from '../ui/Map';
+import UIMap from '../ui/Map';
 import PlayScene from './PlayScene';
 import {Save, load} from '../util/save';
 import Text = PIXI.Text;
@@ -18,7 +18,7 @@ export default class TitleScene extends Scene {
 	});
 	readonly play: Button = new Button('Play', 0xffffff, 'black');
 	/// The map, that is scrolled past
-	readonly map: Map = new Map(128, 128);
+	readonly map: UIMap = new UIMap(128, 128);
 	/// Velocity of the camera per second
 	readonly vel: [number, number] = [0, 0];
 	constructor() {
@@ -49,27 +49,18 @@ export default class TitleScene extends Scene {
 			t.cacheAsBitmap = true;
 			this.addUi(t);
 		}
-		window.onkeydown = (e: KeyboardEvent) => {
+		// Register event handlers
+		this.addEvent("keydown", (e: KeyboardEvent) => {
 			if(e.keyCode == 32 || e.keyCode == 13)
 				this.advance(new PlayScene("keyboard"));
-		};
-		// register click handler for play button
-		r.view.onmousedown = (e: MouseEvent) => {
+		});
+		this.addEvent("mousedown", (e: MouseEvent) => {
 			if(this.play.containsPoint(e))
 				this.advance(new PlayScene("mouse"));
-		};
-		r.view.onmousemove = (e: MouseEvent) => {
+		});
+		this.addEvent("mousemove", (e: MouseEvent) => {
 			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
-		}
-	}
-	/// Advance to a scene (play scene by default)
-	advance(scene: Scene) {
-		const r = Main.instance.renderer;
-		delete window.onkeydown;
-		delete r.view.onmousedown;
-		delete r.view.onmousemove;
-		r.view.style.cursor = 'default';
-		Main.instance.scene = scene;
+		});
 	}
 	update(dt: number) {
 		const c = this.getCamera();

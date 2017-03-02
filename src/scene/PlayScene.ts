@@ -78,16 +78,6 @@ export default class PlayScene extends Scene {
         for (const g of gamepads)
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
-        // Register an event handler for when gamepads are connected
-        window.addEventListener("gamepadconnected", (ge: GamepadEvent) => {
-            this.connectGamepad(ge.gamepad);
-        });
-        // Register an event handler for when gamepads are disconnected
-        window.addEventListener("gamepaddisconnected", (ge: GamepadEvent) => {
-            const e = this.gamepadPlayers.get(ge.gamepad.index) !;
-            this.players.splice(this.players.indexOf(e));
-            this.removeNonUi(e);
-        });
     }
     private makeEnemy(): Enemy {
         const e = new Enemy(this);
@@ -163,6 +153,7 @@ export default class PlayScene extends Scene {
         } while(this.isNotEmpty(p.x, p.y) && --numAttempts >= 0)
         return numAttempts < 0;
     }
+    /// Place the entity `t` near `n`
     private placeNear(t: Entity, n: Entity, numAttempts: number = 5): boolean {
         if(n.room != null)
             while(numAttempts-- > 0) {
@@ -194,6 +185,7 @@ export default class PlayScene extends Scene {
     startTurn() {
         this.inTurn = true;
     }
+    /// End the turn
     endTurn() {
         this.inTurn = false;
         // End the turn
@@ -203,9 +195,11 @@ export default class PlayScene extends Scene {
             e.moved = false;
         this.minimap.redraw();
     }
+    /// Try moving the entity, return true if it could be moved.
     tryMoveEntity(e: Entity): boolean {
         return e.moved || e.tryMove()
-    }    
+    }
+    /// Fil `arr` with the enemies that can see the player.
     private enemiesSeeing(arr: Enemy[], p: Player) {
         for(const e of this.enemies)
             if(e.canSee(p))
@@ -244,9 +238,11 @@ export default class PlayScene extends Scene {
             tx += p.x;
             ty += p.y;
         }
+        // Calculate the camera position
         const r = Main.instance.renderer;
         tx /= this.players.length;
         ty /= this.players.length;
+        // Lock camera so it can't go off the map.
         tx = clamp(tx, r.width / 2, this.map.width - r.width / 2)
         ty = clamp(ty, r.height / 2, this.map.height - r.height / 2);
         this.setCamera(tx, ty);

@@ -150,10 +150,10 @@ export class KeyboardPlayer extends Entity {
     
     constructor(scene: PlayScene) {
         super(scene);
-        window.addEventListener("keydown", (e: KeyboardEvent) => {
+        scene.addEvent("keydown", (e: KeyboardEvent) => {
             this.buttons.add(e.keyCode);
         });
-        window.addEventListener("keyup", (e: KeyboardEvent) => {
+        scene.addEvent("keyup", (e: KeyboardEvent) => {
             this.buttons.delete(e.keyCode);
         });
     }
@@ -193,16 +193,12 @@ export class MousePlayer extends Entity {
     private path: BasePoint[] = [];
     constructor(scene: PlayScene) {
         super(scene);
-        window.onmousedown = (e: MouseEvent) => {
+        scene.addEvent("mousedown", (e: MouseEvent) => {
             const TS = PlayScene.TILE_SIZE;
             const p = this.scene.fromGlobal(new Point(e.offsetX, e.offsetY));
             const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/TS), Point.from(p, false, 1/TS));
             this.path = revPath.reverse();
-        };
-    }
-    destroy() {
-        super.destroy();
-        delete window.onmousedown;
+        });
     }
     clearPath() {
         this.path.splice(0);

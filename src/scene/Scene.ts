@@ -8,6 +8,8 @@ import Main from "../main";
 class Scene extends PIXI.Container {
 	ui: Container = new Container();
 	nonUi: Container = new Container();
+
+	private readonly events: Map<string, any> = new Map();
 	constructor() {
 		super();
 		this.addChild(this.nonUi);
@@ -39,6 +41,29 @@ class Scene extends PIXI.Container {
 	/// Update this scene with the delta time `dt` (in seconds).
 	update(dt: number): void {
 		dt;
+	}
+	/// Advance to a scene (play scene by default)
+	advance(scene: Scene) {
+		const r = Main.instance.renderer;
+		r.view.style.cursor = 'default';
+		Main.instance.scene = scene;
+		this.destroy();
+	}
+	destroy() {
+		const r = Main.instance.renderer;
+		super.destroy();
+		const events = this.events.keys();
+		let v;
+		while(!(v = events.next()).done) {
+			const k = v.value;
+			r.view.removeEventListener(k, this.events.get(k));
+		}
+	}
+	/// Register an event listener that will be unset when this closes.
+	addEvent(name: string, cb: any) {
+		const r = Main.instance.renderer;
+		r.view.addEventListener(name, cb);
+		this.events.set(name, cb);
 	}
 }
 export default Scene;
