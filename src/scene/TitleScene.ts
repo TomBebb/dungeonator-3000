@@ -51,19 +51,19 @@ export default class TitleScene extends Scene {
 		}
 		window.onkeydown = (e: KeyboardEvent) => {
 			if(e.keyCode == 32 || e.keyCode == 13)
-				this.advance();
+				this.advance(new PlayScene("keyboard"));
 		};
 		// register click handler for play button
 		r.view.onmousedown = (e: MouseEvent) => {
 			if(this.play.containsPoint(e))
-				this.advance();
+				this.advance(new PlayScene("mouse"));
 		};
 		r.view.onmousemove = (e: MouseEvent) => {
 			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
 		}
 	}
 	/// Advance to a scene (play scene by default)
-	advance(scene: Scene = new PlayScene()) {
+	advance(scene: Scene) {
 		const r = Main.instance.renderer;
 		delete window.onkeydown;
 		delete r.view.onmousedown;
@@ -90,6 +90,6 @@ export default class TitleScene extends Scene {
 			if(g && g.buttons)
 				for(let b = 0; b < g.buttons.length; b++)
 					if(g.buttons[b].pressed)
-						this.advance();
+						this.advance(new PlayScene("gamepad"));
 	}
 }

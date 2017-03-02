@@ -1,8 +1,8 @@
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
 import Minimap from "../ui/Minimap";
-import { MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
-import { randomIn } from "../util/math";
+import { KeyboardPlayer, MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
+import { clamp, randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
 import { Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
@@ -14,11 +14,9 @@ import Text = PIXI.Text;
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
-    static readonly NUM_ENEMIES = 20;
+    static readonly NUM_ENEMIES = 2;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
-    /// The number of seconds since the last turn
-    // private sinceLast: number = 0;
     /// The entities contained in the scene
     readonly enemies: Enemy[] = [];
     /// The players, where each set bit is an index into `entities`.
@@ -45,7 +43,7 @@ export default class PlayScene extends Scene {
     readonly map: UIMap;
     readonly minimap: Minimap;
     /// Add an entity
-    constructor() {
+    constructor(input: "mouse" | "keyboard" | "gamepad") {
         super();
         this.addUi(this.floorLabel);
         const r = Main.instance.renderer;
@@ -61,15 +59,25 @@ export default class PlayScene extends Scene {
         this.addUi(this.minimap);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
+        let player: Player;
+        switch(input) {
+            case "keyboard":
+                player = new KeyboardPlayer(this);
+                break;
+            case "mouse":
+                player = new MousePlayer(this);
+                break;
+            default:
+                player = new GamepadPlayer(this, 0);
+                this.gamepadPlayers.set(0, player);
+                break;
+        }
+        this.addNonUi(player);
+        player.room = this.place(player);
+        this.players.push(player);
         for (const g of gamepads)
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
-        if(this.players.length == 0) {
-            const player = new MousePlayer(this);
-            this.addNonUi(player);
-            player.room = this.place(player);
-            this.players.push(player);
-        }
         // Register an event handler for when gamepads are connected
         window.addEventListener("gamepadconnected", (ge: GamepadEvent) => {
             this.connectGamepad(ge.gamepad);
@@ -236,6 +244,11 @@ export default class PlayScene extends Scene {
             tx += p.x;
             ty += p.y;
         }
-        this.setCamera(tx / this.players.length, ty / this.players.length);
+        const r = Main.instance.renderer;
+        tx /= this.players.length;
+        ty /= this.players.length;
+        tx = clamp(tx, r.width / 2, this.map.width - r.width / 2)
+        ty = clamp(ty, r.height / 2, this.map.height - r.height / 2);
+        this.setCamera(tx, ty);
     }
 }
