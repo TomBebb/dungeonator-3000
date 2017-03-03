@@ -3,6 +3,7 @@ import { Room } from "./Map";
 import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
+import Bits from "../util/ds/Bits";
 
 /// Loaded animations
 export interface Animations {
@@ -146,25 +147,25 @@ export class Entity extends Dynamic {
     }
 }
 export class KeyboardPlayer extends Entity {
-    private buttons = new Set<number>();
+    private buttons = new Bits(64);
     
     constructor(scene: PlayScene) {
         super(scene);
         scene.addEvent("keydown", (e: KeyboardEvent) => {
-            this.buttons.add(e.keyCode);
+            this.buttons.set(e.keyCode);
         });
         scene.addEvent("keyup", (e: KeyboardEvent) => {
-            this.buttons.delete(e.keyCode);
+            this.buttons.unset(e.keyCode);
         });
     }
     nextPoint(): BasePoint | undefined {
-        if(this.buttons.has(37))
+        if(this.buttons.get(37))
             return { x: this.x - PlayScene.TILE_SIZE, y: this.y};
-        else if(this.buttons.has(38))
+        else if(this.buttons.get(38))
             return { x: this.x, y: this.y - PlayScene.TILE_SIZE};
-        else if(this.buttons.has(39))
+        else if(this.buttons.get(39))
             return { x: this.x + PlayScene.TILE_SIZE, y: this.y};
-        else if(this.buttons.has(40))
+        else if(this.buttons.get(40))
             return { x: this.x, y: this.y + PlayScene.TILE_SIZE};
         else return undefined;
     }

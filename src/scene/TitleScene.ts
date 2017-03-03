@@ -5,6 +5,8 @@ import UIMap from '../ui/Map';
 import PlayScene from './PlayScene';
 import {Save, load} from '../util/save';
 import Text = PIXI.Text;
+import { Rectangle, BaseRectangle } from '../util/geom/Rectangle';
+import QuadTree from '../util/geom/QuadTree';
 /// The title scene, shown when the game loads
 export default class TitleScene extends Scene {
 	/// The title text
@@ -16,7 +18,8 @@ export default class TitleScene extends Scene {
 		dropShadowDistance: 0,
 		fill: 'white'
 	});
-	readonly play: Button = new Button('Play', 0xffffff, 'black');
+	private buttonTree: QuadTree<Button>;
+	private buttons: Map<Button, (_:"mouse" | "keyboard" | "gamepad") => Scene> = new Map();
 	/// The map, that is scrolled past
 	readonly map: UIMap = new UIMap(128, 128);
 	/// Velocity of the camera per second
@@ -24,6 +27,7 @@ export default class TitleScene extends Scene {
 	constructor() {
 		super();
 		const r = Main.instance.renderer;
+		this.buttonTree = new QuadTree<Button>(new Rectangle(0, 0, r.width, r.height));
 		this.title.width = r.width;
 		this.title.height = r.height;
 		this.title.cacheAsBitmap = true;
@@ -34,9 +38,12 @@ export default class TitleScene extends Scene {
 		this.addNonUi(this.map);
 		this.title.scale.set(1, 1);
 		this.addUi(this.title);
-		this.play.scale.set(1, 1);
-		this.play.position.set(r.width / 2 - this.play.width / 2, r.height * 0.75 - this.play.height / 2);
-		this.addUi(this.play);
+		const play: Button = new Button('Play', 0xffffff, 'black');
+		play.scale.set(1, 1);
+		play.position.set(r.width / 2 - play.width / 2, r.height * 0.75 - play.height / 2);
+		this.addUi(play);
+		this.buttons.set(play, (input) => new PlayScene(input));
+		this.buttonTree.insert(play);
 		this.title.position.set(r.width / 2 - this.title.width / 2, r.height / 4 - this.title.height / 2);
 		this.setCamera(this.map.width / 2, this.map.height / 2);
 		const data: Save | undefined = load();
@@ -55,11 +62,23 @@ export default class TitleScene extends Scene {
 				this.advance(new PlayScene("keyboard"));
 		});
 		this.addEvent("mousedown", (e: MouseEvent) => {
-			if(this.play.containsPoint(e))
-				this.advance(new PlayScene("mouse"));
+			const a: Button[] = [];
+			const eR = e as any as BaseRectangle;
+			eR.width = 1;
+			eR.height = 1;
+			this.buttonTree.retrieve(a, eR);
+			const btn = a.find((b) => b.containsPoint(e));
+			if(btn != null)
+				this.advance(this.buttons.get(btn)!("mouse"));
 		});
 		this.addEvent("mousemove", (e: MouseEvent) => {
-			r.view.style.cursor = this.play.containsPoint(e) ? 'pointer' : 'default';
+			const a: Button[] = [];
+			const eR = e as any as BaseRectangle;
+			eR.width = 1;
+			eR.height = 1;
+			this.buttonTree.retrieve(a, eR);
+			const btn = a.find((b) => b.containsPoint(e));
+			r.view.style.cursor = btn != null ? 'pointer' : 'default';
 		});
 	}
 	update(dt: number) {
