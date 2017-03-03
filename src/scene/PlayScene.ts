@@ -68,8 +68,15 @@ export default class PlayScene extends Scene {
                 player = new MousePlayer(this);
                 break;
             default:
-                player = new GamepadPlayer(this, 0);
-                this.gamepadPlayers.set(0, player);
+                const gps = navigator.getGamepads();
+                let index = 0;
+                for(let i = 0; i < gps.length; i++)
+                    if(gps[i] != null) {
+                        index = i;
+                        break;
+                    }
+                player = new GamepadPlayer(this, index);
+                this.gamepadPlayers.set(index, player);
                 break;
         }
         this.addNonUi(player);
