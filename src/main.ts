@@ -5,7 +5,6 @@ import TitleScene from "./scene/TitleScene";
 import Scene from "./scene/Scene";
 
 import test from "./test";
-import PIXI = require("pixi.js");
 export default class Main {
     static instance: Main;
     /// How many seconds between updates.

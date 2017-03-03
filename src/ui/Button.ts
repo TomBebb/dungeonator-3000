@@ -1,3 +1,4 @@
+///<reference path='../pixi.d.ts'/>
 import Container = PIXI.Container;
 import PText = PIXI.Text;
 import Graphics = PIXI.Graphics;

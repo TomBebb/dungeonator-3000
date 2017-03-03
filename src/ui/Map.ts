@@ -1,3 +1,4 @@
+///<reference path='../pixi.d.ts'/>
 import PlayScene from "../scene/PlayScene";
 import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";

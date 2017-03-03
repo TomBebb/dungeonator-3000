@@ -1,3 +1,4 @@
+///<reference path='../pixi.d.ts'/>
 import Graphics = PIXI.Graphics;
 import Grid from "../util/geom/Grid";
 import PlayScene from "../scene/PlayScene";

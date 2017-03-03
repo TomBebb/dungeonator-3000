@@ -1,3 +1,4 @@
+///<reference path='../pixi.d.ts'/>
 import PlayScene from "../scene/PlayScene";
 import { Room } from "./Map"; 
 import { Rectangle } from "../util/geom/Rectangle";
