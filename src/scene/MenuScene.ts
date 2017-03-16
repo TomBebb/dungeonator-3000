@@ -13,7 +13,7 @@ export default class MenuScene extends Scene {
 	/// The title text
 	readonly title: Text = new Text("", {
 		align: 'left',
-		fontSize: 60,
+		fontSize: 70,
 		dropShadow: true,
 		dropShadowBlur: 5,
 		dropShadowDistance: 0,
@@ -26,11 +26,12 @@ export default class MenuScene extends Scene {
 	/// Velocity of the camera per second
 	readonly vel: [number, number] = [0, 0];
 
-	private selected: number = -1;
+	private selected: number = 0;
 	constructor(name: string, buttons: Button[]) {
 		super();
 		const r = Main.instance.renderer;
 		this.buttons = buttons;
+		buttons[0].selected = true;
 		this.title.cacheAsBitmap = true;
 		this.title.text = name;
 		this.title.position.set(r.width / 2 - this.title.width / 2, 5);
@@ -56,8 +57,6 @@ export default class MenuScene extends Scene {
 				this.autoAdvance("keyboard");
 				return;
 			}
-			if(this.selected == -1 && e.keyCode == 38 || e.keyCode == 40)
-				this.selected = 0;
 			this.buttons[this.selected].selected = false;
 			if(e.keyCode == 40 && this.selected > 0)
 				this.selected--;
