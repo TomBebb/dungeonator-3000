@@ -90,7 +90,9 @@ export default class PlayScene extends Scene {
                 this.connectGamepad(g);
     }
     pause() {
+        this.pauseScene.cacheAsBitmap = false;
         this.advance(this.pauseScene, false);
+        this.pauseScene.cacheAsBitmap = true;
     }
     private makeEnemy(): Enemy {
         const e = new Enemy(this);

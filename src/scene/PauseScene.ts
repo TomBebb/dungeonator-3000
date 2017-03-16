@@ -50,6 +50,7 @@ export default class PauseScene extends Scene {
 			else
 				resume();
 		});
+		this.cacheAsBitmap = true;
 	}
 	update(dt: number) {
 		super.update(dt);
