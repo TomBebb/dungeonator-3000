@@ -1,9 +1,11 @@
 ///<reference path='../pixi.d.ts'/>
-import Sprite = PIXI.Sprite;
-
-export default class Ladder extends Sprite {
+import Item from "./Item";
+import { Player } from "./entities";
+export default class Ladder extends Item {
     constructor() {
-        const r = PIXI.loader.resources;
-        super(r['ladder'].texture);
+        super('ladder');
+    }
+    interact(p: Player) {
+    	p.scene.advanceFloor();
     }
 }
