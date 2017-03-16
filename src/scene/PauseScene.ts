@@ -2,6 +2,7 @@ import Main from '../main';
 import Scene from './Scene';
 import Graphics = PIXI.Graphics;
 import Text = PIXI.Text;
+import TitleScene from './TitleScene';
 
 export default class PauseScene extends Scene {
 	readonly scene: Scene;
@@ -23,10 +24,10 @@ export default class PauseScene extends Scene {
 				this.detail.text = "Click to resume";
 				break;
 			case "keyboard":
-				this.detail.text = "Press Enter or Space to resume";
+				this.detail.text = "Press Enter or Space to resume, or Escape to exit";
 				break;
 			case "gamepad":
-				this.detail.text = "Press Start to resume";
+				this.detail.text = "Press Start to resume, or Select to exit";
 				break;
 		}
 		const r = Main.instance.renderer;
@@ -43,13 +44,20 @@ export default class PauseScene extends Scene {
 		this.addChild(this.detail);
 		const resume = PauseScene.prototype.advance.bind(this, this.scene, false);
 		this.addEvent("mousedown", resume);
-		this.addEvent("keyup", resume);
+		this.addEvent("keydown", (e: KeyboardEvent) => {
+			if(e.keyCode == 27)
+				this.advance(new TitleScene(), true);
+			else
+				resume();
+		});
 	}
 	update(dt: number) {
 		super.update(dt);
 		const gps = navigator.getGamepads();
 		for(const gp of gps)
-			if(gp != null && gp.buttons[9].pressed)
+			if(gp != null && gp.buttons[8].pressed)
+				this.advance(new TitleScene(), true);
+			else if(gp != null && gp.buttons[9].pressed)
 				this.advance(this.scene, false);
 	}
 }

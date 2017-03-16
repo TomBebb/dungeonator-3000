@@ -152,7 +152,7 @@ export class KeyboardPlayer extends Entity {
     constructor(scene: PlayScene) {
         super(scene);
         scene.addEvent("keydown", (e: KeyboardEvent) => {
-            if(e.keyCode == 13 || e.keyCode == 32)
+            if(e.keyCode == 13 || e.keyCode == 32 || e.keyCode == 27)
                 this.scene.pause();
             else
                 this.buttons.add(e.keyCode);
