@@ -64,5 +64,10 @@ class Scene extends PIXI.Container {
 		window.addEventListener(name, cb);
 		this.events.set(name, cb);
 	}
+	removeEvent(name: string) {
+		const cb = this.events.get(name)!;
+		this.events.delete(name);
+		window.removeEventListener(name, cb);
+	}
 }
 export default Scene;

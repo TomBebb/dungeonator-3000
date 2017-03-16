@@ -8,6 +8,7 @@ import { Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
 import {Save, save, load} from "../util/save";
 import Scene from "./Scene";
+import PauseScene from "./PauseScene";
 import Main from "../main";
 import Text = PIXI.Text;
 
@@ -42,9 +43,11 @@ export default class PlayScene extends Scene {
     /// The grid as a displayable object.
     readonly map: UIMap;
     readonly minimap: Minimap;
+    private pauseScene: PauseScene
     /// Add an entity
     constructor(input: "mouse" | "keyboard" | "gamepad") {
         super();
+        this.pauseScene = new PauseScene(this, input);
         this.addUi(this.floorLabel);
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
@@ -85,6 +88,9 @@ export default class PlayScene extends Scene {
         for (const g of gamepads)
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
+    }
+    pause() {
+        this.advance(this.pauseScene, false);
     }
     private makeEnemy(): Enemy {
         const e = new Enemy(this);

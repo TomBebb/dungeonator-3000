@@ -153,16 +153,16 @@ export class KeyboardPlayer extends Entity {
     constructor(scene: PlayScene) {
         super(scene);
         scene.addEvent("keydown", (e: KeyboardEvent) => {
-            console.log(`${e.keyCode} pressed`);
-            this.buttons.set(e.keyCode);
+            if(e.keyCode == 13 || e.keyCode == 32)
+                this.scene.pause();
+            else
+                this.buttons.set(e.keyCode);
         });
         scene.addEvent("keyup", (e: KeyboardEvent) => {
-            console.log(`${e.keyCode} up`);
             this.buttons.unset(e.keyCode);
         });
     }
     nextPoint(): BasePoint | undefined {
-        console.log(this.buttons.toString());
         if(this.buttons.get(37))
             return { x: this.x - PlayScene.TILE_SIZE, y: this.y};
         else if(this.buttons.get(38))
@@ -185,6 +185,8 @@ export class GamepadPlayer extends Entity {
         const gp = navigator.getGamepads()[this.index];
         if(gp == null)
             return this;
+        if(gp.buttons[9].pressed)
+            this.scene.pause();
         const dx = gp.axes[0], dy = gp.axes[1];
         if(dx == 0 && dy == 0)
             return undefined;

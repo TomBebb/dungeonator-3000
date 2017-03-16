@@ -21,9 +21,11 @@ export default class Button extends Container {
     });
     private selectedBg: number;
     private normalBg: number;
+    destructive: boolean;
     listener: Listener;
-    constructor(name: string, listener: Listener, bg: number = 0xFFFFFF, selectBg: number = 0xC0C0C0, fg: string = 'black', w: number = 200, h: number = 60) {
+    constructor(name: string, listener: Listener, destructive: boolean = true, bg: number = 0xFFFFFF, selectBg: number = 0xC0C0C0, fg: string = 'black', w: number = 200, h: number = 60) {
         super();
+        this.destructive = destructive;
         this.listener = listener;
         this.label.style.fill = fg;
         this.label.text = name;

@@ -59,9 +59,9 @@ export default class MenuScene extends Scene {
 			if(this.selected == -1 && e.keyCode == 38 || e.keyCode == 40)
 				this.selected = 0;
 			this.buttons[this.selected].selected = false;
-			if(e.keyCode == 38 && this.selected > 0)
+			if(e.keyCode == 40 && this.selected > 0)
 				this.selected--;
-			else if(e.keyCode == 40 && this.selected < this.buttons.length - 1) 
+			else if(e.keyCode == 38 && this.selected < this.buttons.length - 1) 
 				this.selected++;
 			if(e.keyCode == 38 || e.keyCode == 40)
 				this.buttons[this.selected].selected = true;
@@ -86,8 +86,10 @@ export default class MenuScene extends Scene {
 		});
 	}
 	private autoAdvance(input: Input) {
-		if(this.selected != -1)
-			this.advance(this.buttons[this.selected].listener(input), false);
+		if(this.selected != -1) {
+			const button = this.buttons[this.selected];
+			this.advance(button.listener(input), button.destructive);
+		}
 	}
 	update(dt: number) {
 		const c = this.getCamera();

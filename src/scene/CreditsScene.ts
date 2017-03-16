@@ -29,7 +29,7 @@ export default class CreditsScene extends Scene {
 	update(dt: number) {
 		this.text.y -= dt * 20;
 		if(this.text.y + this.text.height < 0) {
-			this.advance(this.from);
+			this.advance(this.from, true);
 		}
 	}
 }
