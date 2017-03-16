@@ -43,26 +43,25 @@ class Scene extends PIXI.Container {
 		dt;
 	}
 	/// Advance to a scene (play scene by default)
-	advance(scene: Scene) {
+	advance(scene: Scene, destructive: boolean = true) {
 		const r = Main.instance.renderer;
 		r.view.style.cursor = 'default';
 		Main.instance.scene = scene;
-		this.destroy();
+		if(destructive)
+			this.destroy();
 	}
 	destroy() {
-		const r = Main.instance.renderer;
 		super.destroy();
 		const events = this.events.keys();
 		let v;
 		while(!(v = events.next()).done) {
 			const k = v.value;
-			r.view.removeEventListener(k, this.events.get(k));
+			window.removeEventListener(k, this.events.get(k));
 		}
 	}
 	/// Register an event listener that will be unset when this closes.
 	addEvent(name: string, cb: any) {
-		const r = Main.instance.renderer;
-		r.view.addEventListener(name, cb);
+		window.addEventListener(name, cb);
 		this.events.set(name, cb);
 	}
 }
