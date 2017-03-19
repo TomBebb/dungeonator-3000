@@ -25,6 +25,7 @@
         "src/ui/entities.ts",
         "src/ui/PauseOverlay.ts",
         "src/ui/Button.ts",
+        "src/ui/Chest.ts",
         "src/ui/Minimap.ts",
         "src/ui/Item.ts",
         "src/ui/Ladder.ts",

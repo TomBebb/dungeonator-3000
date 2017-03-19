@@ -1,3 +1,4 @@
+import Chest from "../ui/Chest";
 import Item from "../ui/Item";
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
@@ -7,6 +8,7 @@ import { clamp, randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
 import { Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
+import QuadTree from "../util/geom/QuadTree";
 import {Save, save, load} from "../util/save";
 import Scene from "./Scene";
 import PauseScene from "./PauseScene";
@@ -33,6 +35,7 @@ export default class PlayScene extends Scene {
         return this._floor;
     }
     private items: Item[] = [];
+    private itemQuadTree: QuadTree<Item>;
     private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
         fontFamily: "sans",
         fontSize: 20,
@@ -53,19 +56,19 @@ export default class PlayScene extends Scene {
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
         this.addNonUi(this.map);
+        // Make items
+        this.itemQuadTree = new QuadTree<Item>(new Rectangle(0, 0, this.map.width, this.map.height));
+        const ladder = new Ladder();
+        this.addItem(ladder);
+        this.addItem(new Chest());
+        // Make enemies
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
             this.makeEnemy();
         this.addUi(this.floorLabel);
-        const ladder = new Ladder();
-        this.items.push(ladder);
-        this.addNonUi(ladder);
-        this.place(ladder);
-        this.minimap = new Minimap(this.map.grid, this.players, ladder);
-        this.minimap.position.set(r.width - this.minimap.width - 10, 10);
-        this.addUi(this.minimap);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         let player: Player;
+        // Handle different input methods
         switch(input) {
             case "keyboard":
                 player = new KeyboardPlayer(this);
@@ -88,9 +91,19 @@ export default class PlayScene extends Scene {
         this.addNonUi(player);
         player.room = this.place(player);
         this.players.push(player);
+        this.minimap = new Minimap(this.map.grid, this.players, ladder);
+        this.minimap.position.set(r.width - this.minimap.width - 10, 10);
+        this.addUi(this.minimap);
         for (const g of gamepads)
             if (g !== undefined && g !== null)
                 this.connectGamepad(g);
+        
+    }
+    private addItem(item: Item) {
+        this.items.push(item);
+        this.itemQuadTree.insert(item);
+        this.place(item);
+        this.addNonUi(item);
     }
     pause() {
         this.pauseScene.cacheAsBitmap = false;
@@ -120,16 +133,21 @@ export default class PlayScene extends Scene {
         // Reset the map (clear, then generate on it)
         this.map.reset();
         this.minimap.redraw();
-        // Place the ladder
+        // Only keep the ladder
         this.items = this.items.filter((i) => i instanceof Ladder);
+        // Place the ladder
         this.place(this.items[0]);
+        this.itemQuadTree.clear();
+        this.itemQuadTree.insert(this.items[0]);
         // Place the entities
         for(const p of this.players)
             this.place(p);
         for(const e of this.enemies) {
             // Make it not follow anything
             e.follow = undefined;
+            // Clear its path, so it won't teleport to points along its previous path
             e.clearPath();
+            // Place it in the dungeon
             this.place(e);
         }
     }
@@ -145,7 +163,7 @@ export default class PlayScene extends Scene {
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
     canWalk(x: number, y: number): boolean {
-        const q = (q:Entity) => q.x === x && q.y === y;
+        const q = (q:BasePoint) => q.x === x && q.y === y;
         return this.map.canWalk(x, y) && this.players.find(q) == undefined && this.enemies.find(q) == undefined;
     }
     /// Check if the position `x`, `y` is clear of entities and tiles
@@ -234,6 +252,7 @@ export default class PlayScene extends Scene {
         if (this.inTurn) {
             let enemies: Enemy[] = [];
             let numMoved = 0;
+            let items: Item[] = [];
             for(const p of this.players)
                 if(this.tryMoveEntity(p)) {
                     enemies.splice(0);
@@ -242,9 +261,10 @@ export default class PlayScene extends Scene {
                         if(e.follow != p)
                             e.startFollowing(p);
                     numMoved++;
-                    for(const item of this.items)
+                    this.itemQuadTree.retrieve(items, p);
+                    for(const item of items)
                         if(item.x == p.x && item.y == p.y)
-                            this.advanceFloor();
+                            item.interact(p);
                 }
             for(const e of this.enemies)
                 if(this.tryMoveEntity(e))
