@@ -1,6 +1,6 @@
 ///<reference path='../pixi.d.ts'/>
 import Item from "./Item";
-import { Entity } from "./entities";
+import Entity from "./entities";
 import Rectangle = PIXI.Rectangle;
 import Texture = PIXI.Texture;
 export default class Chest extends Item {
@@ -15,7 +15,7 @@ export default class Chest extends Item {
 	    this.openTexture = new Texture(t, new Rectangle(0, 0, 16, 16));
 	    this.open = false;
     }
-    interact(e: Entity) {
+    interact(e: Entity<any>) {
     	if(!this.open) {
     		this.open = true;
     		this.texture = this.openTexture;

@@ -4,6 +4,7 @@ import { Room } from "./Map";
 import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
+import {Input, FollowInput, MultiInput, KeyboardInput, MouseInput } from "../util/input";
 import Item from "./Item";
 
 /// Loaded animations
@@ -58,7 +59,7 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
 /// A sprite that can move.
 ///
 /// This has a generic implementation that is easy to extend from.
-export class Entity extends Dynamic {
+export class Entity<I extends Input> extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
     moved: boolean = false;
@@ -67,8 +68,9 @@ export class Entity extends Dynamic {
     room: Rectangle | undefined;
     moveInterval: number;
     private moves: number = 0;
+    input: I;
 
-    constructor(scene: PlayScene, source: string = "player", moveInterval: number = 1, x: number = 0, y: number = 0) {
+    constructor(scene: PlayScene, input: I, source: string = "player", moveInterval: number = 1, x: number = 0, y: number = 0) {
         // Setup animations
         super(Dynamic.makeAnims(source, 16, 18, {
             stand_up: [ {x: 0, y: 0} ],
@@ -96,6 +98,8 @@ export class Entity extends Dynamic {
                 {x: 32, y: 54}
             ]
         }), "stand_up", x, y);
+        this.input = input;
+        input.entity = this;
         this.pivot.set(0, 2);
         this.scene = scene;
         this.lastPoint = new Point(x, y);
@@ -107,7 +111,12 @@ export class Entity extends Dynamic {
     }
     /// Returns the point this entity should try moving to.
     nextPoint(): BasePoint | undefined {
-        return undefined;
+        let i = this.input.next();
+        if(i == "pause") {
+            this.scene.pause();
+            return undefined;
+        } else
+            return i;
     }
     /// Try to move this entitiy, by querying its `nextPoint` method.
     ///
@@ -118,11 +127,11 @@ export class Entity extends Dynamic {
             return true;
         this.moves -= this.moveInterval;
         const p = this.nextPoint();
-        const r = {x: p!.x, y: p!.y, width: 1, height: 1};
+        const r = p ? {x: p.x, y: p.y, width: 1, height: 1}: undefined;
         // If the next point is this point i.e. no movement
         if(p == this)
             return true;
-        else if(p != undefined && this.scene.canWalk(r)) {
+        else if(p != undefined && this.scene.canWalk(r!)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
             if(this.room == undefined || !this.room.contains(x, y)) {
                 let rooms: Room[] = [];
@@ -139,13 +148,13 @@ export class Entity extends Dynamic {
                 this.animation = 'walk_' + (dy > 0 ? 'down' : 'up');
             else
                 this.animation = 'walk_' + (dx > 0 ? 'right' : 'left');
-            this.lastPoint = p;
+            this.lastPoint = p!;
             return true;
         } else {
-            if(p != null) {
+            if(p != undefined) {
                 let items: Item[] = [];
-                this.scene.itemQuadTree.retrieve(items, r);
-                let item = items.find((i: Item) => i.x == p!.x && i.y == p!.y);
+                this.scene.itemQuadTree.retrieve(items, r!);
+                let item = items.find((i: Item) => i.x == p.x && i.y == p.y);
                 if(item != null)
                     item.interact(this);
             }
@@ -154,134 +163,12 @@ export class Entity extends Dynamic {
             return false;
         }
     }
-}
-export class KeyboardPlayer extends Entity {
-    private buttons = new Set<number>();
-    
-    constructor(scene: PlayScene) {
-        super(scene);
-        scene.addEvent("keydown", (e: KeyboardEvent) => {
-            if(e.keyCode == 13 || e.keyCode == 32 || e.keyCode == 27)
-                this.scene.pause();
-            else
-                this.buttons.add(e.keyCode);
-        });
-        scene.addEvent("keyup", (e: KeyboardEvent) => {
-            this.buttons.delete(e.keyCode);
-        });
+    static defaultPlayer(scene: PlayScene): Entity<MultiInput> {
+        return new Entity(scene, new MultiInput(new KeyboardInput(scene), new MouseInput(scene)));
     }
-    nextPoint(): BasePoint | undefined {
-        if(this.buttons.has(37))
-            return { x: this.x - PlayScene.TILE_SIZE, y: this.y};
-        else if(this.buttons.has(38))
-            return { x: this.x, y: this.y - PlayScene.TILE_SIZE};
-        else if(this.buttons.has(39))
-            return { x: this.x + PlayScene.TILE_SIZE, y: this.y};
-        else if(this.buttons.has(40))
-            return { x: this.x, y: this.y + PlayScene.TILE_SIZE};
-        else return undefined;
-    }
-}
-export class GamepadPlayer extends Entity {
-    readonly index: number;
-    
-    constructor(scene: PlayScene, index: number) {
-        super(scene);
-        this.index = index;
-    }
-    nextPoint(): BasePoint | undefined {
-        const gp = navigator.getGamepads()[this.index];
-        if(gp == null)
-            return this;
-        if(gp.buttons[9].pressed)
-            this.scene.pause();
-        const dx = gp.axes[0], dy = gp.axes[1];
-        if(dx == 0 && dy == 0)
-            return undefined;
-        else
-            return { x: this.x + Math.round(dx) * PlayScene.TILE_SIZE, y: this.y + Math.round(dy) * PlayScene.TILE_SIZE};
+    static newEnemy(scene: PlayScene): Entity<FollowInput> {
+        return new Entity(scene, new FollowInput(), "zombie");
     }
 }
 
-export class MousePlayer extends Entity {
-    /// The cache of the path found using A*
-    private path: BasePoint[] = [];
-    constructor(scene: PlayScene) {
-        super(scene);
-        scene.addEvent("mousedown", (e: MouseEvent) => {
-            const TS = PlayScene.TILE_SIZE;
-            const p = this.scene.fromGlobal(new Point(e.offsetX, e.offsetY));
-            const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/TS), Point.from(p, false, 1/TS));
-            this.path = revPath.reverse();
-        });
-    }
-    clearPath() {
-        this.path.splice(0);
-    }
-    nextPoint(): BasePoint | undefined {
-        if(this.path.length > 0) {
-            return Point.from(this.path.pop()!, true, 16);
-        } else
-            return undefined;
-    }
-}
-export type Player = KeyboardPlayer | GamepadPlayer | MousePlayer;
-export class Enemy extends Entity {
-    /// How many steps to cache a path for
-    private static readonly MAX_PATH_LENGTH = 4;
-    /// The player to follow
-    follow: Player | undefined;
-    /// The cache of the path found using A*
-    private path: BasePoint[] = [];
-
-    private sightDist: number = 6 * PlayScene.TILE_SIZE;
-    constructor(scene:PlayScene) {
-        super(scene, "zombie", 2)
-    }
-    clearPath() {
-        this.path.splice(0);
-    }
-    startFollowing(e: Player) {
-        this.follow = e;
-        const text = new PIXI.Text("!", {
-            fill: "white"
-        });
-        text.position.set(this.x - text.width / 2, this.y - text.height);
-        let frame: () => void;
-        frame = () => {
-            text.alpha -= 0.1;
-            if(text.alpha <= 0) {
-                this.scene.removeNonUi(text);
-                this.scene.counter.unregister(frame);
-            }
-        }
-        this.scene.counter.register(0.03, frame);
-        this.scene.addNonUi(text);
-    }
-    canSee(p: Player): boolean {
-        return this.distanceFrom(p) < 2 * this.sightDist || (p.room != undefined && this.room == p.room);
-    }
-
-
-    nextPoint(): BasePoint | undefined {
-        if(this.follow == undefined)
-            return this;
-        // The player to follow
-        const f = this.follow!;
-        // If there is no difference
-        if(this.x - f.x == 0 && this.y - f.y == 0)
-            return this
-        // If the cached path is empty
-        else if(this.path.length == 0) {
-            // The path from start to finish
-            const revPath = this.scene.map.grid.findPath(Point.from(this, true, 1/16), Point.from(f, true, 1/16));
-            revPath.splice(Enemy.MAX_PATH_LENGTH);
-            this.path = revPath.reverse();
-        }
-            // order from method: first is start, last is goal
-        if(this.path.length > 0) {
-            return Point.from(this.path.pop()!, true, 16);
-        } else
-            return this
-    }
-}
+export default Entity;

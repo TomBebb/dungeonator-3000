@@ -21,6 +21,7 @@
         "src/util/Generator.ts",
         "src/util/save.ts",
         "src/util/math.ts",
+        "src/util/input.ts",
         "src/util/Tile.ts",
         "src/ui/entities.ts",
         "src/ui/PauseOverlay.ts",

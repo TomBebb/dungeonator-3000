@@ -3,7 +3,8 @@ import Item from "../ui/Item";
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
 import Minimap from "../ui/Minimap";
-import { KeyboardPlayer, MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
+import Entity from "../ui/entities";
+import {GamepadInput, FollowInput} from "../util/input";
 import { clamp, randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
 import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
@@ -22,9 +23,9 @@ export default class PlayScene extends Scene {
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
     /// The entities contained in the scene
-    readonly enemies: Enemy[] = [];
+    readonly enemies: Entity<FollowInput>[] = [];
     /// The players, where each set bit is an index into `entities`.
-    readonly players: Player[] = [];
+    readonly players: Entity<any>[] = [];
     private _floor: number = 1;
     
     set floor(v: number) {
@@ -44,7 +45,7 @@ export default class PlayScene extends Scene {
         align: "left"
     });
     private inTurn: boolean = false;
-    private readonly gamepadPlayers = new Map<number, GamepadPlayer>();
+    private readonly gamepadPlayers = new Map<number, Entity<GamepadInput>>();
     /// The grid as a displayable object.
     readonly map: UIMap;
     readonly minimap: Minimap;
@@ -71,27 +72,7 @@ export default class PlayScene extends Scene {
         this.addUi(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
-        let player: Player;
-        // Handle different input methods
-        switch(input) {
-            case "keyboard":
-                player = new KeyboardPlayer(this);
-                break;
-            case "mouse":
-                player = new MousePlayer(this);
-                break;
-            default:
-                const gps = navigator.getGamepads();
-                let index = 0;
-                for(let i = 0; i < gps.length; i++)
-                    if(gps[i] != null) {
-                        index = i;
-                        break;
-                    }
-                player = new GamepadPlayer(this, index);
-                this.gamepadPlayers.set(index, player);
-                break;
-        }
+        let player: Entity<any> = Entity.defaultPlayer(this);
         this.quadTree.insert(player);
         this.addNonUi(player);
         player.room = this.place(player);
@@ -116,8 +97,8 @@ export default class PlayScene extends Scene {
         this.advance(this.pauseScene, false);
         this.pauseScene.cacheAsBitmap = true;
     }
-    private makeEnemy(): Enemy {
-        const e = new Enemy(this);
+    private makeEnemy(): Entity<FollowInput> {
+        const e = Entity.newEnemy(this);
         this.addNonUi(e);
         this.quadTree.insert(e);
         e.room = this.place(e);
@@ -151,9 +132,9 @@ export default class PlayScene extends Scene {
             this.place(p);
         for(const e of this.enemies) {
             // Make it not follow anything
-            e.follow = undefined;
+            e.input.follow = undefined;
             // Clear its path, so it won't teleport to points along its previous path
-            e.clearPath();
+            e.input.clearPath();
             // Place it in the dungeon
             this.place(e);
         }
@@ -162,7 +143,7 @@ export default class PlayScene extends Scene {
     private connectGamepad(g: Gamepad) {
         if (this.gamepadPlayers.has(g.index))
             return;
-        const player: GamepadPlayer = new GamepadPlayer(this, g.index);
+        const player: Entity<any> = new Entity(this, new GamepadInput(g.index));
         this.addNonUi(player);
         this.players.push(player);
         this.gamepadPlayers.set(g.index, player);
@@ -177,7 +158,7 @@ export default class PlayScene extends Scene {
     }
     /// Check if the tile under `r` is clear of anything
     isNotEmpty(r: BaseRectangle): boolean {
-        const q = (q:Entity) => q.x === r.x && q.y === r.y;
+        const q = (q:BasePoint) => q.x === r.x && q.y === r.y;
         const os: BaseRectangle[] = [];
         this.quadTree.retrieve(os, r);
         return this.map.isNotEmpty(r.x, r.y) || os.find(q) != undefined;
@@ -202,7 +183,7 @@ export default class PlayScene extends Scene {
         return numAttempts < 0;
     }
     /// Place the entity `t` near `n`
-    private placeNear(t: Entity, n: Entity, numAttempts: number = 5): boolean {
+    private placeNear(t: Entity<any>, n: Entity<any>, numAttempts: number = 5): boolean {
         if(n.room != null)
             while(numAttempts-- > 0) {
                 const r = randomIn(this.map.grid.rooms);
@@ -245,13 +226,13 @@ export default class PlayScene extends Scene {
         this.minimap.redraw();
     }
     /// Try moving the entity, return true if it could be moved.
-    tryMoveEntity(e: Entity): boolean {
+    tryMoveEntity(e: Entity<any>): boolean {
         return e.moved || e.tryMove()
     }
     /// Fil `arr` with the enemies that can see the player.
-    private enemiesSeeing(arr: Enemy[], p: Player) {
+    private enemiesSeeing(arr: Entity<FollowInput>[], p: Entity<any>) {
         for(const e of this.enemies)
-            if(e.canSee(p))
+            if(e.input.canSee(p))
                 arr.push(e);
     }
     update(dt: number): void {
@@ -262,15 +243,15 @@ export default class PlayScene extends Scene {
                 this.connectGamepad(g);
         // If it is in a turn
         if (this.inTurn) {
-            let enemies: Enemy[] = [];
+            let enemies: Entity<FollowInput>[] = [];
             let numMoved = 0;
             for(const p of this.players)
                 if(this.tryMoveEntity(p)) {
                     enemies.splice(0);
                     this.enemiesSeeing(enemies, p);
                     for(const e of enemies)
-                        if(e.follow != p)
-                            e.startFollowing(p);
+                        if(e.input.follow != p)
+                            e.input.startFollowing(p);
                     numMoved++;
                 }
             for(const e of this.enemies)

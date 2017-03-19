@@ -2,7 +2,7 @@
 import Graphics = PIXI.Graphics;
 import Grid from "../util/geom/Grid";
 import PlayScene from "../scene/PlayScene";
-import {Player} from "./entities";
+import Entity from "./entities";
 import Ladder from "./Ladder";
 
 export default class Minimap extends Graphics {
@@ -11,9 +11,9 @@ export default class Minimap extends Graphics {
     private static readonly PLAYER: number = 0x00cc00;
     private static readonly PLAYER_RADIUS: number = 2;
     private grid: Grid;
-    private players: Player[];
+    private players: Entity<any>[];
     private ladder: Ladder;
-    constructor(grid: Grid, players: Player[], ladder: Ladder) {
+    constructor(grid: Grid, players: Entity<any>[], ladder: Ladder) {
         super();
         this.grid = grid;
         this.alpha = 0.5;
