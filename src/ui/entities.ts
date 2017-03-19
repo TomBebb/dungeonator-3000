@@ -4,6 +4,7 @@ import { Room } from "./Map";
 import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
+import Item from "./Item";
 
 /// Loaded animations
 export interface Animations {
@@ -117,10 +118,11 @@ export class Entity extends Dynamic {
             return true;
         this.moves -= this.moveInterval;
         const p = this.nextPoint();
+        const r = {x: p!.x, y: p!.y, width: 1, height: 1};
         // If the next point is this point i.e. no movement
         if(p == this)
             return true;
-        else if(p != undefined && this.scene.canWalk(p.x, p.y)) {
+        else if(p != undefined && this.scene.canWalk(r)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
             if(this.room == undefined || !this.room.contains(x, y)) {
                 let rooms: Room[] = [];
@@ -140,6 +142,13 @@ export class Entity extends Dynamic {
             this.lastPoint = p;
             return true;
         } else {
+            if(p != null) {
+                let items: Item[] = [];
+                this.scene.itemQuadTree.retrieve(items, r);
+                let item = items.find((i: Item) => i.x == p!.x && i.y == p!.y);
+                if(item != null)
+                    item.interact(this);
+            }
             if(this.animation.startsWith('walk_'))
                 this.animation = this.animation.replace('walk_', 'stand_');
             return false;

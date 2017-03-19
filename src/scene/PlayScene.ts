@@ -6,7 +6,7 @@ import Minimap from "../ui/Minimap";
 import { KeyboardPlayer, MousePlayer, GamepadPlayer, Player, Enemy, Entity } from "../ui/entities";
 import { clamp, randomIn } from "../util/math";
 import { BasePoint } from "../util/geom/Point";
-import { Rectangle } from "../util/geom/Rectangle";
+import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
 import QuadTree from "../util/geom/QuadTree";
 import {Save, save, load} from "../util/save";
@@ -35,7 +35,8 @@ export default class PlayScene extends Scene {
         return this._floor;
     }
     private items: Item[] = [];
-    private itemQuadTree: QuadTree<Item>;
+    itemQuadTree: QuadTree<Item>;
+    private quadTree: QuadTree<BaseRectangle>;
     private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
         fontFamily: "sans",
         fontSize: 20,
@@ -56,8 +57,11 @@ export default class PlayScene extends Scene {
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
         this.addNonUi(this.map);
+        const rect = new Rectangle(0, 0, this.map.width, this.map.height);
+        // Make quad tree for all collidable objects
+        this.quadTree = new QuadTree<BaseRectangle>(rect);
         // Make items
-        this.itemQuadTree = new QuadTree<Item>(new Rectangle(0, 0, this.map.width, this.map.height));
+        this.itemQuadTree = new QuadTree<Item>(rect);
         const ladder = new Ladder();
         this.addItem(ladder);
         this.addItem(new Chest());
@@ -88,6 +92,7 @@ export default class PlayScene extends Scene {
                 this.gamepadPlayers.set(index, player);
                 break;
         }
+        this.quadTree.insert(player);
         this.addNonUi(player);
         player.room = this.place(player);
         this.players.push(player);
@@ -102,6 +107,7 @@ export default class PlayScene extends Scene {
     private addItem(item: Item) {
         this.items.push(item);
         this.itemQuadTree.insert(item);
+        this.quadTree.insert(item);
         this.place(item);
         this.addNonUi(item);
     }
@@ -113,6 +119,7 @@ export default class PlayScene extends Scene {
     private makeEnemy(): Enemy {
         const e = new Enemy(this);
         this.addNonUi(e);
+        this.quadTree.insert(e);
         e.room = this.place(e);
         this.enemies.push(e);
         return e;
@@ -161,18 +168,22 @@ export default class PlayScene extends Scene {
         this.gamepadPlayers.set(g.index, player);
         this.placeNear(this.players[0], player);
     }
-    /// Check if the position `x`, `y` is clear of entities and tiles
-    canWalk(x: number, y: number): boolean {
-        const q = (q:BasePoint) => q.x === x && q.y === y;
-        return this.map.canWalk(x, y) && this.players.find(q) == undefined && this.enemies.find(q) == undefined;
+    /// Check if the tile under `r` is walkable
+    canWalk(r: BaseRectangle): boolean {
+        const q = (q:BasePoint) => q.x === r.x && q.y === r.y;
+        const os: BaseRectangle[] = [];
+        this.quadTree.retrieve(os, r);
+        return this.map.canWalk(r.x, r.y) && os.find(q) == undefined;
     }
-    /// Check if the position `x`, `y` is clear of entities and tiles
-    isNotEmpty(x: number, y: number): boolean {
-        const q = (q:Entity) => q.x === x && q.y === y;
-        return this.map.isNotEmpty(x, y) || this.players.find(q) != undefined || this.enemies.find(q) != undefined;
+    /// Check if the tile under `r` is clear of anything
+    isNotEmpty(r: BaseRectangle): boolean {
+        const q = (q:Entity) => q.x === r.x && q.y === r.y;
+        const os: BaseRectangle[] = [];
+        this.quadTree.retrieve(os, r);
+        return this.map.isNotEmpty(r.x, r.y) || os.find(q) != undefined;
     }
     /// Attempt to place the point `p` in the game.
-    private place(p: BasePoint, numAttempts: number = 5): Rectangle | undefined {
+    private place(p: BaseRectangle, numAttempts: number = 5): Rectangle | undefined {
         let r: Rectangle;
         do {
             // Get a random room
@@ -180,14 +191,14 @@ export default class PlayScene extends Scene {
             // Place p in the room
             if(this.placeIn(p, r, numAttempts))
                 return r;
-        } while(this.isNotEmpty(p.x, p.y) && --numAttempts > 0)
+        } while(this.isNotEmpty(p) && --numAttempts > 0)
         return numAttempts > 0 ? r : undefined;
     }
-    private placeIn(p: BasePoint, r: Rectangle, numAttempts: number = 5): boolean {
+    private placeIn(p: BaseRectangle, r: Rectangle, numAttempts: number = 5): boolean {
         do {
             p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
             p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
-        } while(this.isNotEmpty(p.x, p.y) && --numAttempts >= 0)
+        } while(this.isNotEmpty(p) && --numAttempts >= 0)
         return numAttempts < 0;
     }
     /// Place the entity `t` near `n`
@@ -201,19 +212,20 @@ export default class PlayScene extends Scene {
                 }
             }
         const TS = PlayScene.TILE_SIZE;
-        if(this.canWalk(n.x - TS, n.y)) {
-            t.x = n.x - TS;
+        t.x = n.x + TS;
+        t.y = n.y;
+        if(this.canWalk(t))
             return true;
-        } else if(this.canWalk(n.x + TS, n.y)) {
-            t.x = n.x + TS;
+        t.x = n.x - TS;
+        if(this.canWalk(t))
             return true;
-        } else if(this.canWalk(n.x, n.y - TS)) {
-            t.y = n.x - TS;
+        t.x = n.x;
+        t.y = n.y + TS;
+        if(this.canWalk(t))
             return true;
-        } else if(this.canWalk(n.x, n.y + TS)) {
-            t.y = n.x + TS;
+        t.y = n.y - TS;
+        if(this.canWalk(t))
             return true;
-        }
         const r = this.place(t, numAttempts);
         t.room = r;
         return r != undefined;
@@ -252,7 +264,6 @@ export default class PlayScene extends Scene {
         if (this.inTurn) {
             let enemies: Enemy[] = [];
             let numMoved = 0;
-            let items: Item[] = [];
             for(const p of this.players)
                 if(this.tryMoveEntity(p)) {
                     enemies.splice(0);
@@ -261,10 +272,6 @@ export default class PlayScene extends Scene {
                         if(e.follow != p)
                             e.startFollowing(p);
                     numMoved++;
-                    this.itemQuadTree.retrieve(items, p);
-                    for(const item of items)
-                        if(item.x == p.x && item.y == p.y)
-                            item.interact(p);
                 }
             for(const e of this.enemies)
                 if(this.tryMoveEntity(e))

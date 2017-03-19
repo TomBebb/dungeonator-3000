@@ -1,9 +1,9 @@
 ///<reference path='../pixi.d.ts'/>
 import Sprite = PIXI.Sprite;
-import { Player } from "./entities";
+import { Entity } from "./entities";
 
 export default class Item extends Sprite {
-    interact(p: Player) {
-    	p;
+    interact(e: Entity) {
+    	e;
     }
 }

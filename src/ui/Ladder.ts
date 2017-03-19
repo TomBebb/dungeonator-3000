@@ -1,11 +1,11 @@
 import Item from "./Item";
-import { Player } from "./entities";
+import { Entity } from "./entities";
 export default class Ladder extends Item {
     constructor() {
 	    const r = PIXI.loader.resources;
 	    super(r['ladder'].texture);
     }
-    interact(p: Player) {
-    	p.scene.advanceFloor();
+    interact(e: Entity) {
+    	e.scene.advanceFloor();
     }
 }
