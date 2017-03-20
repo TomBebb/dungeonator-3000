@@ -24,6 +24,7 @@ export default class Main {
         // Set which assets should be loaded by PIXI
         PIXI.loader.baseUrl = 'assets/';
         PIXI.loader
+            .add("coins", "coins.png")
             .add("chests", "chests.png")
             .add("blank", "blank.png")
             .add("player", "player.png")

@@ -29,8 +29,8 @@ export class MultiInput implements Input {
 	}
 	next(): Event {
 		for(const i of this.inputs) {
-			const v = i.next();
-			if(v != undefined)
+			const v: Event = i.next();
+			if(v == "pause" || v != undefined)
 				return v;
 		}
 		return undefined;
@@ -157,7 +157,7 @@ export class GamepadInput implements Input {
     next(): Event {
         const gp = navigator.getGamepads()[this.index];
         if(gp == null)
-            return this.entity;
+            return undefined;
         if(gp.buttons[9].pressed)
             return "pause";
         const x = this.entity.x, y = this.entity.y, dx = gp.axes[0], dy = gp.axes[1], TS = PlayScene.TILE_SIZE;

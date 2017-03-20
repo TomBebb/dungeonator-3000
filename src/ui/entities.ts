@@ -4,7 +4,7 @@ import { Room } from "./Map";
 import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
 import {manhattanDistance} from "../util/math";
-import {Input, FollowInput, MultiInput, KeyboardInput, MouseInput } from "../util/input";
+import {Input, FollowInput, MultiInput, GamepadInput, KeyboardInput, MouseInput } from "../util/input";
 import Item from "./Item";
 
 /// Loaded animations
@@ -42,7 +42,6 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
         this.loop = true;
         this.play();
     }
-
     static makeAnims(source: string, fw: number, fh: number, anims: AnimationsDef): Animations {
         const b = new PIXI.BaseTexture(PIXI.loader.resources[source].data);
         const a: Animations = {};
@@ -54,6 +53,25 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
         return a;
     }
 
+}
+
+export class Coin extends Dynamic {
+    scene: PlayScene;
+    constructor(scene: PlayScene, x: number, y: number) {
+        super(Dynamic.makeAnims("coins", 16, 16, {
+            still: [{x: 0, y: 0}],
+            spin: [{x: 0, y: 0}, {x: 16, y: 0}, {x: 32, y: 0}, {x: 48, y: 0}, {x: 64, y: 0}, {x: 80, y: 0}, {x: 96, y: 0}, {x: 111, y: 0}, ]
+        }), "spin", x, y);
+        this.scene = scene;
+        this.play();
+    }
+    update(dt: number) {
+        super.update(dt);
+        this.y -= dt * 0.2;
+        this.alpha -= dt * 0.01;
+        if(this.alpha <= 0)
+            this.scene.removeNonUi(this);
+    }
 }
 
 /// A sprite that can move.
@@ -164,7 +182,7 @@ export class Entity<I extends Input> extends Dynamic {
         }
     }
     static defaultPlayer(scene: PlayScene): Entity<MultiInput> {
-        return new Entity(scene, new MultiInput(new KeyboardInput(scene), new MouseInput(scene)));
+        return new Entity(scene, new MultiInput(new KeyboardInput(scene), new MouseInput(scene), new GamepadInput(0)));
     }
     static newEnemy(scene: PlayScene): Entity<FollowInput> {
         return new Entity(scene, new FollowInput(), "zombie");

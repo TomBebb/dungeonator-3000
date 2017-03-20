@@ -19,6 +19,7 @@ import Text = PIXI.Text;
 /// The main scene
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
+    static readonly NUM_CHESTS = 8;
     static readonly NUM_ENEMIES = 10;
     static readonly TURN_DELAY = 0.1;
     readonly counter: Counter = new Counter();
@@ -35,10 +36,25 @@ export default class PlayScene extends Scene {
     get floor(): number {
         return this._floor;
     }
+    private _coins: number = 0;
+    
+    set coins(v: number) {
+        this._coins = v;
+        this.coinsLabel.text = `Coins: ${this.coins}`;
+    }
+    get coins(): number {
+        return this._floor;
+    }
     private items: Item[] = [];
     itemQuadTree: QuadTree<Item>;
     private quadTree: QuadTree<BaseRectangle>;
     private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
+        fontFamily: "sans",
+        fontSize: 20,
+        fill: "white",
+        align: "left"
+    });
+    private readonly coinsLabel: Text = new Text(`Coins: ${this._coins}`, {
         fontFamily: "sans",
         fontSize: 20,
         fill: "white",
@@ -53,8 +69,13 @@ export default class PlayScene extends Scene {
     /// Add an entity
     constructor(input: "mouse" | "keyboard" | "gamepad") {
         super();
+        let s = load();
+        if(s != undefined && s.coins)
+            this.coins = s.coins;
         this.pauseScene = new PauseScene(this, input);
         this.addUi(this.floorLabel);
+        this.coinsLabel.x = Main.instance.renderer.width / 2;
+        this.addUi(this.coinsLabel);
         const r = Main.instance.renderer;
         this.map = new UIMap(128, 128);
         this.addNonUi(this.map);
@@ -65,7 +86,8 @@ export default class PlayScene extends Scene {
         this.itemQuadTree = new QuadTree<Item>(rect);
         const ladder = new Ladder();
         this.addItem(ladder);
-        this.addItem(new Chest());
+        for(let i = 0; i < PlayScene.NUM_CHESTS; i++)
+            this.addItem(new Chest());
         // Make enemies
         for(let i = 0; i < PlayScene.NUM_ENEMIES; i++)
             this.makeEnemy();
@@ -85,11 +107,29 @@ export default class PlayScene extends Scene {
                 this.connectGamepad(g);
         
     }
-    private addItem(item: Item) {
-        this.items.push(item);
+    private addEntity(e: Entity<any>) {
+        this.resetEntity(e);
+        this.addNonUi(e);
+        (e.input instanceof FollowInput ? this.enemies : this.players).push(e);
+    }
+    private resetEntity(e: Entity<any>) {
+        this.quadTree.insert(e);
+        e.room = this.place(e);
+        if(e.input instanceof FollowInput) {
+            // Make it not follow anything
+            e.input.follow = undefined;
+            // Clear its path, so it won't teleport to points along its previous path
+            e.input.clearPath();
+        }
+    }
+    private resetItem(item: Item) {
         this.itemQuadTree.insert(item);
         this.quadTree.insert(item);
         this.place(item);
+    }
+    private addItem(item: Item) {
+        this.resetItem(item);
+        this.items.push(item);
         this.addNonUi(item);
     }
     pause() {
@@ -99,10 +139,7 @@ export default class PlayScene extends Scene {
     }
     private makeEnemy(): Entity<FollowInput> {
         const e = Entity.newEnemy(this);
-        this.addNonUi(e);
-        this.quadTree.insert(e);
-        e.room = this.place(e);
-        this.enemies.push(e);
+        this.addEntity(e);
         return e;
     }
     /// Advance to the next floor
@@ -112,7 +149,8 @@ export default class PlayScene extends Scene {
         const f = ++this.floor;
         if(saveData == undefined)
             saveData = {
-                maxFloor: f
+                maxFloor: f,
+                coins: this.coins
             };
         else if(f > saveData.maxFloor)
             saveData.maxFloor = f;
@@ -120,33 +158,26 @@ export default class PlayScene extends Scene {
         save(saveData);
         // Reset the map (clear, then generate on it)
         this.map.reset();
-        this.minimap.redraw();
-        // Only keep the ladder
-        this.items = this.items.filter((i) => i instanceof Ladder);
-        // Place the ladder
-        this.place(this.items[0]);
+        // Clear quad trees
+        this.quadTree.clear();
         this.itemQuadTree.clear();
-        this.itemQuadTree.insert(this.items[0]);
+        // Re-place items
+        for(const i of this.items)
+            this.resetItem(i);
         // Place the entities
         for(const p of this.players)
-            this.place(p);
-        for(const e of this.enemies) {
-            // Make it not follow anything
-            e.input.follow = undefined;
-            // Clear its path, so it won't teleport to points along its previous path
-            e.input.clearPath();
-            // Place it in the dungeon
-            this.place(e);
-        }
+            this.resetEntity(p);
+        for(const e of this.enemies)
+            this.resetEntity(e);
+        // Redraw the minimap
+        this.minimap.redraw();
     }
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
         if (this.gamepadPlayers.has(g.index))
             return;
         const player: Entity<any> = new Entity(this, new GamepadInput(g.index));
-        this.addNonUi(player);
-        this.players.push(player);
-        this.gamepadPlayers.set(g.index, player);
+        this.addEntity(player);
         this.placeNear(this.players[0], player);
     }
     /// Check if the tile under `r` is walkable

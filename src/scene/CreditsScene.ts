@@ -3,7 +3,7 @@ import Scene from './Scene';
 import Text = PIXI.Text;
 
 export default class CreditsScene extends Scene {
-	private static readonly TEXT = "Programming: Tom Bebbington\nCoding: Tom Bebbington";
+	private static readonly TEXT = "Programming: Tom Bebbington\nCoin Sprite: Puddin (OpenGameArt)";
 	private text: Text;
 	private from: Scene;
 	constructor(from: Scene) {

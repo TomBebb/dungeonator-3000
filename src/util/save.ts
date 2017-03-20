@@ -1,6 +1,8 @@
 export interface Save {
     /// The maximum floor reached
-    maxFloor: number
+    maxFloor: number,
+    /// How many coins got earned
+    coins: number
 }
 export function load(): Save | undefined {
     const d = localStorage.getItem(SAVE_ID);
