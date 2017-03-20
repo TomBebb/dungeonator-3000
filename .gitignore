@@ -1,2 +1,12 @@
-**.js
-**.js.map
+src/*.js
+src/*.js.map
+src/scene/*.js
+src/scene/*.js.map
+src/ui/*.js
+src/ui/*.js.map
+src/util/*.js
+src/util/*.js.map
+src/util/ds/*.js
+src/util/ds/*.js.map
+src/util/geom/*.js
+src/util/geom/*.js.map
