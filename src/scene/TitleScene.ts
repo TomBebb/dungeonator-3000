@@ -15,13 +15,20 @@ export default class TitleScene extends MenuScene {
 		const r = Main.instance.renderer;
 		const data: Save | undefined = load();
 		if(data != undefined) {
-			const t = new Text(`Highest floor: ${data.maxFloor}`, {
+			const floor = new Text(`Highest floor: ${data.maxFloor}`, {
 				fontSize: 40,
 				fill: 'white'
 			});
-			t.position.set((r.width - t.width) / 2, (r.height - t.height) / 2);
-			t.cacheAsBitmap = true;
-			this.addUi(t);
+			floor.position.set((r.width - floor.width) / 2, (r.height - floor.height) / 2);
+			floor.cacheAsBitmap = true;
+			this.addUi(floor);
+			const coins = new Text(`Coins: ${data.coins}`, {
+				fontSize: 40,
+				fill: 'white'
+			});
+			coins.position.set((r.width - coins.width) / 2, r.height * 0.3);
+			coins.cacheAsBitmap = true;
+			this.addUi(coins);
 		}
 	}
 }

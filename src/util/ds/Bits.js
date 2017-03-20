@@ -1,6 +1,5 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
     var Bits = (function () {
         function Bits(capacity) {
             this.array = new Int32Array(capacity >> 5);
@@ -52,6 +51,6 @@ define(["require", "exports"], function (require, exports) {
         };
         return Bits;
     }());
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Bits;
 });
-//# sourceMappingURL=Bits.js.map

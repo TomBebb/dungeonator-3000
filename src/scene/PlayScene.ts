@@ -27,34 +27,34 @@ export default class PlayScene extends Scene {
     readonly enemies: Entity<FollowInput>[] = [];
     /// The players, where each set bit is an index into `entities`.
     readonly players: Entity<any>[] = [];
-    private _floor: number = 1;
+    private _floor: number;
     
     set floor(v: number) {
         this._floor = v;
-        this.floorLabel.text = `Floor: ${this.floor}`;
+        this.floorLabel.text = `Floor: ${this.floor.toLocaleString(undefined, {minimumIntegerDigits: 3})}`;
     }
     get floor(): number {
         return this._floor;
     }
-    private _coins: number = 0;
+    private _coins: number;
     
     set coins(v: number) {
         this._coins = v;
-        this.coinsLabel.text = `Coins: ${this.coins}`;
+        this.coinsLabel.text = `Coins: ${this.coins.toLocaleString(undefined, {minimumIntegerDigits: 6})}`;
     }
     get coins(): number {
-        return this._floor;
+        return this._coins;
     }
     private items: Item[] = [];
     itemQuadTree: QuadTree<Item>;
     private quadTree: QuadTree<BaseRectangle>;
-    private readonly floorLabel: Text = new Text(`Floor: ${this._floor}`, {
+    private readonly floorLabel: Text = new Text('', {
         fontFamily: "sans",
         fontSize: 20,
         fill: "white",
         align: "left"
     });
-    private readonly coinsLabel: Text = new Text(`Coins: ${this._coins}`, {
+    private readonly coinsLabel: Text = new Text('', {
         fontFamily: "sans",
         fontSize: 20,
         fill: "white",
@@ -70,8 +70,11 @@ export default class PlayScene extends Scene {
     constructor(input: "mouse" | "keyboard" | "gamepad") {
         super();
         let s = load();
+        this.floor = 1;
         if(s != undefined && s.coins)
             this.coins = s.coins;
+        else
+            this.coins = 0;
         this.pauseScene = new PauseScene(this, input);
         this.addUi(this.floorLabel);
         this.coinsLabel.x = Main.instance.renderer.width / 2;
@@ -152,7 +155,9 @@ export default class PlayScene extends Scene {
                 maxFloor: f,
                 coins: this.coins
             };
-        else if(f > saveData.maxFloor)
+        else
+            saveData.coins = this.coins;
+        if(f > saveData.maxFloor)
             saveData.maxFloor = f;
         // Increment the floor number
         save(saveData);

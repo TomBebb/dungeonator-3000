@@ -1,6 +1,5 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
     var HashMap = (function () {
         function HashMap(_default) {
             if (_default === void 0) { _default = undefined; }
@@ -29,6 +28,6 @@ define(["require", "exports"], function (require, exports) {
         };
         return HashMap;
     }());
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = HashMap;
 });
-//# sourceMappingURL=HashMap.js.map

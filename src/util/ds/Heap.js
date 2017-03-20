@@ -1,6 +1,5 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
     var Heap = (function () {
         function Heap(score) {
             this.content = [];
@@ -84,6 +83,6 @@ define(["require", "exports"], function (require, exports) {
         };
         return Heap;
     }());
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Heap;
 });
-//# sourceMappingURL=Heap.js.map
