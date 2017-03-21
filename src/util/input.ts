@@ -44,8 +44,14 @@ export class KeyboardInput implements Input {
     entity: Entity<any>;
     
     constructor(scene: Scene) {
-        scene.addEvent("keydown", (e: KeyboardEvent) => this.buttons.add(e.keyCode));
-        scene.addEvent("keyup", (e: KeyboardEvent) => this.buttons.delete(e.keyCode));
+        scene.addEvent("keydown", (e: KeyboardEvent) => {
+            if(!e.repeat)
+                this.buttons.add(e.keyCode)
+        });
+        scene.addEvent("keyup", (e: KeyboardEvent) => {
+            if(!e.repeat)
+                this.buttons.delete(e.keyCode)
+        });
     }
     next(): Event {
     	const x = this.entity.x, y = this.entity.y, TS = PlayScene.TILE_SIZE;

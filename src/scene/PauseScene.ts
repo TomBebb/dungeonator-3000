@@ -42,23 +42,33 @@ export default class PauseScene extends Scene {
 		this.overlay.endFill();
 		this.addChild(this.paused);
 		this.addChild(this.detail);
-		const resume = PauseScene.prototype.advance.bind(this, this.scene, false);
-		this.addEvent("mousedown", resume);
+		this.addEvent("mousedown", this.resume.bind(this));
 		this.addEvent("keydown", (e: KeyboardEvent) => {
+			if(e.repeat)
+				return;
 			if(e.keyCode == 27)
-				this.advance(new TitleScene(), true);
+				this.title();
 			else
-				resume();
+				this.resume();
 		});
 		this.cacheAsBitmap = true;
+	}
+	private title() {
+		this.advance(new TitleScene(), true);
+	}
+	private resume() {
+		this.advance(this.scene, false);
 	}
 	update(dt: number) {
 		super.update(dt);
 		const gps = navigator.getGamepads();
-		for(const gp of gps)
-			if(gp != null && gp.buttons[8].pressed)
-				this.advance(new TitleScene(), true);
-			else if(gp != null && gp.buttons[9].pressed)
-				this.advance(this.scene, false);
+		for(const gp of gps) {
+			if(gp == null)
+				continue;
+			if(gp.buttons[8].pressed)
+				this.title();
+			else if(gp.buttons[9].pressed)
+				this.resume();
+		}
 	}
 }

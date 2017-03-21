@@ -19,7 +19,7 @@ export default class LoadingScene extends Scene {
 		this.text.x = (r.width - this.text.width) / 2;
 		this.text.y = (r.height - this.text.height) / 2;
 		this.text.scale.set(1, 1);
-		this.text.cacheAsBitmap = true;
+		this.cacheAsBitmap = true;
 		this.ui.scale.set(1, 1);
 		this.addUi(this.text);
 	}
@@ -27,9 +27,9 @@ export default class LoadingScene extends Scene {
 		this.sinceAddDot += dt;
 		if(this.sinceAddDot >= LoadingScene.DOT_INTERVAL) {
 			this.sinceAddDot -= LoadingScene.DOT_INTERVAL;
-			this.text.cacheAsBitmap = false;
+			this.cacheAsBitmap = false;
 			this.text.text += ".";
-			this.text.cacheAsBitmap = true;
+			this.cacheAsBitmap = true;
 		}
 	}
 }
