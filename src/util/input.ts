@@ -12,7 +12,7 @@ export interface Input {
 	next(): Event;
 }
 
-/// Takes multiple input sources
+/// Takes multiple input sources, used for multiple primary player inputs.
 export class MultiInput implements Input {
 	private _entity: Entity<any>;
 	get entity(): Entity<any> {
@@ -20,6 +20,7 @@ export class MultiInput implements Input {
 	}
 	set entity(e: Entity<any>) {
 		this._entity = e;
+        // Register the entity for all the inner inputs
 		for(const i of this.inputs)
 			i.entity = e;
 	}
@@ -69,6 +70,7 @@ export class KeyboardInput implements Input {
     }
 }
 
+/// Input using a mouse
 export class MouseInput implements Input {
 	entity: Entity<any>;
     /// The cache of the path found using A*

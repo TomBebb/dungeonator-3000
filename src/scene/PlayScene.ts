@@ -16,7 +16,7 @@ import PauseScene from "./PauseScene";
 import Main from "../main";
 import Text = PIXI.Text;
 
-/// The main scene
+/// Displays a dungeon floor and allows players to interact with it.
 export default class PlayScene extends Scene {
     static readonly TILE_SIZE = 16;
     static readonly NUM_CHESTS = 8;
@@ -27,6 +27,7 @@ export default class PlayScene extends Scene {
     readonly enemies: Entity<FollowInput>[] = [];
     /// The players, where each set bit is an index into `entities`.
     readonly players: Entity<any>[] = [];
+    // Wrap the floor as a property so when it is set it updates the floor label as well.
     private _floor: number;
     
     set floor(v: number) {
@@ -36,6 +37,7 @@ export default class PlayScene extends Scene {
     get floor(): number {
         return this._floor;
     }
+    // Wrap the coins as a property so when it is set it updates the coin label as well.
     private _coins: number;
     
     set coins(v: number) {
@@ -46,7 +48,9 @@ export default class PlayScene extends Scene {
         return this._coins;
     }
     private items: Item[] = [];
+    /// The quad tree that items such as chests are stored on.
     itemQuadTree: QuadTree<Item>;
+    /// The quad tree that any collidable object (including entities and items) is stored on.
     private quadTree: QuadTree<BaseRectangle>;
     private readonly floorLabel: Text = new Text('', {
         fontFamily: "sans",
@@ -60,11 +64,14 @@ export default class PlayScene extends Scene {
         fill: "white",
         align: "left"
     });
+    /// Whether the game is currently in a turn.
     private inTurn: boolean = false;
     private readonly gamepadPlayers = new Map<number, Entity<GamepadInput>>();
     /// The grid as a displayable object.
     readonly map: UIMap;
+    /// The mini-map, which displays a miniature version of the dungeon.
     readonly minimap: Minimap;
+    /// The pause scene, which is made along with this but not displayed.
     private pauseScene: PauseScene
     /// Add an entity
     constructor(input: "mouse" | "keyboard" | "gamepad") {
@@ -110,11 +117,13 @@ export default class PlayScene extends Scene {
                 this.connectGamepad(g);
         
     }
+    /// Add an entity `e`.
     private addEntity(e: Entity<any>) {
         this.resetEntity(e);
         this.addNonUi(e);
         (e.input instanceof FollowInput ? this.enemies : this.players).push(e);
     }
+    /// Reset the entity `e`.
     private resetEntity(e: Entity<any>) {
         this.quadTree.insert(e);
         e.room = this.place(e);
@@ -125,27 +134,33 @@ export default class PlayScene extends Scene {
             e.input.clearPath();
         }
     }
+    /// Reset the item `item`.
     private resetItem(item: Item) {
         this.itemQuadTree.insert(item);
         this.quadTree.insert(item);
         this.place(item);
     }
+    /// Add the item `item`
     private addItem(item: Item) {
         this.resetItem(item);
         this.items.push(item);
         this.addNonUi(item);
     }
+    /// Pause the game.
     pause() {
+        // Delete the pause scene cached bitmap as it might have changeed.
         this.pauseScene.cacheAsBitmap = false;
         this.advance(this.pauseScene, false);
+        // Cache the pause scene as a bitmap, as while the game is paused that never changes.
         this.pauseScene.cacheAsBitmap = true;
     }
+    /// Make an enemy and add it to the game.
     private makeEnemy(): Entity<FollowInput> {
         const e = Entity.newEnemy(this);
         this.addEntity(e);
         return e;
     }
-    /// Advance to the next floor
+    /// Advance to the next floor.
     advanceFloor() {
         this.endTurn();
         let saveData: Save | undefined = load();

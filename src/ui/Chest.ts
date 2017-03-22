@@ -4,6 +4,8 @@ import {Coin, Entity}  from "./entities";
 import { FollowInput } from "../util/input";
 import Rectangle = PIXI.Rectangle;
 import Texture = PIXI.Texture;
+
+/// A treasure chest.
 export default class Chest extends Item {
 	private shutTexture: Texture;
 	private openTexture: Texture;
@@ -18,9 +20,12 @@ export default class Chest extends Item {
 	    this.open = false;
     }
     interact(e: Entity<any>) {
+        // If the chest is closed and the entity interacting isn't an enemy
     	if(!this.open && !(e.input instanceof FollowInput)) {
+            // Mark as open
     		this.open = true;
     		this.texture = this.openTexture;
+            // Make a coin
     		this.coin = new Coin(e.scene, this.x, this.y - 16);
             e.scene.coins += 1;
        		e.scene.addNonUi(this.coin);

@@ -8,7 +8,7 @@ import QuadTree from '../util/geom/QuadTree';
 
 type Input = "mouse" | "keyboard" | "gamepad";
 
-/// Any meny scene
+/// A scene that lists buttons that can be scrolled through and selected.
 export default class MenuScene extends Scene {
 	/// The title text
 	readonly title: Text = new Text("", {
@@ -21,11 +21,12 @@ export default class MenuScene extends Scene {
 	});
 	private buttonTree: QuadTree<Button>;
 	private readonly buttons: Button[];
-	/// The map, that is scrolled past
+	/// The map, that is scrolled in the background.
 	readonly map: UIMap = new UIMap(128, 128);
-	/// Velocity of the camera per second
+	/// Velocity of the camera per second.
 	readonly vel: [number, number] = [0, 0];
 
+	/// The index of the selected button, or -1 if no button is selected.
 	private selected: number = -1;
 	constructor(name: string, buttons: Button[]) {
 		super();
@@ -58,6 +59,7 @@ export default class MenuScene extends Scene {
 			}
 			if(this.selected != -1)
 				this.buttons[this.selected].selected = false;
+			// Handle directional buttons
 			if(e.keyCode == 40 && this.selected == -1)
 				this.selected = this.buttons.length - 1;
 			else if(e.keyCode == 40 && this.selected > 0)
@@ -88,12 +90,14 @@ export default class MenuScene extends Scene {
 			}
 		});
 	}
+	/// Advance this scene, using the scene registered to input.
 	private autoAdvance(input: Input) {
 		if(this.selected != -1) {
 			const button = this.buttons[this.selected];
 			this.advance(button.listener(input), button.destructive);
 		}
 	}
+
 	update(dt: number) {
 		const c = this.getCamera();
 		const r = Main.instance.renderer;
@@ -108,7 +112,7 @@ export default class MenuScene extends Scene {
 		else if(c.y > this.map.height - r.height / 2)
 			this.vel[1] = -Math.abs(this.vel[1])
 		const gs = navigator.getGamepads();
-		// Advance on any button.
+		// Advance on any gamepad button
 		for(const g of gs)
 			if(g && g.buttons)
 				for(let b = 0; b < g.buttons.length; b++)
