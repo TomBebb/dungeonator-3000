@@ -78,12 +78,16 @@ export class Coin extends Dynamic {
 ///
 /// This has a generic implementation that is easy to extend from.
 export class Entity<I extends Input> extends Dynamic {
+    static readonly DEAD_ZONE: number = 0.2;
+    static readonly SPEED: number = 1;
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
     moved: boolean = false;
+    /// The last point the input instructed the entity to move to
     lastPoint: BasePoint;
 
     room: Rectangle | undefined;
+    /// How many seconds to wait in between turns
     moveInterval: number;
     private moves: number = 0;
     input: I;
@@ -146,9 +150,10 @@ export class Entity<I extends Input> extends Dynamic {
         this.moves -= this.moveInterval;
         const p = this.nextPoint();
         const r = p ? {x: p.x, y: p.y, width: 1, height: 1}: undefined;
-        // If the next point is this point i.e. no movement
+        // If the next point is this point i.e. explicit lack of movement
         if(p == this)
             return true;
+        // If the next point can be moved to
         else if(p != undefined && this.scene.canWalk(r!)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
             if(this.room == undefined || !this.room.contains(x, y)) {
@@ -158,8 +163,6 @@ export class Entity<I extends Input> extends Dynamic {
                     if(r.contains(x, y))
                         this.room = this.scene.map.grid.rooms[r.index];
             }
-            this.x = p.x;
-            this.y = p.y;
             this.moved = true;
             const dy = p.y - this.lastPoint.y, dx = p.x - this.lastPoint.x;
             if(Math.abs(dy) > Math.abs(dx))
@@ -170,6 +173,7 @@ export class Entity<I extends Input> extends Dynamic {
             return true;
         } else {
             if(p != undefined) {
+                // Query for an item at the next point's co-ordinates.
                 let items: Item[] = [];
                 this.scene.itemQuadTree.retrieve(items, r!);
                 let item = items.find((i: Item) => i.x == p.x && i.y == p.y);
@@ -181,9 +185,23 @@ export class Entity<I extends Input> extends Dynamic {
             return false;
         }
     }
+    update(dt: number) {
+        super.update(dt);
+        const dx = this.lastPoint.x - this.x, dy = this.lastPoint.y - this.y;
+        if(Math.abs(dx) < Entity.DEAD_ZONE)
+            this.x = this.lastPoint.x;
+        else if(Math.abs(dx) > Entity.DEAD_ZONE)
+            this.x += Math.sign(dx) * dt * Entity.SPEED;
+        if(Math.abs(dy) < Entity.DEAD_ZONE)
+            this.y = this.lastPoint.y;
+        else if(Math.abs(dy) > Entity.DEAD_ZONE)
+            this.y += Math.sign(dy) * dt * Entity.SPEED;
+    }
+    /// Create a player entity.
     static defaultPlayer(scene: PlayScene): Entity<MultiInput> {
         return new Entity(scene, new MultiInput(new KeyboardInput(scene), new MouseInput(scene), new GamepadInput(0)));
     }
+    /// Create an enemy entity.
     static newEnemy(scene: PlayScene): Entity<FollowInput> {
         return new Entity(scene, new FollowInput(), "zombie");
     }

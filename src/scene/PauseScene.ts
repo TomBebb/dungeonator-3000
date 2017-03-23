@@ -35,11 +35,13 @@ export default class PauseScene extends Scene {
 		this.detail.position.set((r.width - this.detail.width) / 2, this.paused.y + this.paused.height * 2);
 
 		this.scene = scene;
+		this.scene.cacheAsBitmap = true;
 		this.addChild(scene);
 		this.addChild(this.overlay);
 		this.overlay.beginFill(0, 0.35);
 		this.overlay.drawRect(0, 0, r.width, r.height);
 		this.overlay.endFill();
+		this.overlay.cacheAsBitmap = true;
 		this.addChild(this.paused);
 		this.addChild(this.detail);
 		this.addEvent("mousedown", this.resume.bind(this));
@@ -51,12 +53,12 @@ export default class PauseScene extends Scene {
 			else
 				this.resume();
 		});
-		this.cacheAsBitmap = true;
 	}
 	private title() {
 		this.advance(new TitleScene(), true);
 	}
 	private resume() {
+		this.scene.cacheAsBitmap = false;
 		this.advance(this.scene, false);
 	}
 	update(dt: number) {

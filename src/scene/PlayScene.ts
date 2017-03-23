@@ -32,7 +32,9 @@ export default class PlayScene extends Scene {
     
     set floor(v: number) {
         this._floor = v;
+        this.floorLabel.cacheAsBitmap = false;
         this.floorLabel.text = `Floor: ${this.floor.toLocaleString(undefined, {minimumIntegerDigits: 3})}`;
+        this.floorLabel.cacheAsBitmap = true;
     }
     get floor(): number {
         return this._floor;
@@ -42,7 +44,9 @@ export default class PlayScene extends Scene {
     
     set coins(v: number) {
         this._coins = v;
+        this.coinsLabel.cacheAsBitmap = false;
         this.coinsLabel.text = `Coins: ${this.coins.toLocaleString(undefined, {minimumIntegerDigits: 6})}`;
+        this.coinsLabel.cacheAsBitmap = true;
     }
     get coins(): number {
         return this._coins;
@@ -104,11 +108,7 @@ export default class PlayScene extends Scene {
         this.addUi(this.floorLabel);
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
-        let player: Entity<any> = Entity.defaultPlayer(this);
-        this.quadTree.insert(player);
-        this.addNonUi(player);
-        player.room = this.place(player);
-        this.players.push(player);
+        this.addEntity(Entity.defaultPlayer(this));
         this.minimap = new Minimap(this.map.grid, this.players, ladder);
         this.minimap.position.set(r.width - this.minimap.width - 10, 10);
         this.addUi(this.minimap);
@@ -122,11 +122,15 @@ export default class PlayScene extends Scene {
         this.resetEntity(e);
         this.addNonUi(e);
         (e.input instanceof FollowInput ? this.enemies : this.players).push(e);
+        if(this.players.length == 1)
+            this.setCamera(e.x, e.y);
     }
     /// Reset the entity `e`.
     private resetEntity(e: Entity<any>) {
         this.quadTree.insert(e);
         e.room = this.place(e);
+        e.lastPoint.x = e.x;
+        e.lastPoint.y = e.y;
         if(e.input instanceof FollowInput) {
             // Make it not follow anything
             e.input.follow = undefined;

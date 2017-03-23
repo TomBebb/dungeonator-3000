@@ -20,15 +20,15 @@ export default class TitleScene extends MenuScene {
 				fill: 'white'
 			});
 			floor.position.set((r.width - floor.width) / 2, (r.height - floor.height) / 2);
-			floor.cacheAsBitmap = true;
 			this.addUi(floor);
+			floor.cacheAsBitmap = true;
 			const coins = new Text(`Coins: ${data.coins}`, {
 				fontSize: 40,
 				fill: 'white'
 			});
 			coins.position.set((r.width - coins.width) / 2, r.height * 0.3);
-			coins.cacheAsBitmap = true;
 			this.addUi(coins);
+			coins.cacheAsBitmap = true;
 		}
 	}
 }
