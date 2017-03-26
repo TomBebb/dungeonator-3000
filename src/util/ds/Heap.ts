@@ -43,7 +43,7 @@ export default class Heap<T> {
         const i = this.content.findIndex((e) => e == elem);
         this.sinkDown(i);
     }
-    sinkDown(n: number) {
+    private sinkDown(n: number) {
         const elem: T = this.content[n];
         // While the element can still sink..
         while(n > 0) {
@@ -61,7 +61,7 @@ export default class Heap<T> {
         }
     }
     /// Push an element up the tree
-    bubbleUp(n: number) {
+    private bubbleUp(n: number) {
         const length = this.content.length;
         const elem: T = this.content[n];
         const score: (_: T) => number = this.score;

@@ -6,11 +6,11 @@ import Main from "../main";
 /// A common base class for scenes (the object other objects are placed on).
 ///
 /// The PIXI layer takes care of rendering.
-class Scene extends PIXI.Container {
+class Scene extends Container {
 	/// The container used for UI (floating) elements.
-	ui: Container = new Container();
+	protected ui: Container = new Container();
 	/// The container used for non-UI (not floating) elements.
-	nonUi: Container = new Container();
+	protected nonUi: Container = new Container();
 
 	/// A map of strings to event listeners.
 	private readonly events: Map<string, any> = new Map();

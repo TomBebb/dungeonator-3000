@@ -6,13 +6,13 @@ import TitleScene from './TitleScene';
 
 export default class PauseScene extends Scene {
 	readonly scene: Scene;
-	readonly overlay: Graphics = new Graphics();
-	readonly paused: Text = new Text("Paused", {
+	private readonly overlay: Graphics = new Graphics();
+	private readonly paused: Text = new Text("Paused", {
 		align: 'centre',
 		fontSize: 60,
 		fill: 'white'
 	});
-	readonly detail: Text = new Text("", {
+	private readonly detail: Text = new Text("", {
 		align: 'centre',
 		fontSize: 20,
 		fill: 'white'
@@ -47,13 +47,13 @@ export default class PauseScene extends Scene {
 			if(e.repeat)
 				return;
 			if(e.keyCode == 27)
-				this.title();
+				this.advanceTitle();
 			else
 				this.resume();
 		});
 		this.cacheAsBitmap = true;
 	}
-	private title() {
+	private advanceTitle() {
 		this.advance(new TitleScene(), true);
 	}
 	private resume() {
@@ -66,7 +66,7 @@ export default class PauseScene extends Scene {
 			if(gp == null)
 				continue;
 			if(gp.buttons[8].pressed)
-				this.title();
+				this.advanceTitle();
 			else if(gp.buttons[9].pressed)
 				this.resume();
 		}

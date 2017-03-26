@@ -5,8 +5,9 @@ import { Entity } from "../ui/entities";
 
 type Event = BasePoint | "pause" | undefined;
 
-/// Any source of input
+/// Any source of input.
 export interface Input {
+    /// The entity that this input acts on.
 	entity: Entity<any>;
 	/// Query for the next point from this input source
 	next(): Event;
@@ -24,7 +25,7 @@ export class MultiInput implements Input {
 		for(const i of this.inputs)
 			i.entity = e;
 	}
-	inputs: Input[];
+	private inputs: Input[];
 	constructor(...inputs: Input[]) {
 		this.inputs = inputs;
 	}

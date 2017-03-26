@@ -214,7 +214,8 @@ export default class PlayScene extends Scene {
         this.quadTree.retrieve(os, r);
         return this.map.isNotEmpty(r.x, r.y) || os.find(q) != undefined;
     }
-    /// Attempt to place the point `p` in the game.
+    /// Attempt to place the rectangle `p` in the game. This assumes
+    /// that it has dimensions 1x1.
     private place(p: BaseRectangle, numAttempts: number = 5): Rectangle | undefined {
         let r: Rectangle;
         do {
@@ -226,6 +227,8 @@ export default class PlayScene extends Scene {
         } while(this.isNotEmpty(p) && --numAttempts > 0)
         return numAttempts > 0 ? r : undefined;
     }
+    /// Attempt to place the rectangle `p` in the game. This assumes
+    /// that it has dimensions 1x1.
     private placeIn(p: BaseRectangle, r: Rectangle, numAttempts: number = 5): boolean {
         do {
             p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
@@ -233,16 +236,18 @@ export default class PlayScene extends Scene {
         } while(this.isNotEmpty(p) && --numAttempts >= 0)
         return numAttempts < 0;
     }
-    /// Place the entity `t` near `n`
+    /// Attempt to place `t` near `t`
     private placeNear(t: Entity<any>, n: Entity<any>, numAttempts: number = 5): boolean {
-        if(n.room != null)
+        if(n.room != null) {
+            const origNumAttempts = numAttempts;
             while(numAttempts-- > 0) {
                 const r = randomIn(this.map.grid.rooms);
-                if(this.placeIn(t, r!, numAttempts)) {
+                if(this.placeIn(t, r!, origNumAttempts)) {
                     t.room = r;
                     return true;
                 }
             }
+        }
         const TS = PlayScene.TILE_SIZE;
         t.x = n.x + TS;
         t.y = n.y;

@@ -81,10 +81,10 @@ export class Entity<I extends Input> extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
     moved: boolean = false;
-    lastPoint: BasePoint;
+    private lastPoint: BasePoint;
 
     room: Rectangle | undefined;
-    moveInterval: number;
+    private moveInterval: number;
     private moves: number = 0;
     input: I;
 
@@ -124,11 +124,11 @@ export class Entity<I extends Input> extends Dynamic {
         this.moveInterval = moveInterval;
     }
     /// Find the (manhattan) distancce between this and p
-    distanceFrom(p: BasePoint) {
+    distanceFrom(p: BasePoint): number {
         return manhattanDistance(this.x, this.y, p.x, p.y);
     }
     /// Returns the point this entity should try moving to.
-    nextPoint(): BasePoint | undefined {
+    private nextPoint(): BasePoint | undefined {
         let i = this.input.next();
         if(i == "pause") {
             this.scene.pause();
