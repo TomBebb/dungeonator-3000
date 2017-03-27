@@ -74,7 +74,7 @@ export default class PlayScene extends Scene {
     /// The pause scene, which is made along with this but not displayed.
     private pauseScene: PauseScene
     /// Add an entity
-    constructor(input: "mouse" | "keyboard" | "gamepad") {
+    constructor() {
         super();
         let s = load();
         this.floor = 1;
@@ -82,7 +82,7 @@ export default class PlayScene extends Scene {
             this.coins = s.coins;
         else
             this.coins = 0;
-        this.pauseScene = new PauseScene(this, input);
+        this.pauseScene = new PauseScene(this);
         this.addUi(this.floorLabel);
         this.coinsLabel.x = Main.instance.renderer.width / 2;
         this.addUi(this.coinsLabel);
@@ -150,6 +150,7 @@ export default class PlayScene extends Scene {
     pause() {
         // Delete the pause scene cached bitmap as it might have changeed.
         this.pauseScene.cacheAsBitmap = false;
+        this.pauseScene.input = this.players[0].input.type;
         this.advance(this.pauseScene, false);
         // Cache the pause scene as a bitmap, as while the game is paused that never changes.
         this.pauseScene.cacheAsBitmap = true;

@@ -3,10 +3,14 @@ import Scene from "../scene/Scene";
 import PlayScene from "../scene/PlayScene";
 import { Entity } from "../ui/entities";
 
-type Event = BasePoint | "pause" | undefined;
+export type Event = BasePoint | "pause" | undefined;
+
+export type InputType = "mouse" | "keyboard" | "gamepad" | undefined;
 
 /// Any source of input.
 export interface Input {
+    /// The type of input this is using
+    type: InputType;
     /// The entity that this input acts on.
 	entity: Entity<any>;
 	/// Query for the next point from this input source
@@ -25,15 +29,22 @@ export class MultiInput implements Input {
 		for(const i of this.inputs)
 			i.entity = e;
 	}
+	get type() {
+	    return this.lastInput.type;
+	}
+	private lastInput: Input;
 	private inputs: Input[];
 	constructor(...inputs: Input[]) {
 		this.inputs = inputs;
+		this.lastInput = inputs[0];
 	}
 	next(): Event {
 		for(const i of this.inputs) {
 			const v: Event = i.next();
-			if(v == "pause" || v != undefined)
+			if(v == "pause" || v != undefined) {
+			    this.lastInput = i;
 				return v;
+			}
 		}
 		return undefined;
 	}
@@ -42,7 +53,7 @@ export class MultiInput implements Input {
 /// Input from a keyboard
 export class KeyboardInput implements Input {
     private buttons = new Set<number>();
-
+    readonly type: InputType = "keyboard";
     entity: Entity<any>;
     
     constructor(scene: Scene) {
@@ -74,6 +85,7 @@ export class KeyboardInput implements Input {
 /// Input using a mouse
 export class MouseInput implements Input {
 	entity: Entity<any>;
+    readonly type: InputType = "mouse";
     /// The cache of the path found using A*
     private path: BasePoint[] = [];
     constructor(scene: PlayScene) {
@@ -95,6 +107,7 @@ export class MouseInput implements Input {
     }
 }
 export class FollowInput implements Input {
+    readonly type: InputType = undefined;
     /// How many steps to cache a path for
     private static readonly MAX_PATH_LENGTH = 4;
     /// The entity to follow (usually the player)
@@ -156,6 +169,7 @@ export class FollowInput implements Input {
     }
 }
 export class GamepadInput implements Input {
+    readonly type: InputType = "gamepad";
     readonly index: number;
 
     entity: Entity<any>;

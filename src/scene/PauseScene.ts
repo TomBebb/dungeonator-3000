@@ -3,6 +3,7 @@ import Scene from './Scene';
 import Graphics = PIXI.Graphics;
 import Text = PIXI.Text;
 import TitleScene from './TitleScene';
+import { InputType } from '../util/input';
 
 export default class PauseScene extends Scene {
 	readonly scene: Scene;
@@ -17,23 +18,25 @@ export default class PauseScene extends Scene {
 		fontSize: 20,
 		fill: 'white'
 	});
-	constructor(scene: Scene, input: "mouse" | "gamepad" | "keyboard") {
-		super();
-		switch(input) {
+	set input(v: InputType) {
+		switch(v) {
 			case "mouse":
 				this.detail.text = "Click to resume";
-				break;
-			case "keyboard":
-				this.detail.text = "Press Enter or Space to resume, or Escape to exit";
 				break;
 			case "gamepad":
 				this.detail.text = "Press Start to resume, or Select to exit";
 				break;
+			default:
+				this.detail.text = "Press Enter or Space to resume, or Escape to exit";
 		}
 		const r = Main.instance.renderer;
-		this.paused.position.set((r.width - this.paused.width) / 2, (r.height - this.paused.height) / 2);
 		this.detail.position.set((r.width - this.detail.width) / 2, this.paused.y + this.paused.height * 2);
-
+	}
+	constructor(scene: Scene) {
+		super();
+		const r = Main.instance.renderer;
+		this.paused.position.set((r.width - this.paused.width) / 2, (r.height - this.paused.height) / 2);
+		this.input = undefined;
 		this.scene = scene;
 		this.addChild(scene);
 		this.addChild(this.overlay);

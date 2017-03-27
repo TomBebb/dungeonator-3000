@@ -10,7 +10,7 @@ export default class TitleScene extends MenuScene {
 	constructor() {
 		super("Dungeonator 3000", [
 			new Button('Credits', () => new CreditsScene(this), false),
-			new Button('Play', (input) => new PlayScene(input), true),
+			new Button('Play', () => new PlayScene(), true),
 		]);
 		const r = Main.instance.renderer;
 		const data: Save | undefined = load();
