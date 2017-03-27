@@ -4,8 +4,6 @@ import LoadingScene from "./scene/LoadingScene";
 import TitleScene from "./scene/TitleScene";
 import Scene from "./scene/Scene";
 
-import test from "./test";
-
 import SystemRenderer = PIXI.SystemRenderer;
 
 export default class Main {
@@ -20,7 +18,6 @@ export default class Main {
     });
     scene: Scene;
     constructor() {
-        test();
         Main.instance = this;
         this.renderer.view.tabIndex = 1;
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;

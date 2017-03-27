@@ -72,16 +72,6 @@ export default class Grid {
     canWalk(x: number, y: number): boolean {
         return this.isValid(x, y) && this.tileAt(x, y) != Tile.Wall;
     }
-    print() {
-        let t = "";
-        for(let y = 0; y < this.height; y++) {
-            for(let x = 0; x < this.width; x++) {
-                t += this.canWalk(x, y) ? "░" : "█";
-            }
-            t += "\n";
-        }
-        console.log(t);
-    }
     /// Returns true when the position {x, y} is in the grid and not empty
     isNotEmpty(x: number, y: number): boolean {
         return this.isValid(x, y) && this.tileAt(x, y) !== Tile.Empty;
