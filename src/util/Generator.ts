@@ -41,11 +41,14 @@ export default class Generator {
 	private placeOnGrid(room: Rectangle, numAttempts: number = 5): boolean {
 		let maybeRooms: Rectangle[] = [];
 		do {
-			/// Generate a random position that should be valid.
+			// Generate width and height values
+			room.width = random(Generator.MIN_ROOM_SIZE, Generator.MAX_ROOM_SIZE);
+			room.height = random(Generator.MIN_ROOM_SIZE, Generator.MAX_ROOM_SIZE);
+			// Generate a random position that should be valid.
 			room.x = random(Generator.EDGE_DISTANCE, this.grid.width - room.width - Generator.EDGE_DISTANCE * 2);
 			room.y = random(Generator.EDGE_DISTANCE, this.grid.height - room.height - Generator.EDGE_DISTANCE * 2);
 			this.quadTree.retrieve(maybeRooms, room);
-			/// Repeat the above if there is a room with `room`.
+			// Repeat the above if there is a room with `room`.
 		} while(maybeRooms.find((r: Rectangle) => r.intersects(room, Generator.ROOM_SPACING)) != undefined && --numAttempts > 0);
 		return numAttempts > 0;
 	}
@@ -55,10 +58,8 @@ export default class Generator {
 		this.grid.clear(Tile.Wall);
 		let _num = numAttempts;
 		while(this.rooms.length < Generator.NUM_ROOMS && --_num > 0) {
-			// Generate a room size for the `room`
-			const roomSize = random.bind(null, Generator.MIN_ROOM_SIZE, Generator.MAX_ROOM_SIZE);
 			// Make a rectangle with default values.
-			const room: Rectangle = new Rectangle(0, 0, roomSize(), roomSize());
+			const room: Rectangle = new Rectangle(0, 0, 0, 0);
 			// If the room could be placed in the dungeon, i.e. its position could be set randomly.
 			if(this.placeOnGrid(room)) {
 				// Set all the tiles inside `room` to empty ones.
