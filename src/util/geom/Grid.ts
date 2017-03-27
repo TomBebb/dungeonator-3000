@@ -121,7 +121,7 @@ export default class Grid {
         }
         return [];
     }
-    neighbours(p: Point): Point[] {
+    private neighbours(p: BasePoint): Point[] {
         return [
             new Point(p.x - 1, p.y),
             new Point(p.x + 1, p.y),
