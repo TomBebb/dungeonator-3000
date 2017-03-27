@@ -4,6 +4,7 @@ import Text = PIXI.Text;
 
 export default class CreditsScene extends Scene {
 	private static readonly TEXT = "Programming: Tom Bebbington\nCoin Sprite: Puddin (OpenGameArt)";
+	private static readonly SPEED = 100;
 	private text: Text;
 	private from: Scene;
 	constructor(from: Scene) {
@@ -27,7 +28,7 @@ export default class CreditsScene extends Scene {
 		this.addUi(this.text);
 	}
 	update(dt: number) {
-		this.text.y -= dt * 20;
+		this.text.y -= dt * CreditsScene.SPEED;
 		if(this.text.y + this.text.height < 0) {
 			this.advance(this.from, true);
 		}
