@@ -1,11 +1,14 @@
 import Item from "./Item";
 import Entity from "./entities";
+/// A ladder, which advances the floor when interacted with.
 export default class Ladder extends Item {
     constructor() {
-	    const r = PIXI.loader.resources;
-	    super(r['ladder'].texture);
+        const r = PIXI.loader.resources;
+        super(r['ladder'].texture);
     }
+    // When an entity interacts with this..
     interact(e: Entity<any>) {
-    	e.scene.advanceFloor();
+        // Advance the dungeon floor
+        e.scene.advanceFloor();
     }
 }

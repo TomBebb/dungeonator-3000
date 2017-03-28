@@ -2,40 +2,47 @@
 ///
 /// Handy for cleaning up code with lots of counters.
 export default class Counter {
-	// The internal list of callback
-	private callbacks: Callback[] = [];
-	update(dt: number) {
-		// For each registered callback
-		for(const c of this.callbacks) {
-			// Add the change in time to that callback's counter
-			c.sinceLast += dt;
-			if(c.sinceLast > c.interval) {
-				c.sinceLast -= c.interval;
-				// Run the function
-				c.callback();
-			}
-		}
-	}
-	clear() {
-		this.callbacks.splice(0);
-	}
-	/// Register `cb` to run every `interval` seconds
-	register(interval: number, cb: () => void) {
-		this.callbacks.push({
-			sinceLast: 0,
-			interval: interval,
-			callback: cb
-		})
-	}
-	unregister(cb: () => void) {
-		const i = this.callbacks.findIndex((v) => v.callback == cb);
-		this.callbacks.splice(i, 1);
-	}
+    // The internal list of callback
+    private callbacks: Callback[] = [];
+    update(dt: number) {
+        // For each registered callback
+        for(const c of this.callbacks) {
+            // Add the change in time to that callback's counter
+            c.sinceLast += dt;
+            if(c.sinceLast > c.interval) {
+                c.sinceLast -= c.interval;
+                // Run the function
+                c.callback();
+            }
+        }
+    }
+    /// Clear this counter of all callbacks.
+    clear() {
+        this.callbacks.splice(0);
+    }
+    /// Register `cb` to run every `interval` seconds
+    register(interval: number, cb: () => void) {
+        // Add the callback and details about it to `callbacks`
+        this.callbacks.push({
+            sinceLast: 0,
+            interval: interval,
+            callback: cb
+        })
+    }
+    /// Unregister the callback `cb`
+    unregister(cb: () => void) {
+        // Find the index it has in `callbacks`
+        const i = this.callbacks.findIndex((v) => v.callback == cb);
+        // If the callback is in `callbacks`
+        if(i != -1)
+            // Remove it
+            this.callbacks.splice(i, 1);
+    }
 }
 
 /// A registered callback
 interface Callback {
-	callback: () => void,
-	interval: number,
-	sinceLast: number,
+    callback: () => void,
+    interval: number,
+    sinceLast: number,
 }

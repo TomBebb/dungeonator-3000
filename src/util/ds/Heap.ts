@@ -1,10 +1,12 @@
 /// An implementation of a priorty queue based on a binary heap that sorts from lowest to highest.
 /// AKA An array min-heap
-/// Based on https://github.com/bgrins/javascript-astar/blob/master/astar.js
+/// Based on https://github.com/bgrins/javascript-astar/blob/master/astar.js, with a few changes
+/// like using a score function and being strongly typed.
 
 export default class Heap<T> {
     /// The array in which the data is stored
     readonly content: T[] = [];
+    /// The score function, used to get a numerical score from an element.
     readonly score: (_:T) => number; 
     get size() {
         return this.content.length;
@@ -12,6 +14,7 @@ export default class Heap<T> {
     constructor(score: (_:T) => number) {
         this.score = score;
     }
+    /// Clear the heap of elements.
     clear() {
         this.content.splice(0);
     }
@@ -38,11 +41,15 @@ export default class Heap<T> {
         }
         return result;
     }
-    /// Update an element's position in the tree.
+    /// Update the element `elem`'s position in the tree.
+    ///
+    /// This should be called when the value its score function returns has
+    /// canged.
     rescoreElement(elem: T) {
         const i = this.content.findIndex((e) => e == elem);
         this.sinkDown(i);
     }
+    /// Sink the element at index `n` through the array.
     private sinkDown(n: number) {
         const elem: T = this.content[n];
         // While the element can still sink..
@@ -60,7 +67,7 @@ export default class Heap<T> {
             }
         }
     }
-    /// Push an element up the tree
+    /// Push the element at index `n` up the tree.
     private bubbleUp(n: number) {
         const length = this.content.length;
         const elem: T = this.content[n];

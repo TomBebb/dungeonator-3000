@@ -7,17 +7,24 @@ import { BaseRectangle, Rectangle } from './Rectangle';
 export default class QuadTree<R extends BaseRectangle> {
     /// The maximum number of objects each node can contain before being split up.
     private static readonly MAX_OBJECTS: number = 10;
+    /// The maximum number of levels this tree can store before being split up.
     private static readonly MAX_LEVELS: number = 5;
 
+    /// The number of layers this tree.
     private level: number;
+    /// The objects this tree contains.
     private objects: R[] = [];
+    /// The rectangle this tree lies in.
     private bounds: Rectangle;
+    /// The quad trees this contains.
+    ///
+    /// Only 4 trees can be stored on a quad tree.
     private nodes: (QuadTree<R> | null)[] = [];
     constructor(bounds: Rectangle, level: number = 0) {
         this.bounds = bounds;
         this.level = level;
     }
-    /// Clear the quad tree
+    /// Clear the quad tree.
     clear(): void {
         this.objects.splice(0);
         for(let i = 0; i < this.nodes.length; i++)
@@ -26,17 +33,19 @@ export default class QuadTree<R extends BaseRectangle> {
                 this.nodes[i] = null;
             }
     }
-    /// Split into 4 subnodes
+    /// Split into 4 quartiles.
     private split() {
+        // Compute quartile width and height
         const subW = this.bounds.width / 2, subH = this.bounds.height / 2;
         const x = this.bounds.x, y = this.bounds.y;
         const l = this.level + 1;
+        // Make a new quad tree for each quartile
         this.nodes[0] = new QuadTree<R>(new Rectangle(x + subW, y, subW, subH), l);
         this.nodes[1] = new QuadTree<R>(new Rectangle(x, y, subW, subH), l);
         this.nodes[2] = new QuadTree<R>(new Rectangle(x, y + subH, subW, subH), l);
         this.nodes[3] = new QuadTree<R>(new Rectangle(x + subW, y + subH, subW, subH), l);
     }
-    /// Determine which node `rect` belongs to
+    /// Determine which quartile `rect` belongs to
     private indexOf(r: BaseRectangle): number {
         let index = -1;
         const c = this.bounds.centre;
@@ -56,6 +65,7 @@ export default class QuadTree<R extends BaseRectangle> {
         }
         return index;
     }
+    /// Insert the object `r` into this tree.
     insert(r: R) {
         if(this.nodes[0] != null) {
             const i = this.indexOf(r);
@@ -80,7 +90,7 @@ export default class QuadTree<R extends BaseRectangle> {
             }
         }
     }
-    /// Retrieve objects that might be colliding with the given objects
+    /// Retrieve objects that might be colliding with the given objects.
     retrieve(objects: R[], obj: BaseRectangle) {
         objects.splice(0);
         const i = this.indexOf(obj);

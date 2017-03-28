@@ -72,7 +72,7 @@ export default class PlayScene extends Scene {
     /// The mini-map, which displays a miniature version of the dungeon.
     readonly minimap: Minimap;
     /// The pause scene, which is made along with this but not displayed.
-    private pauseScene: PauseScene
+    private pauseScene: PauseScene<PlayScene>;
     /// Add an entity
     constructor() {
         super();
@@ -82,7 +82,7 @@ export default class PlayScene extends Scene {
             this.coins = s.coins;
         else
             this.coins = 0;
-        this.pauseScene = new PauseScene(this);
+        this.pauseScene = new PauseScene<PlayScene>(this);
         this.addUi(this.floorLabel);
         this.coinsLabel.x = Main.instance.renderer.width / 2;
         this.addUi(this.coinsLabel);

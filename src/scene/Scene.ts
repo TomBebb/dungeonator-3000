@@ -58,6 +58,7 @@ class Scene extends Container {
 		if(destructive)
 			this.destroy();
 	}
+	/// Release this scene's resources and unregister events set by this.
 	destroy() {
 		super.destroy();
 		const events = this.events.keys();
@@ -73,7 +74,7 @@ class Scene extends Container {
 		window.addEventListener(name, cb);
 		this.events.set(name, cb);
 	}
-	/// Remove an event listener by the name of it.
+	/// Remove an event listener by its name.
 	removeEvent(name: string) {
 		const cb = this.events.get(name)!;
 		this.events.delete(name);

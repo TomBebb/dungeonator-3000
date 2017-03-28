@@ -1,5 +1,8 @@
+/// A structural interface to represent a 2D point.
 export interface BasePoint {
+    /// The x co-ordinate of this point.
     x: number;
+    /// The y co-ordinate of this point.
     y: number;
 }
 
@@ -10,20 +13,33 @@ export class Point implements BasePoint {
     constructor(x: number = 0, y: number = 0) {
         this.set(x, y);
     }
+    /// Set the x and y co-ordinates.
     set(x: number, y: number) {
         this.x = x;
         this.y = y;
     }
+    /// Compute a 32-bit hash of this point by storing the `x` in the leftmost
+    /// 16 bits, and the `y` in the rightmost 16 bits.
+    ///
+    /// This assumes x and y can actually be represented by 16-bit integers.
+    /// Unfortunately, TypeScript has no distinction between floating-point
+    /// numbers and integer numbers
     hash(): number {
         return (this.x << 16) | (this.y & 0xFFFF);
     }
+    /// Return true when this point and `other` have the same co-ordinates.
     equals(other: BasePoint): boolean {
         return this.x === other.x && this.y === other.y;
     }
+    /// If `copy` is true, make a new point with same co-ordinates.
+    /// If `copy` is false, make `p` into a point.
+    /// Scale this point by `scale`.
     static from(p: BasePoint, copy: boolean = false, scale: number = 1): Point {
         if(copy)
+            // Duplicate `p`
             p = new Point(p.x, p.y);
         else
+            // Force `p` to be an instance of `Point`
             Object.setPrototypeOf(p, Point.prototype);
         p.x = Math.floor(p.x * scale);
         p.y = Math.floor(p.y * scale);

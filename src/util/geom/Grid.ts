@@ -11,9 +11,10 @@ export default class Grid {
     readonly width: number;
     /// The height of the grid in tiles.
     readonly height: number;
-
+    /// The tiles array.
     readonly tiles: Int8Array;
 
+    /// The rooms that are on this grid.
     rooms: Rectangle[] = [];
 
     constructor(width: number, height: number) {
@@ -44,19 +45,24 @@ export default class Grid {
         for(let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++)
             this.setTileAt(x, y, t);
     }
+    /// Draw a vertical line between (x, y1) and (x, y2)
     vline(x: number, y1: number, y2: number, t: Tile): void {
         for(let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++)
             this.setTileAt(x, y, t);
     }
+    /// Completely clear the tiles with a certain tile (empty by default)
     clear(t: Tile = Tile.Empty): void {
         this.tiles.fill(t);
     }
+    /// Compute the index into `tiles` (x, y) is stored at.
     private index(x: number, y: number): number {
         return x + y * this.width;
     }
+    /// Return the tile at (x, y)
     tileAt(x: number, y: number): Tile {
         return this.tiles[this.index(x, y)];
     }
+    /// Set the tile at (x, y) to t
     setTileAt(x: number, y: number, t: Tile) {
         this.tiles[this.index(x, y)] = t;
     }
@@ -78,9 +84,6 @@ export default class Grid {
     }
     /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
     /// Based on the A* algorithm as detailed at http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript
-    ///
-    /// INVESTIGATE FRINGE SEARCH
-    /// returns in order goal -> start
     findPath(_start: BasePoint, goal: BasePoint): BasePoint[] {
         const start = Point.from(_start);
         const fScores = new HashMap<Point, number>();
@@ -121,6 +124,7 @@ export default class Grid {
         }
         return [];
     }
+    /// Return the neigbours to `p`
     private neighbours(p: BasePoint): Point[] {
         return [
             new Point(p.x - 1, p.y),

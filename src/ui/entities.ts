@@ -55,7 +55,9 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
 
 }
 
+/// A collectable persistent coin
 export class Coin extends Dynamic {
+    /// The scene this coin is displayed on.
     scene: PlayScene;
     constructor(scene: PlayScene, x: number, y: number) {
         super(Dynamic.makeAnims("coins", 16, 16, {
@@ -67,8 +69,11 @@ export class Coin extends Dynamic {
     }
     update(dt: number) {
         super.update(dt);
+        // Move upwards at constant rate.
         this.y -= dt * 0.2;
+        // Disappear at constant rate.
         this.alpha -= dt * 0.01;
+        // Remove from scene upon disappearing completely.
         if(this.alpha <= 0)
             this.scene.removeNonUi(this);
     }
@@ -76,7 +81,9 @@ export class Coin extends Dynamic {
 
 /// A sprite that can move.
 ///
-/// This has a generic implementation that is easy to extend from.
+/// The `I` generic allows any kind of input (say, from a keyboard or mouse) to
+/// be used without having to have different entities for different combinations
+/// of inputs.
 export class Entity<I extends Input> extends Dynamic {
     /// The scene instance the entity is attached to.
     readonly scene: PlayScene;
@@ -86,6 +93,8 @@ export class Entity<I extends Input> extends Dynamic {
     room: Rectangle | undefined;
     private moveInterval: number;
     private moves: number = 0;
+    /// The input, whose `next` method is queried every turn for the next point
+    /// to move to.
     input: I;
 
     constructor(scene: PlayScene, input: I, source: string = "player", moveInterval: number = 1, x: number = 0, y: number = 0) {
@@ -127,7 +136,7 @@ export class Entity<I extends Input> extends Dynamic {
     distanceFrom(p: BasePoint): number {
         return manhattanDistance(this.x, this.y, p.x, p.y);
     }
-    /// Returns the point this entity should try moving to.
+    /// Returns the point this entity should move to.
     private nextPoint(): BasePoint | undefined {
         let i = this.input.next();
         if(i == "pause") {
@@ -136,7 +145,7 @@ export class Entity<I extends Input> extends Dynamic {
         } else
             return i;
     }
-    /// Try to move this entitiy, by querying its `nextPoint` method.
+    /// Try to move this entitiy, by querying the input's `next` method.
     ///
     /// This will be called at least once a turn.
     tryMove(): boolean {
@@ -147,8 +156,9 @@ export class Entity<I extends Input> extends Dynamic {
         const p = this.nextPoint();
         const r = p ? {x: p.x, y: p.y, width: 1, height: 1}: undefined;
         // If the next point is this point i.e. no movement
-        if(p == this)
+        if(p != undefined && p.x == this.x && p.y == this.y)
             return true;
+        // If the next point is walkable
         else if(p != undefined && this.scene.canWalk(r!)) {
             const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
             if(this.room == undefined || !this.room.contains(x, y)) {
@@ -168,6 +178,7 @@ export class Entity<I extends Input> extends Dynamic {
                 this.animation = 'walk_' + (dx > 0 ? 'right' : 'left');
             this.lastPoint = p!;
             return true;
+        // If the next point is not walkable
         } else {
             if(p != undefined) {
                 let items: Item[] = [];
@@ -176,14 +187,17 @@ export class Entity<I extends Input> extends Dynamic {
                 if(item != null)
                     item.interact(this);
             }
+            // Set the animation to a walking one
             if(this.animation.startsWith('walk_'))
                 this.animation = this.animation.replace('walk_', 'stand_');
             return false;
         }
     }
+    /// Create the default player in `scene`
     static defaultPlayer(scene: PlayScene): Entity<MultiInput> {
         return new Entity(scene, new MultiInput(new KeyboardInput(scene), new MouseInput(scene), new GamepadInput(0)));
     }
+    /// Create an enemy in `scene`.
     static newEnemy(scene: PlayScene): Entity<FollowInput> {
         return new Entity(scene, new FollowInput(), "zombie");
     }
