@@ -1,3 +1,5 @@
+import Hash from '../ds/Hash';
+
 /// A structural interface to represent a 2D point.
 export interface BasePoint {
     /// The x co-ordinate of this point.
@@ -7,7 +9,7 @@ export interface BasePoint {
 }
 
 /// A 2d point.
-export class Point implements BasePoint {
+export class Point implements BasePoint, Hash {
     x: number;
     y: number;
     constructor(x: number = 0, y: number = 0) {
@@ -35,7 +37,7 @@ export class Point implements BasePoint {
     /// If `copy` is false, make `p` into a point.
     /// Scale this point by `scale`.
     static from(p: BasePoint, copy: boolean = false, scale: number = 1): Point {
-        if(copy)
+        if (copy)
             // Duplicate `p`
             p = new Point(p.x, p.y);
         else

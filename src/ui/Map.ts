@@ -2,7 +2,7 @@
 import PlayScene from "../scene/PlayScene";
 import Grid from "../util/geom/Grid";
 import Generator from "../util/Generator";
-import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
+import { Rectangle } from "../util/geom/Rectangle";
 import QuadTree from "../util/geom/QuadTree";
 import Sprite = PIXI.Sprite;
 import Container = PIXI.Container;
@@ -25,7 +25,7 @@ export default class Map extends Container {
     /// The quad tree the rooms are stored in, used to speed up determining
     /// which room (if any) an entity has moved to.
     readonly quadTree: QuadTree<Room>;
-    
+
     constructor(tileWidth: number, tileHeight: number) {
         super();
         this.grid = new Grid(tileWidth, tileHeight);
@@ -54,7 +54,7 @@ export default class Map extends Container {
         // Clear the quad tree
         this.quadTree.clear();
         // Generate rooms and add to quad tree
-        for(let i = 0; i < this.grid.rooms.length; i++) {
+        for (let i = 0; i < this.grid.rooms.length; i++) {
             const r = this.grid.rooms[i];
             // Make room by scaling grid room by tile size
             const rm = new Room(r.x * TS, r.y * TS, r.width * TS, r.height * TS);
@@ -64,10 +64,6 @@ export default class Map extends Container {
         }
         // Redraw this map
         this.redraw();
-    }
-    /// Retrieve the rectangles that might be colliding with `r`.
-    retrieve(arr: Room[], r: BaseRectangle) {
-        this.quadTree.retrieve(arr, r);
     }
     /// Returns true when (x, y) is a valid point on the underlying `grid`.
     isValid(x: number, y: number): boolean {
@@ -94,8 +90,8 @@ export default class Map extends Container {
         this.cacheAsBitmap = false;
         const TS = PlayScene.TILE_SIZE;
         // For each tile in the grid
-        for(let x = 0; x < this.tileWidth; x++)
-            for(let y = 0; y < this.tileHeight; y++) {
+        for (let x = 0; x < this.tileWidth; x++)
+            for (let y = 0; y < this.tileHeight; y++) {
                 // Get the byte at `x`, `y`.
                 const t = this.grid.tileAt(x, y);
                 // Make a sprite from the `t`th index in `textures`.

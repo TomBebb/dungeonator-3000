@@ -11,7 +11,7 @@ export default class Grid {
     readonly width: number;
     /// The height of the grid in tiles.
     readonly height: number;
-    /// The tiles array.
+    /// The tiles array, which stores each tile as a signed byte.
     readonly tiles: Int8Array;
 
     /// The rooms that are on this grid.
@@ -42,12 +42,12 @@ export default class Grid {
     }
     /// Draw a horizontal line between (x1, y) and (x2, y)
     hline(x1: number, x2: number, y: number, t: Tile): void {
-        for(let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++)
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++)
             this.setTileAt(x, y, t);
     }
     /// Draw a vertical line between (x, y1) and (x, y2)
     vline(x: number, y1: number, y2: number, t: Tile): void {
-        for(let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++)
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++)
             this.setTileAt(x, y, t);
     }
     /// Completely clear the tiles with a certain tile (empty by default)
@@ -85,6 +85,7 @@ export default class Grid {
     /// Find the shortest path from `start` to `goal` with a maximum number of steps `max`, and using the validity function `isValid`.
     /// Based on the A* algorithm as detailed at http://www.briangrinstead.com/blog/astar-search-algorithm-in-javascript
     findPath(_start: BasePoint, goal: BasePoint): BasePoint[] {
+        // Convert start to a Point so it can use the methods on Point
         const start = Point.from(_start);
         const fScores = new HashMap<Point, number>();
         const gScores = new HashMap<Point, number>();
@@ -96,13 +97,13 @@ export default class Grid {
         fScores.set(start, start.manhattanDistance(goal));
         open.push(start);
         openSet.add(start);
-        while(open.size > 0) {
+        while (open.size > 0) {
             let current = open.pop()!;
             openSet.delete(current);
             closed.add(current);
-            if(current.equals(goal)) {
+            if (current.equals(goal)) {
                 const path = [current];
-                while(parents.has(current)) {
+                while (parents.has(current)) {
                     current = parents.get(current)!;
                     path.push(current);
                 }
@@ -110,9 +111,9 @@ export default class Grid {
             }
             const g = gScores.get(current)! + 1;
             const neighbours = this.neighbours(current);
-            for(const n of neighbours) {
-                if(!closed.has(n) && this.canWalk(n.x, n.y) && (!openSet.has(n) || g < gScores.get(n)!)) {
-                    if(!openSet.has(n)) {
+            for (const n of neighbours) {
+                if (!closed.has(n) && this.canWalk(n.x, n.y) && (!openSet.has(n) || g < gScores.get(n)!)) {
+                    if (!openSet.has(n)) {
                         openSet.add(n);
                         open.push(n);
                     }
@@ -124,7 +125,7 @@ export default class Grid {
         }
         return [];
     }
-    /// Return the neigbours to `p`
+    /// Return the neigbours to `p`, even if they are invalid
     private neighbours(p: BasePoint): Point[] {
         return [
             new Point(p.x - 1, p.y),

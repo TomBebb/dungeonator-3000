@@ -4,12 +4,13 @@
 export default class Counter {
     // The internal list of callback
     private callbacks: Callback[] = [];
+    /// Update the callbacks array with delta time `dt`.
     update(dt: number) {
         // For each registered callback
-        for(const c of this.callbacks) {
+        for (const c of this.callbacks) {
             // Add the change in time to that callback's counter
             c.sinceLast += dt;
-            if(c.sinceLast > c.interval) {
+            if (c.sinceLast > c.interval) {
                 c.sinceLast -= c.interval;
                 // Run the function
                 c.callback();
@@ -34,7 +35,7 @@ export default class Counter {
         // Find the index it has in `callbacks`
         const i = this.callbacks.findIndex((v) => v.callback == cb);
         // If the callback is in `callbacks`
-        if(i != -1)
+        if (i != -1)
             // Remove it
             this.callbacks.splice(i, 1);
     }
@@ -42,7 +43,10 @@ export default class Counter {
 
 /// A registered callback
 interface Callback {
+    /// The function to call.
     callback: () => void,
+    /// How often to run it, in seconds.
     interval: number,
+    /// The number of seconds since this was last ran.
     sinceLast: number,
 }

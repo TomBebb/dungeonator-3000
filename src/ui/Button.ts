@@ -4,7 +4,7 @@ import PText = PIXI.Text;
 import Graphics = PIXI.Graphics;
 import Scene from '../scene/Scene';
 import { BasePoint } from '../util/geom/Point';
-import {rectContains} from '../util/math';
+import { rectContains } from '../util/math';
 
 /// A button listener.
 type Listener = () => Scene;

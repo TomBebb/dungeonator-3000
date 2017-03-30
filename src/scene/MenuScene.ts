@@ -40,7 +40,7 @@ export default class MenuScene extends Scene {
 
         this.buttonTree = new QuadTree<Button>(new Rectangle(0, 0, r.width, r.height));
         // For every button..
-        for(let i = 0, button:Button = buttons[0]; i < buttons.length; button = buttons[++i]) {
+        for (let i = 0, button: Button = buttons[0]; i < buttons.length; button = buttons[++i]) {
             button.scale.set(1, 1);
             // Make each button display in the horizontal centre and each one display further down the screen.
             button.position.set(r.width / 2 - button.width / 2, r.height * 0.95 - (i + 1) * (button.height + 10));
@@ -59,36 +59,35 @@ export default class MenuScene extends Scene {
         this.setCamera(this.map.width / 2, this.map.height / 2);
         // Register event handlers
         this.addEvent("keydown", (e: KeyboardEvent) => {
-            if(e.keyCode == 32 || e.keyCode == 13) {
+            if (e.keyCode == 32 || e.keyCode == 13) {
                 this.autoAdvance();
                 return;
             }
-            if(this.selected != -1)
+            if (this.selected != -1)
                 this.buttons[this.selected].selected = false;
             // Handle directional buttons
-            if(e.keyCode == 40 && this.selected == -1)
+            if (e.keyCode == 40 && this.selected == -1)
                 this.selected = this.buttons.length - 1;
-            else if(e.keyCode == 40 && this.selected > 0)
+            else if (e.keyCode == 40 && this.selected > 0)
                 this.selected--;
-            else if(e.keyCode == 38 && this.selected == -1)
+            else if (e.keyCode == 38 && this.selected == -1)
                 this.selected = 0;
-            else if(e.keyCode == 38 && this.selected < this.buttons.length - 1) 
+            else if (e.keyCode == 38 && this.selected < this.buttons.length - 1)
                 this.selected++;
-            if(e.keyCode == 38 || e.keyCode == 40)
+            if (e.keyCode == 38 || e.keyCode == 40)
                 this.buttons[this.selected].selected = true;
         });
         this.addEvent("mousedown", (_: MouseEvent) => this.autoAdvance());
         this.addEvent("mousemove", (e: MouseEvent) => {
-            const a: Button[] = [];
             const eR = e as any as BaseRectangle;
             eR.width = 1;
             eR.height = 1;
-            this.buttonTree.retrieve(a, eR);
-            const btn:Button | undefined = a.find((b) => b.containsPoint(e));
-            for(const btn2 of a)
-                if(btn2.selected && btn2 != btn)
+            const a: Button[] = this.buttonTree.retrieve(eR);
+            const btn: Button | undefined = a.find((b) => b.containsPoint(e));
+            for (const btn2 of a)
+                if (btn2.selected && btn2 != btn)
                     btn2.selected = false;
-            if(btn != null) {
+            if (btn != null) {
                 btn.selected = true;
                 this.selected = this.buttons.indexOf(btn);
             } else {
@@ -98,7 +97,7 @@ export default class MenuScene extends Scene {
     }
     /// Advance this scene, using the scene registered to input.
     private autoAdvance() {
-        if(this.selected != -1) {
+        if (this.selected != -1) {
             const button = this.buttons[this.selected];
             this.advance(button.listener(), button.destructive);
         }
@@ -111,20 +110,20 @@ export default class MenuScene extends Scene {
         c.x += this.vel[0] * dt;
         c.y += this.vel[1] * dt;
         // Bounce off walls of map
-        if(c.x < r.width / 2)
+        if (c.x < r.width / 2)
             this.vel[0] = Math.abs(this.vel[0])
-        else if(c.x > this.map.width - r.width / 2)
+        else if (c.x > this.map.width - r.width / 2)
             this.vel[0] = -Math.abs(this.vel[0])
-        if(c.y < r.height / 2)
+        if (c.y < r.height / 2)
             this.vel[1] = Math.abs(this.vel[1])
-        else if(c.y > this.map.height - r.height / 2)
+        else if (c.y > this.map.height - r.height / 2)
             this.vel[1] = -Math.abs(this.vel[1])
         const gs = navigator.getGamepads();
         // Advance on any gamepad button
-        for(const g of gs)
-            if(g && g.buttons)
-                for(let b = 0; b < g.buttons.length; b++)
-                    if(g.buttons[b].pressed)
+        for (const g of gs)
+            if (g && g.buttons)
+                for (let b = 0; b < g.buttons.length; b++)
+                    if (g.buttons[b].pressed)
                         this.autoAdvance();
     }
 }

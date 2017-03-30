@@ -1,10 +1,10 @@
 ///<reference path='../pixi.d.ts'/>
 import PlayScene from "../scene/PlayScene";
-import { Room } from "./Map"; 
+import { Room } from "./Map";
 import { Rectangle } from "../util/geom/Rectangle";
 import { BasePoint, Point } from "../util/geom/Point";
-import {manhattanDistance} from "../util/math";
-import {Input, FollowInput, MultiInput, GamepadInput, KeyboardInput, MouseInput } from "../util/input";
+import { manhattanDistance } from "../util/math";
+import { Input, FollowInput, MultiInput, GamepadInput, KeyboardInput, MouseInput } from "../util/input";
 import Item from "./Item";
 
 /// Loaded animations
@@ -13,7 +13,7 @@ export interface Animations {
 }
 /// Animation definitions i.e. represents animations before they are loaded
 export interface AnimationsDef {
-    [index: string]: {x: number, y: number}[];
+    [index: string]: { x: number, y: number }[];
 }
 /// An animated sprite.
 export class Dynamic extends PIXI.extras.AnimatedSprite {
@@ -45,7 +45,7 @@ export class Dynamic extends PIXI.extras.AnimatedSprite {
     static makeAnims(source: string, fw: number, fh: number, anims: AnimationsDef): Animations {
         const b = new PIXI.BaseTexture(PIXI.loader.resources[source].data);
         const a: Animations = {};
-        for(const anim in anims) {
+        for (const anim in anims) {
             const points = anims[anim];
             const textures = points.map((p) => new PIXI.Texture(b, new PIXI.Rectangle(p.x, p.y, fw, fh)));
             a[anim] = textures;
@@ -61,8 +61,8 @@ export class Coin extends Dynamic {
     scene: PlayScene;
     constructor(scene: PlayScene, x: number, y: number) {
         super(Dynamic.makeAnims("coins", 16, 16, {
-            still: [{x: 0, y: 0}],
-            spin: [{x: 0, y: 0}, {x: 16, y: 0}, {x: 32, y: 0}, {x: 48, y: 0}, {x: 64, y: 0}, {x: 80, y: 0}, {x: 96, y: 0}, {x: 111, y: 0}, ]
+            still: [{ x: 0, y: 0 }],
+            spin: [{ x: 0, y: 0 }, { x: 16, y: 0 }, { x: 32, y: 0 }, { x: 48, y: 0 }, { x: 64, y: 0 }, { x: 80, y: 0 }, { x: 96, y: 0 }, { x: 111, y: 0 },]
         }), "spin", x, y);
         this.scene = scene;
         this.play();
@@ -74,7 +74,7 @@ export class Coin extends Dynamic {
         // Disappear at constant rate.
         this.alpha -= dt * 0.01;
         // Remove from scene upon disappearing completely.
-        if(this.alpha <= 0)
+        if (this.alpha <= 0)
             this.scene.removeNonUi(this);
     }
 }
@@ -100,29 +100,29 @@ export class Entity<I extends Input> extends Dynamic {
     constructor(scene: PlayScene, input: I, source: string = "player", moveInterval: number = 1, x: number = 0, y: number = 0) {
         // Setup animations
         super(Dynamic.makeAnims(source, 16, 18, {
-            stand_up: [ {x: 0, y: 0} ],
-            stand_right: [ {x: 0, y: 18} ],
-            stand_down: [ {x: 0, y: 36} ],
-            stand_left: [ {x: 0, y: 54} ],
+            stand_up: [{ x: 0, y: 0 }],
+            stand_right: [{ x: 0, y: 18 }],
+            stand_down: [{ x: 0, y: 36 }],
+            stand_left: [{ x: 0, y: 54 }],
             walk_up: [
-                {x: 0, y: 0},
-                {x: 16, y: 0},
-                {x: 32, y: 0}
+                { x: 0, y: 0 },
+                { x: 16, y: 0 },
+                { x: 32, y: 0 }
             ],
             walk_right: [
-                {x: 0, y: 18},
-                {x: 16, y: 18},
-                {x: 32, y: 18}
+                { x: 0, y: 18 },
+                { x: 16, y: 18 },
+                { x: 32, y: 18 }
             ],
             walk_down: [
-                {x: 0, y: 36},
-                {x: 16, y: 36},
-                {x: 32, y: 36}
+                { x: 0, y: 36 },
+                { x: 16, y: 36 },
+                { x: 32, y: 36 }
             ],
             walk_left: [
-                {x: 0, y: 54},
-                {x: 16, y: 54},
-                {x: 32, y: 54}
+                { x: 0, y: 54 },
+                { x: 16, y: 54 },
+                { x: 32, y: 54 }
             ]
         }), "stand_up", x, y);
         this.input = input;
@@ -139,7 +139,7 @@ export class Entity<I extends Input> extends Dynamic {
     /// Returns the point this entity should move to.
     private nextPoint(): BasePoint | undefined {
         let i = this.input.next();
-        if(i == "pause") {
+        if (i == "pause") {
             this.scene.pause();
             return undefined;
         } else
@@ -150,48 +150,52 @@ export class Entity<I extends Input> extends Dynamic {
     /// This will be called at least once a turn.
     tryMove(): boolean {
         this.moves++;
-        if(this.moves < this.moveInterval) 
+        if (this.moves < this.moveInterval)
             return true;
         this.moves -= this.moveInterval;
-        const p = this.nextPoint();
-        const r = p ? {x: p.x, y: p.y, width: 1, height: 1}: undefined;
-        // If the next point is this point i.e. no movement
-        if(p != undefined && p.x == this.x && p.y == this.y)
+        const p: BasePoint | undefined = this.nextPoint();
+        if ((p == undefined || p == this) && this.animation.startsWith('walk_'))
+            this.animation = this.animation.replace('walk_', 'stand_');
+        // If there is no movement
+        if (p == undefined)
+            return false;
+        if (p == this)
             return true;
-        // If the next point is walkable
-        else if(p != undefined && this.scene.canWalk(r!)) {
-            const x = p.x / PlayScene.TILE_SIZE, y = p.y / PlayScene.TILE_SIZE;
-            if(this.room == undefined || !this.room.contains(x, y)) {
-                let rooms: Room[] = [];
-                this.scene.map.retrieve(rooms, this);
-                for(const r of rooms)
-                    if(r.contains(x, y))
-                        this.room = this.scene.map.grid.rooms[r.index];
-            }
-            this.x = p.x;
-            this.y = p.y;
-            this.moved = true;
-            const dy = p.y - this.lastPoint.y, dx = p.x - this.lastPoint.x;
-            if(Math.abs(dy) > Math.abs(dx))
-                this.animation = 'walk_' + (dy > 0 ? 'down' : 'up');
-            else
-                this.animation = 'walk_' + (dx > 0 ? 'right' : 'left');
-            this.lastPoint = p!;
-            return true;
-        // If the next point is not walkable
-        } else {
-            if(p != undefined) {
-                let items: Item[] = [];
-                this.scene.itemQuadTree.retrieve(items, r!);
-                let item = items.find((i: Item) => i.x == p.x && i.y == p.y);
-                if(item != null)
-                    item.interact(this);
-            }
-            // Set the animation to a walking one
-            if(this.animation.startsWith('walk_'))
-                this.animation = this.animation.replace('walk_', 'stand_');
+        // Copy the x, y values of this
+        const last = this.lastPoint;
+        // Move to new values
+        this.x = p.x;
+        this.y = p.y;
+        // If this point is unwalkable
+        if (!this.scene.canWalk(this)) {
+            // Find items at this point
+            const items: Item[] = this.scene.itemQuadTree.retrieve(this);
+            let item = items.find((i: Item) => i.x == this.x && i.y == this.y);
+            // Return to old position
+            this.x = last.x;
+            this.y = last.y;
+            if (item != null)
+                item.interact(this);
             return false;
         }
+        // If the entity isn't marked as in a room or the current room doesn't contain it
+        if (this.room == undefined || !this.room.contains(this.x, this.y)) {
+            // Retrieve rooms this might be in.
+            const rooms: Room[] = this.scene.map.quadTree.retrieve(this);
+            // Set this room as the first room found containing this.
+            this.room = rooms.find((room) => room.intersects(this, 0));
+        }
+        // Mark as moved
+        this.moved = true;
+        // Calculate change in co-ordinates.
+        const dy = this.y - last.y, dx = this.x - last.x;
+        // Set animation appropriately.
+        if (Math.abs(dy) > Math.abs(dx))
+            this.animation = 'walk_' + (dy > 0 ? 'down' : 'up');
+        else
+            this.animation = 'walk_' + (dx > 0 ? 'right' : 'left');
+        this.lastPoint = p;
+        return true;
     }
     /// Create the default player in `scene`
     static defaultPlayer(scene: PlayScene): Entity<MultiInput> {

@@ -1,6 +1,6 @@
 ///<reference path='../pixi.d.ts'/>
 import Item from "./Item";
-import {Coin, Entity}  from "./entities";
+import { Coin, Entity } from "./entities";
 import { FollowInput } from "../util/input";
 import Rectangle = PIXI.Rectangle;
 import Texture = PIXI.Texture;
@@ -28,7 +28,7 @@ export default class Chest extends Item {
     /// Open the chest if it hasn't been opened.
     interact(e: Entity<any>) {
         // If the chest is closed and the entity interacting isn't an enemy
-        if(!this.open && !(e.input instanceof FollowInput)) {
+        if (!this.open && !(e.input instanceof FollowInput)) {
             // Mark as open
             this.texture = this.openTexture;
             // Make a coin
@@ -38,7 +38,8 @@ export default class Chest extends Item {
         }
     }
     update(dt: number) {
-        if(this.coin != undefined)
+        // If there is a coin coming out of this, update it.
+        if (this.coin != undefined)
             this.coin.update(dt);
     }
 }
