@@ -6,17 +6,20 @@ import { BasePoint, Point } from "../util/geom/Point";
 import { manhattanDistance } from "../util/math";
 import { Input, FollowInput, MultiInput, GamepadInput, KeyboardInput, MouseInput } from "../util/input";
 import Item from "./Item";
+import AnimatedSprite = PIXI.extras.AnimatedSprite;
+import Texture = PIXI.Texture;
+
 
 /// Loaded animations
 export interface Animations {
-    [index: string]: PIXI.Texture[];
+    [index: string]: Texture[];
 }
 /// Animation definitions i.e. represents animations before they are loaded
 export interface AnimationsDef {
     [index: string]: { x: number, y: number }[];
 }
 /// An animated sprite.
-export class Dynamic extends PIXI.extras.AnimatedSprite {
+export class Dynamic extends AnimatedSprite {
     /// Width of each frame in pixels
     readonly frameWidth: number;
     /// Height of each frame in pixels
