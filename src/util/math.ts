@@ -30,3 +30,6 @@ export function manhattanDistance(x1: number, y1: number, x2: number, y2: number
 export function rectContains(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number): boolean {
     return Math.abs(x1 + w1 / 2 - x2) < w1 / 2 && Math.abs(y1 + h1 / 2 - y2) < h1;
 }
+export function rectContainsRect(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number): boolean {
+    return x2 > x1 && y2 > y1 && x2 + w2 < x1 + w1 && y2 + h2 < y1 + h1;
+}

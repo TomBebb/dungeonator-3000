@@ -1,102 +1,82 @@
 import { BaseRectangle, Rectangle } from './Rectangle';
+import {intersects} from '../math';
 /// A quad tree, a kind of tree where each node has exactly 4 children, and is used
 /// here to split up a grid into 4 quartiles repeatedly.
 ///
-/// Based on https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
+/// Based on http://algs4.cs.princeton.edu/92search/QuadTree.java.html
 /// But ported to TypeScript and given descriptive generic
-export default class QuadTree<R extends BaseRectangle> {
-    /// The maximum number of objects each node can contain before being split up.
-    private static readonly MAX_OBJECTS: number = 10;
-    /// The maximum number of levels this tree can store before being split up.
-    private static readonly MAX_LEVELS: number = 5;
-
-    /// The number of layers this tree.
-    private level: number;
-    /// The objects this tree contains.
-    private objects: R[] = [];
-    /// The rectangle this tree lies in.
-    private bounds: Rectangle;
-    /// The quad trees this contains.
-    ///
-    /// Only 4 trees can be stored on a quad tree.
-    private nodes: (QuadTree<R> | null)[] = [];
-    constructor(bounds: Rectangle, level: number = 0) {
+export default class QuadTree<P extends BaseRectangle> {
+    private static readonly NODE_CAPACITY: number = 4;
+    private static readonly MAX_DEPTH: number = 4;
+    readonly bounds: Rectangle;
+    private depth:number;
+    private topLeft: QuadTree<P> | undefined;
+    private topRight: QuadTree<P> | undefined;
+    private bottomLeft: QuadTree<P> | undefined;
+    private bottomRight: QuadTree<P> | undefined;
+    private objs: P[] = [];
+    constructor(bounds: Rectangle, depth: number = 0) {
         this.bounds = bounds;
-        this.level = level;
+        this.depth = depth;
     }
-    /// Clear the quad tree.
     clear(): void {
-        this.objects.splice(0);
-        for(let i = 0; i < this.nodes.length; i++)
-            if(this.nodes[i] != null) {
-                this.nodes[i]!.clear();
-                this.nodes[i] = null;
-            }
+        // Delete reference quad trees
+        this.topLeft = undefined;
+        this.topRight = undefined;
+        this.bottomLeft = undefined;
+        this.bottomRight = undefined;
+        // Clear objects
+        this.objs.splice(0);
+        this.depth = 0;
+    }
+    /// Insert an object
+    insert(p: P): boolean {
+        // Ignore objects not inside the tree
+        if(!this.bounds.containsRect(p))
+            return false;
+        if(this.depth < QuadTree.MAX_DEPTH && (this.topLeft != undefined || this.objs.length >= QuadTree.NODE_CAPACITY)) {
+            // Split up and add the point to an accepting node
+            if(this.topLeft == undefined)
+                this.split();
+            if(this.topLeft!.insert(p) ||
+                this.topRight!.insert(p) ||
+                this.bottomLeft!.insert(p) ||
+                this.bottomRight!.insert(p)) return true;
+        }
+        this.objs.push(p);
+        return true;
     }
     /// Split into 4 quartiles.
     private split() {
         // Compute quartile width and height
-        const subW = this.bounds.width / 2, subH = this.bounds.height / 2;
-        const x = this.bounds.x, y = this.bounds.y;
-        const l = this.level + 1;
+        const halfW = this.bounds.width / 2, halfH = this.bounds.height / 2,
+        x = this.bounds.x, y = this.bounds.y;
         // Make a new quad tree for each quartile
-        this.nodes[0] = new QuadTree<R>(new Rectangle(x + subW, y, subW, subH), l);
-        this.nodes[1] = new QuadTree<R>(new Rectangle(x, y, subW, subH), l);
-        this.nodes[2] = new QuadTree<R>(new Rectangle(x, y + subH, subW, subH), l);
-        this.nodes[3] = new QuadTree<R>(new Rectangle(x + subW, y + subH, subW, subH), l);
-    }
-    /// Determine which quartile `rect` belongs to
-    private indexOf(r: BaseRectangle): number {
-        let index = -1;
-        const c = this.bounds.centre;
-        const vMid = c.x, hMid = c.y;
-        const topQuad = r.y < hMid && r.y + r.height < hMid;
-        const bottomQuad = r.y > hMid;
-        if(r.x < vMid && r.x + r.width < vMid) {
-            if(topQuad)
-                index = 1;
-            else if(bottomQuad)
-                index = 2;
-        } else if(r.x > vMid) {
-            if(topQuad)
-                index = 0;
-            else if(bottomQuad)
-                index = 3;
-        }
-        return index;
-    }
-    /// Insert the object `r` into this tree.
-    insert(r: R) {
-        if(this.nodes[0] != null) {
-            const i = this.indexOf(r);
-            if(i != -1) {
-                this.nodes[i]!.insert(r);
-                return;
-            }
-        }
-        this.objects.push(r);
-        if(this.objects.length > QuadTree.MAX_OBJECTS && this.level < QuadTree.MAX_LEVELS) {
-            if(this.nodes[0] == null)
-                this.split();
-            let i = 0;
-            while(i < this.objects.length) {
-                const ind = this.indexOf(this.objects[i]);
-                if(ind != -1) {
-                    const v = this.objects[i];
-                    this.objects.splice(i, 1);
-                    this.nodes[ind]!.insert(v);
-                } else
-                    i++;
-            }
+        this.topLeft = new QuadTree<P>(new Rectangle(x, y, halfW, halfH));
+        this.topRight = new QuadTree<P>(new Rectangle(x + halfW, y, halfW, halfH));
+        this.bottomLeft = new QuadTree<P>(new Rectangle(x, y - halfH, halfW, halfH));
+        this.bottomRight = new QuadTree<P>(new Rectangle(x + halfW, y - halfH, halfW, halfH));
+        for(const o of this.objs) {
+            if(this.topLeft.insert(o) ||
+            this.topRight.insert(o) ||
+            this.bottomRight.insert(o) ||
+            this.bottomLeft.insert(o))
+                this.objs.splice(this.objs.indexOf(o), 1);
         }
     }
-    /// Retrieve objects that might be colliding with the given objects.
-    retrieve(objects: R[], obj: BaseRectangle) {
-        objects.splice(0);
-        const i = this.indexOf(obj);
-        if(i != -1 && this.nodes[0] != null)
-            this.nodes[i]!.retrieve(objects, obj);
-        for(const obj of this.objects)
-            objects.push(obj);
+    retrieve(range: BaseRectangle, objects: P[] = []): P[] {
+        if(!this.bounds.intersects(range, 0))
+            return objects;
+        for(const o of this.objs)
+            if(intersects(range.x, range.y, range.width, range.height, o.x, o.y, o.width, o.height, 0))
+                objects.push(o);
+        // If this is a leaf node
+        if(this.topLeft == undefined)
+            return objects;
+        this.topLeft!.retrieve(range, objects);
+        this.topRight!.retrieve(range, objects);
+        this.bottomLeft!.retrieve(range, objects);
+        this.topLeft!.retrieve(range, objects);
+        return objects;
     }
 }
