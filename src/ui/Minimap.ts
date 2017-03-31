@@ -2,7 +2,7 @@
 import Graphics = PIXI.Graphics;
 import Grid from "../util/geom/Grid";
 import PlayScene from "../scene/PlayScene";
-import Entity from "./entities";
+import Entity from "./Entity";
 import Ladder from "./Ladder";
 
 /// Displays a miniature view of the map in the top-right corner of the screen.

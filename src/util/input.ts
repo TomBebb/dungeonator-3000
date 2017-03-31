@@ -1,7 +1,7 @@
 import { BasePoint, Point } from "./geom/Point";
 import Scene from "../scene/Scene";
 import PlayScene from "../scene/PlayScene";
-import { Entity } from "../ui/entities";
+import Entity from "../ui/Entity";
 
 /// An event that an input is polled for.
 ///

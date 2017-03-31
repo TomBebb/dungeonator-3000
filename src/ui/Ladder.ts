@@ -1,5 +1,5 @@
 import Item from "./Item";
-import Entity from "./entities";
+import Entity from "./Entity";
 /// A ladder, which advances the floor when interacted with.
 export default class Ladder extends Item {
     constructor() {

@@ -3,7 +3,7 @@ import Item from "../ui/Item";
 import Ladder from "../ui/Ladder";
 import UIMap from "../ui/Map";
 import Minimap from "../ui/Minimap";
-import Entity from "../ui/entities";
+import Entity from "../ui/Entity";
 import { GamepadInput, FollowInput } from "../util/input";
 import { clamp, randomIn } from "../util/math";
 import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";

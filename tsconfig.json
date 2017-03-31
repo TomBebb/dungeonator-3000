@@ -23,7 +23,7 @@
         "src/util/math.ts",
         "src/util/input.ts",
         "src/util/Tile.ts",
-        "src/ui/entities.ts",
+        "src/ui/Entity.ts",
         "src/ui/PauseOverlay.ts",
         "src/ui/Button.ts",
         "src/ui/Chest.ts",

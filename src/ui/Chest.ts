@@ -1,6 +1,6 @@
 ///<reference path='../pixi.d.ts'/>
 import Item from "./Item";
-import { Coin, Entity } from "./entities";
+import { Coin, Entity } from "./Entity";
 import { FollowInput } from "../util/input";
 import Rectangle = PIXI.Rectangle;
 import Texture = PIXI.Texture;
