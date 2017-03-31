@@ -41,9 +41,7 @@ export default class PlayScene extends Scene {
 
     set floor(v: number) {
         this._floor = v;
-        this.floorLabel.cacheAsBitmap = false;
         this.floorLabel.text = `Floor: ${this.floor.toLocaleString(undefined, { minimumIntegerDigits: 3 })}`;
-        this.floorLabel.cacheAsBitmap = true;
     }
     get floor(): number {
         return this._floor;
@@ -53,9 +51,7 @@ export default class PlayScene extends Scene {
 
     set coins(v: number) {
         this._coins = v;
-        this.coinsLabel.cacheAsBitmap = false;
         this.coinsLabel.text = `Coins: ${this.coins.toLocaleString(undefined, { minimumIntegerDigits: 6 })}`;
-        this.coinsLabel.cacheAsBitmap = true;
     }
     get coins(): number {
         return this._coins;
