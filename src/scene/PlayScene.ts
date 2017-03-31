@@ -18,10 +18,19 @@ import Text = PIXI.Text;
 
 /// Displays a dungeon floor and allows players to interact with it.
 export default class PlayScene extends Scene {
+    /// The size of a tile, in pixels.
     static readonly TILE_SIZE = 16;
-    static readonly NUM_CHESTS = 8;
-    static readonly NUM_ENEMIES = 10;
+    /// The minimum number of chests to spawn.
+    static readonly MIN_CHESTS = 0;
+    /// The maximum number of chests to spawn.
+    static readonly MAX_CHESTS = 8;
+    /// The maximum number of enemies to spawn.
+    static readonly MAX_ENEMIES = 20;
+    /// The minimum number of enemies to spawn.
+    static readonly MIN_ENEMIES = 5;
+    /// How many seconds to be forced to wait between turns.
     static readonly TURN_DELAY = 0.1;
+    /// The counter to register functions to run every interval.
     readonly counter: Counter = new Counter();
     /// The entities contained in the scene
     readonly enemies: Entity<FollowInput>[] = [];
@@ -32,7 +41,9 @@ export default class PlayScene extends Scene {
 
     set floor(v: number) {
         this._floor = v;
+        this.floorLabel.cacheAsBitmap = false;
         this.floorLabel.text = `Floor: ${this.floor.toLocaleString(undefined, { minimumIntegerDigits: 3 })}`;
+        this.floorLabel.cacheAsBitmap = true;
     }
     get floor(): number {
         return this._floor;
@@ -42,11 +53,14 @@ export default class PlayScene extends Scene {
 
     set coins(v: number) {
         this._coins = v;
+        this.coinsLabel.cacheAsBitmap = false;
         this.coinsLabel.text = `Coins: ${this.coins.toLocaleString(undefined, { minimumIntegerDigits: 6 })}`;
+        this.coinsLabel.cacheAsBitmap = true;
     }
     get coins(): number {
         return this._coins;
     }
+    /// Items in this scene.
     private items: Item[] = [];
     /// The quad tree that items such as chests are stored on.
     itemQuadTree: QuadTree<Item>;
@@ -102,10 +116,10 @@ export default class PlayScene extends Scene {
         const ladder = new Ladder();
         this.addItem(ladder);
         // Make chests
-        for (let i = 0; i < PlayScene.NUM_CHESTS; i++)
+        for (let i = 0; i < PlayScene.MIN_CHESTS; i++)
             this.addItem(new Chest());
         // Make enemies
-        for (let i = 0; i < PlayScene.NUM_ENEMIES; i++)
+        for (let i = 0; i < PlayScene.MIN_ENEMIES; i++)
             this.makeEnemy();
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
@@ -189,11 +203,17 @@ export default class PlayScene extends Scene {
         // Re-place items
         for (const i of this.items)
             this.resetItem(i);
+        // Add chest if applicable
+        if(this.items.length - 1 < Math.min(this._floor, PlayScene.MAX_CHESTS))
+            this.addItem(new Chest());
         // Place the entities
         for (const p of this.players)
             this.resetEntity(p);
         for (const e of this.enemies)
             this.resetEntity(e);
+        // Add enemy if number of enemies is 
+        if(this.enemies.length < Math.min(this._floor, PlayScene.MAX_ENEMIES))
+            this.addEntity(Entity.newEnemy(this));
         // Redraw the minimap
         this.minimap.redraw();
     }

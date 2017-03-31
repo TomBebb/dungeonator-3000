@@ -9,7 +9,9 @@ import { rectContains } from '../util/math';
 /// A button listener.
 type Listener = () => Scene;
 
-/// A button, a label with a box that links to a diff
+/// A button, a label with a box that can be selected by a button.
+///
+/// When it is pressed `listener` is ran.
 export default class Button extends Container {
     /// The graphics instance to draw the background on.
     private bg: Graphics = new Graphics();

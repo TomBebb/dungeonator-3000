@@ -16,7 +16,7 @@ export default class Minimap extends Graphics {
     /// The radius to draw players and the ladder with.
     private static readonly RADIUS: number = 2;
     /// The number of pixels this minimap should take up (in width and height).
-    private static readonly SIZE: number = 64;
+    private static readonly SIZE: number = 128;
     /// The grid to be displayed.
     private grid: Grid;
     /// The players array.
@@ -30,6 +30,9 @@ export default class Minimap extends Graphics {
         this.players = players;
         this.ladder = ladder;
         this.redraw();
+    }
+    private drawSquare(x: number, y: number, radius: number) {
+        this.drawRect(x - radius, y - radius, radius * 2, radius * 2);
     }
     /// Redraw the minimap
     redraw() {
@@ -46,17 +49,18 @@ export default class Minimap extends Graphics {
         for (let x = 0; x < this.grid.width; x++)
             for (let y = 0; y < this.grid.height; y++)
                 if (this.grid.canWalk(x, y))
-                    this.drawRect(x * SF, y * SF, 1, 1);
+                    this.drawRect(x * SF, y * SF, SF, SF);
         this.endFill();
+        const NSF = SF / PlayScene.TILE_SIZE;
         // Fill in the players
         this.beginFill(Minimap.PLAYER);
         const R = Minimap.RADIUS;
         for (const p of this.players)
-            this.drawCircle(p.x, p.y, R);
+            this.drawSquare(p.x * NSF, p.y * NSF, R);
         this.endFill();
         // Fill in the ladder
         this.beginFill(Minimap.LADDER);
-        this.drawCircle(this.ladder.x / PlayScene.TILE_SIZE, this.ladder.y / PlayScene.TILE_SIZE, R);
+        this.drawSquare(this.ladder.x * NSF, this.ladder.y * NSF, R);
         this.endFill();
         // Cache this again, now that it has been re-drawn
         this.cacheAsBitmap = true;
