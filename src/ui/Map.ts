@@ -31,14 +31,12 @@ export default class Map extends Container {
         this.grid = new Grid(tileWidth, tileHeight);
 
         const TS = PlayScene.TILE_SIZE;
-        // Compute the absolute width
-        this.width = tileWidth * TS;
-        this.height = tileHeight * TS;
         // Initialise the grid
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
         this.cacheAsBitmap = true;
-        const bounds = new Rectangle(0, 0, this.width, this.height);
+        // Make quad tree for rooms
+        const bounds = new Rectangle(0, 0, tileWidth * TS, tileHeight * TS);
         this.quadTree = new QuadTree<Room>(bounds);
         this.reset();
     }

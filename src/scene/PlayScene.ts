@@ -6,6 +6,7 @@ import Minimap from "../ui/Minimap";
 import Entity from "../ui/Entity";
 import { GamepadInput, FollowInput } from "../util/input";
 import { clamp, randomIn } from "../util/math";
+import { Point } from "../util/geom/Point";
 import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
 import QuadTree from "../util/geom/QuadTree";
@@ -223,14 +224,21 @@ export default class PlayScene extends Scene {
     }
     /// Check if the tile under `r` is walkable
     canWalk(r: BaseRectangle): boolean {
-        const a = this.quadTree.retrieve(r);
-        if (a.length > 0 && r instanceof Entity)
-            console.log(r, a);
-        return this.map.canWalk(r.x, r.y) && a.find((q) => r.x == q.x && r.y == q.y) == undefined;
+        // Query quad tree for objects that might be in `r`s tile.
+        const maybeObjects = this.quadTree.retrieve(r);
+        // Partially apply the point equality function with `r`
+        const pointEq = Point.eq.bind(null, r);
+        // Return true if the underlying map tile is walkable and there aren't any objects at `r`.
+        return this.map.canWalk(r.x, r.y) && maybeObjects.find(pointEq) == undefined;
     }
     /// Check if the tile under `r` is clear of anything
     isNotEmpty(r: BaseRectangle): boolean {
-        return this.map.isNotEmpty(r.x, r.y) || this.quadTree.retrieve(r).find((q) => r.x == q.x && r.y == q.y) != undefined;
+        // Query quad tree for objects that might be in `r`s tile.
+        const maybeObjects = this.quadTree.retrieve(r);
+        // Partially apply the point equality function with `r`
+        const pointEq = Point.eq.bind(null, r);
+        // Return true if the underlying map tile is not walkable and there are objects at `r`.
+        return this.map.isNotEmpty(r.x, r.y) || maybeObjects.find(pointEq) != undefined;
     }
     /// Attempt to place the rectangle `p` in the game. This assumes
     /// that it has dimensions 1x1.
