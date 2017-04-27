@@ -148,6 +148,9 @@ export class Entity<I extends Input> extends Dynamic {
         } else
             return i;
     }
+    isEnemy(): boolean {
+        return this.input instanceof FollowInput;
+    }
     /// Try to move this entitiy, by querying the input's `next` method.
     ///
     /// This will be called at least once a turn.
@@ -170,10 +173,15 @@ export class Entity<I extends Input> extends Dynamic {
         this.x = p.x;
         this.y = p.y;
         const interaction = this.scene.checkAt(this);
+        // If this bumped into an entity
+        if(this.isEnemy() && interaction != undefined && interaction instanceof Entity && !interaction.isEnemy()) {
+            const entity: Entity<any> = interaction;
+            this.scene.place(entity);
+        }
         // If this point is unwalkable
-        if (interaction != undefined) {
+        else if (interaction != undefined) {
             // Find items at this point
-            let item = (interaction instanceof Item) ? interaction : null;
+            const item = (interaction instanceof Item) ? interaction : null;
             // Return to old position
             this.x = last.x;
             this.y = last.y;

@@ -220,7 +220,7 @@ export default class PlayScene extends Scene {
     }
     /// Attempt to place the rectangle `p` in the game. This assumes
     /// that it has dimensions 1x1.
-    private place(p: BaseRectangle, numAttempts: number = 5): Rectangle | undefined {
+    place(p: BaseRectangle, numAttempts: number = 5): Rectangle | undefined {
         let r: Rectangle;
         do {
             // Get a random room
