@@ -1,5 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var HashSet = (function () {
         function HashSet() {
             this._ = new Set();
@@ -18,6 +19,5 @@ define(["require", "exports"], function (require, exports) {
         };
         return HashSet;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = HashSet;
 });
