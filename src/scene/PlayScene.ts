@@ -6,15 +6,13 @@ import Minimap from "../ui/Minimap";
 import Entity from "../ui/Entity";
 import { GamepadInput, FollowInput } from "../util/input";
 import { clamp, randomIn } from "../util/math";
-import { Point } from "../util/geom/Point";
+import { BasePoint, Point } from "../util/geom/Point";
 import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
 import Counter from "../util/Counter";
-import QuadTree from "../util/geom/QuadTree";
 import { Save, save, load } from "../util/save";
 import Scene from "./Scene";
 import PauseScene from "./PauseScene";
 import Main from "../main";
-import Sprite = PIXI.Sprite;
 import Text = PIXI.Text;
 
 /// Displays a dungeon floor and allows players to interact with it.
@@ -35,8 +33,10 @@ export default class PlayScene extends Scene {
     readonly counter: Counter = new Counter();
     /// The entities contained in the scene
     readonly enemies: Entity<FollowInput>[] = [];
-    /// The players, where each set bit is an index into `entities`.
+    /// The players contained in the scene.
     readonly players: Entity<any>[] = [];
+    /// All the entities!
+    readonly entities: Entity<any>[] = [];
     // Wrap the floor as a property so when it is set it updates the floor label as well.
     private _floor: number;
 
@@ -58,11 +58,7 @@ export default class PlayScene extends Scene {
         return this._coins;
     }
     /// Items in this scene.
-    private items: Item[] = [];
-    /// The quad tree that items such as chests are stored on.
-    itemQuadTree: QuadTree<Item>;
-    /// The quad tree that any collidable object (including entities and items) is stored on.
-    private quadTree: QuadTree<Sprite>;
+    readonly items: Item[] = [];
     /// The label that displays the floor number.
     private readonly floorLabel: Text = new Text('', {
         fontFamily: "sans",
@@ -105,11 +101,6 @@ export default class PlayScene extends Scene {
         // Create a map (a graphical Grid wrapper).
         this.map = new UIMap(128, 128);
         this.addNonUi(this.map);
-        const bounds = new Rectangle(0, 0, this.map.width, this.map.height);
-        // Make quad tree for all collidable objects
-        this.quadTree = new QuadTree<Sprite>(bounds);
-        // Make quad tree for items
-        this.itemQuadTree = new QuadTree<Item>(bounds);
         const ladder = new Ladder();
         this.addItem(ladder);
         // Make chests
@@ -121,8 +112,7 @@ export default class PlayScene extends Scene {
         this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         // Add player
-        let player: Entity<any> = Entity.defaultPlayer(this);
-        this.addEntity(player);
+        this.addEntity(Entity.defaultPlayer(this));
         // Make and setup minimap
         this.minimap = new Minimap(this.map.grid, this.players, ladder);
         this.minimap.position.set(r.width - this.minimap.width - 10, 10);
@@ -136,11 +126,11 @@ export default class PlayScene extends Scene {
     private addEntity(e: Entity<any>) {
         this.resetEntity(e);
         this.addNonUi(e);
+        this.entities.push(e);
         (e.input instanceof FollowInput ? this.enemies : this.players).push(e);
     }
     /// Reset the entity `e`.
     private resetEntity(e: Entity<any>) {
-        this.quadTree.insert(e);
         e.room = this.place(e);
         if (e.input instanceof FollowInput) {
             // Make it not follow anything
@@ -151,8 +141,6 @@ export default class PlayScene extends Scene {
     }
     /// Reset the item `item`.
     private resetItem(item: Item) {
-        this.itemQuadTree.insert(item);
-        this.quadTree.insert(item);
         this.place(item);
     }
     /// Add the item `item`
@@ -194,9 +182,6 @@ export default class PlayScene extends Scene {
         save(saveData);
         // Reset the map (clear, then generate on it)
         this.map.reset();
-        // Clear quad trees
-        this.quadTree.clear();
-        this.itemQuadTree.clear();
         // Re-place items
         for (const i of this.items)
             this.resetItem(i);
@@ -204,11 +189,9 @@ export default class PlayScene extends Scene {
         if(this.items.length - 1 < Math.min(this._floor, PlayScene.MAX_CHESTS))
             this.addItem(new Chest());
         // Place the entities
-        for (const p of this.players)
+        for (const p of this.entities)
             this.resetEntity(p);
-        for (const e of this.enemies)
-            this.resetEntity(e);
-        // Add enemy if number of enemies is 
+        // Add enemy if number of enemies is bigger
         if(this.enemies.length < Math.min(this._floor, PlayScene.MAX_ENEMIES))
             this.addEntity(Entity.newEnemy(this));
         // Redraw the minimap
@@ -222,23 +205,18 @@ export default class PlayScene extends Scene {
         this.addEntity(player);
         this.placeNear(this.players[0], player);
     }
-    /// Check if the tile under `r` is walkable
-    canWalk(r: BaseRectangle): boolean {
-        // Query quad tree for objects that might be in `r`s tile.
-        const maybeObjects = this.quadTree.retrieve(r);
-        // Partially apply the point equality function with `r`
-        const pointEq = Point.eq.bind(null, r);
+    /// Check what is at the point `r`
+    checkAt(r: BasePoint): Entity<any> | Item | "tile" | undefined {
         // Return true if the underlying map tile is walkable and there aren't any objects at `r`.
-        return this.map.canWalk(r.x, r.y) && maybeObjects.find(pointEq) == undefined;
-    }
-    /// Check if the tile under `r` is clear of anything
-    isNotEmpty(r: BaseRectangle): boolean {
-        // Query quad tree for objects that might be in `r`s tile.
-        const maybeObjects = this.quadTree.retrieve(r);
-        // Partially apply the point equality function with `r`
-        const pointEq = Point.eq.bind(null, r);
-        // Return true if the underlying map tile is not walkable and there are objects at `r`.
-        return this.map.isNotEmpty(r.x, r.y) || maybeObjects.find(pointEq) != undefined;
+        if(this.map.isNotEmpty(r.x, r.y))
+            return "tile";
+        const item = this.items.find((p) => Point.eq(p, r)); 
+        if(item != undefined)
+            return item;
+        const entity = this.entities.find((p) => p != r && Point.eq(p, r)); 
+        if(entity != undefined)
+            return entity;
+        return undefined;
     }
     /// Attempt to place the rectangle `p` in the game. This assumes
     /// that it has dimensions 1x1.
@@ -250,7 +228,7 @@ export default class PlayScene extends Scene {
             // Place p in the room
             if (this.placeIn(p, r, numAttempts))
                 return r;
-        } while (this.isNotEmpty(p) && --numAttempts > 0)
+        } while (this.checkAt(p) != undefined && --numAttempts > 0)
         return numAttempts > 0 ? r : undefined;
     }
     /// Attempt to place the rectangle `p` in the game. This assumes
@@ -259,7 +237,7 @@ export default class PlayScene extends Scene {
         do {
             p.x = (r.x + Math.floor(Math.random() * r.width)) * PlayScene.TILE_SIZE;
             p.y = (r.y + Math.floor(Math.random() * r.height)) * PlayScene.TILE_SIZE;
-        } while (this.isNotEmpty(p) && --numAttempts >= 0)
+        } while (this.checkAt(p) != undefined && --numAttempts >= 0)
         return numAttempts < 0;
     }
     /// Attempt to place `t` near `t`
@@ -275,19 +253,9 @@ export default class PlayScene extends Scene {
             }
         }
         const TS = PlayScene.TILE_SIZE;
-        t.x = n.x + TS;
-        t.y = n.y;
-        if (this.canWalk(t))
-            return true;
-        t.x = n.x - TS;
-        if (this.canWalk(t))
-            return true;
-        t.x = n.x;
-        t.y = n.y + TS;
-        if (this.canWalk(t))
-            return true;
-        t.y = n.y - TS;
-        if (this.canWalk(t))
+        t.x = n.x + (Math.random() * 2 - 1) | 0 * TS;
+        t.y = n.y + (Math.random() * 2 - 1) | 0 * TS;
+        if(this.checkAt(t) == undefined)
             return true;
         const r = this.place(t, numAttempts);
         t.room = r;

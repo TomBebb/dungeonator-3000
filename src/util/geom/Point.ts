@@ -29,9 +29,14 @@ export class Point implements BasePoint, Hash {
     hash(): number {
         return (this.x << 16) | (this.y & 0xFFFF);
     }
+
+    /// Return true when this point and `other` have the same co-ordinates.
+    static eq(a: BasePoint, b: BasePoint): boolean {
+        return a.x === b.x && a.y === b.y;
+    }
     /// Return true when this point and `other` have the same co-ordinates.
     equals(other: BasePoint): boolean {
-        return this.x === other.x && this.y === other.y;
+        return Point.eq(this, other);
     }
     /// If `copy` is true, make a new point with same co-ordinates.
     /// If `copy` is false, make `p` into a point.

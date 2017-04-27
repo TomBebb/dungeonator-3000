@@ -169,11 +169,11 @@ export class Entity<I extends Input> extends Dynamic {
         // Move to new values
         this.x = p.x;
         this.y = p.y;
+        const interaction = this.scene.checkAt(this);
         // If this point is unwalkable
-        if (!this.scene.canWalk(this)) {
+        if (interaction != undefined) {
             // Find items at this point
-            const items: Item[] = this.scene.itemQuadTree.retrieve(this);
-            let item = items.find((i: Item) => i.x == this.x && i.y == this.y);
+            let item = (interaction instanceof Item) ? interaction : null;
             // Return to old position
             this.x = last.x;
             this.y = last.y;
