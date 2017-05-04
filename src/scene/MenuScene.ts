@@ -121,9 +121,23 @@ export default class MenuScene extends Scene {
         const gs = navigator.getGamepads();
         // Advance on any gamepad button
         for (const g of gs)
-            if (g && g.buttons)
-                for (let b = 0; b < g.buttons.length; b++)
-                    if (g.buttons[b].pressed)
-                        this.autoAdvance();
+            if (g && g.buttons && g.axes) {
+                if (g.buttons[0].pressed || g.buttons[9].pressed)
+                    this.autoAdvance();
+                const dy = g.axes[1];
+                if(dy < 0 && this.selected == -1) {
+                    this.selected = 0;
+                    this.buttons[0].selected = true;
+                }else if(dy > 0 && this.selected == -1) {
+                    this.selected = this.buttons.length - 1;
+                    this.buttons[this.selected].selected = true;
+                }else if(dy < 0 && this.selected + 1 < this.buttons.length) {
+                    this.buttons[this.selected].selected = false;
+                    this.buttons[++this.selected].selected = true;
+                } else if(dy > 0 && this.selected - 1 >= 0) {
+                    this.buttons[this.selected].selected = false;
+                    this.buttons[--this.selected].selected = true;
+                }
+            }
     }
 }
