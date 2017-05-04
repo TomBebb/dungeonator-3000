@@ -204,6 +204,7 @@ export default class PlayScene extends Scene {
         const player: Entity<any> = new Entity(this, new GamepadInput(g.index));
         this.addEntity(player);
         this.placeNear(this.players[0], player);
+        this.gamepadPlayers.set(g.index, player);
     }
     /// Check what is at the point `r`
     checkAt(r: BasePoint): Entity<any> | Item | "tile" | undefined {
