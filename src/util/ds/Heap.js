@@ -1,5 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var Heap = (function () {
         function Heap(score) {
             this.content = [];
@@ -50,10 +51,7 @@ define(["require", "exports"], function (require, exports) {
             }
         };
         Heap.prototype.bubbleUp = function (n) {
-            var length = this.content.length;
-            var elem = this.content[n];
-            var score = this.score;
-            var elemScore = score(elem);
+            var length = this.content.length, elem = this.content[n], score = this.score, elemScore = score(elem);
             while (true) {
                 var child2N = (n + 1) << 1;
                 var child1N = child2N - 1;
@@ -83,6 +81,5 @@ define(["require", "exports"], function (require, exports) {
         };
         return Heap;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Heap;
 });

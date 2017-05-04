@@ -216,12 +216,16 @@ export class GamepadInput implements Input {
         if (gp.buttons[9].pressed)
             return "pause";
         // Store axis values and entity position.
-        const x = this.entity.x, y = this.entity.y, dx = gp.axes[0], dy = gp.axes[1], TS = PlayScene.TILE_SIZE;
-        if (dx == 0 && dy == 0)
+        const dx = gp.axes[0], dy = gp.axes[1], TS = PlayScene.TILE_SIZE;
+        let x = this.entity.x, y = this.entity.y;
+        x += Math.round(dx) * TS;
+        y += Math.round(dy) * TS;
+        if (x == this.entity.x && y == this.entity.y)
             return undefined;
+        else if(x != this.entity.x)
+            return {x: x, y: this.entity.y}
         else
-            // Calculate next point
-            return { x: x + Math.round(dx) * TS, y: y + Math.round(dy) * TS };
+            return {x: this.entity.x, y: y };
     }
 }
 export default Input;

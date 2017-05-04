@@ -1,19 +1,17 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var HashMap = (function () {
         function HashMap(_default) {
             if (_default === void 0) { _default = undefined; }
             this._ = new Map();
-            this.keys = [];
             this._default = _default;
         }
         HashMap.prototype.clear = function () {
             this._.clear();
-            this.keys.splice(0);
         };
         HashMap.prototype.delete = function (key) {
             this._.delete(key.hash());
-            this.keys.splice(this.keys.indexOf(key), 1);
         };
         HashMap.prototype.has = function (key) {
             return this._.has(key.hash());
@@ -28,6 +26,5 @@ define(["require", "exports"], function (require, exports) {
         };
         return HashMap;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = HashMap;
 });
