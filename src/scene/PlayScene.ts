@@ -199,11 +199,13 @@ export default class PlayScene extends Scene {
     }
     /// Runs when a gamepad is connected.
     private connectGamepad(g: Gamepad) {
-        if (this.gamepadPlayers.has(g.index))
+        // If this gamepad is registered to an entity or is the primary gamepad
+        if (this.gamepadPlayers.has(g.index) || g.index == 0)
             return;
         const player: Entity<any> = new Entity(this, new GamepadInput(g.index));
         this.addEntity(player);
         this.placeNear(this.players[0], player);
+        this.gamepadPlayers.set(g.index, player);
     }
     /// Check what is at the point `r`
     checkAt(r: BasePoint): Entity<any> | Item | "tile" | undefined {
@@ -240,26 +242,17 @@ export default class PlayScene extends Scene {
         } while (this.checkAt(p) != undefined && --numAttempts >= 0)
         return numAttempts < 0;
     }
-    /// Attempt to place `t` near `t`
-    private placeNear(t: Entity<any>, n: Entity<any>, numAttempts: number = 5): boolean {
-        if (n.room != null) {
-            const origNumAttempts = numAttempts;
-            while (numAttempts-- > 0) {
-                const r = randomIn(this.map.grid.rooms);
-                if (this.placeIn(t, r!, origNumAttempts)) {
-                    t.room = r;
+    /// Attempt to place `t` near `n` - returns true if spawned near player
+    private placeNear(t: Entity<any>, n: Entity<any>): boolean {
+        const radius = 2;
+        for(t.x = n.x - radius; t.x <= n.x + radius; t.x += radius * 2) {
+            for(t.y = n.y - radius; t.y <= n.y + radius; t.y += radius * 2) {
+                if(this.checkAt(t) == undefined)
                     return true;
-                }
             }
         }
-        const TS = PlayScene.TILE_SIZE;
-        t.x = n.x + (Math.random() * 2 - 1) | 0 * TS;
-        t.y = n.y + (Math.random() * 2 - 1) | 0 * TS;
-        if(this.checkAt(t) == undefined)
-            return true;
-        const r = this.place(t, numAttempts);
-        t.room = r;
-        return r != undefined;
+        this.place(t);
+        return false;
     }
     /// Start a new turn
     startTurn() {
