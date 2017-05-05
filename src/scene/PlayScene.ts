@@ -8,7 +8,6 @@ import { GamepadInput, FollowInput } from "../util/input";
 import { clamp, randomIn } from "../util/math";
 import { BasePoint, Point } from "../util/geom/Point";
 import { BaseRectangle, Rectangle } from "../util/geom/Rectangle";
-import Counter from "../util/Counter";
 import { Save, save, load } from "../util/save";
 import Scene from "./Scene";
 import PauseScene from "./PauseScene";
@@ -29,8 +28,6 @@ export default class PlayScene extends Scene {
     static readonly MIN_ENEMIES = 5;
     /// How many seconds to be forced to wait between turns.
     static readonly TURN_DELAY = 0.1;
-    /// The counter to register functions to run every interval.
-    readonly counter: Counter = new Counter();
     /// The entities contained in the scene
     readonly enemies: Entity<FollowInput>[] = [];
     /// The players contained in the scene.
@@ -109,7 +106,7 @@ export default class PlayScene extends Scene {
         // Make enemies
         for (let i = 0; i < PlayScene.MIN_ENEMIES; i++)
             this.makeEnemy();
-        this.counter.register(PlayScene.TURN_DELAY, () => this.startTurn());
+        setInterval(() => this.startTurn(), PlayScene.TURN_DELAY * 1000);
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         // Add player
         this.addEntity(Entity.defaultPlayer(this));
@@ -278,8 +275,7 @@ export default class PlayScene extends Scene {
             if (e.input.canSee(p))
                 arr.push(e);
     }
-    update(dt: number): void {
-        this.counter.update(dt);
+    update(_: number): void {
         const gamepads: Gamepad[] = navigator.getGamepads() || [];
         for (const g of gamepads)
             if (g != undefined && !this.gamepadPlayers.has(g.index))

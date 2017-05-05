@@ -158,14 +158,15 @@ export class FollowInput implements Input {
         text.position.set(x - text.width / 2, y - text.height);
         let frame: () => void;
         const scene = this.entity.scene;
+        let intervalId: number = -1;
         frame = () => {
             text.alpha -= 0.1;
             if (text.alpha <= 0) {
                 scene.removeNonUi(text);
-                scene.counter.unregister(frame);
+                clearInterval(intervalId);
             }
         }
-        scene.counter.register(0.03, frame);
+        intervalId = setInterval(frame, 30);
         scene.addNonUi(text);
     }
     /// Return true if `entity` can 'see' `p`.
