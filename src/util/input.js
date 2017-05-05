@@ -120,14 +120,15 @@ define(["require", "exports", "./geom/Point", "../scene/PlayScene"], function (r
             text.position.set(x - text.width / 2, y - text.height);
             var frame;
             var scene = this.entity.scene;
+            var intervalId = -1;
             frame = function () {
                 text.alpha -= 0.1;
                 if (text.alpha <= 0) {
                     scene.removeNonUi(text);
-                    scene.counter.unregister(frame);
+                    clearInterval(intervalId);
                 }
             };
-            scene.counter.register(0.03, frame);
+            intervalId = setInterval(frame, 30);
             scene.addNonUi(text);
         };
         FollowInput.prototype.canSee = function (p) {
@@ -166,11 +167,16 @@ define(["require", "exports", "./geom/Point", "../scene/PlayScene"], function (r
                 return undefined;
             if (gp.buttons[9].pressed)
                 return "pause";
-            var x = this.entity.x, y = this.entity.y, dx = gp.axes[0], dy = gp.axes[1], TS = PlayScene_1.default.TILE_SIZE;
-            if (dx == 0 && dy == 0)
+            var dx = gp.axes[0], dy = gp.axes[1], TS = PlayScene_1.default.TILE_SIZE;
+            var x = this.entity.x, y = this.entity.y;
+            x += Math.round(dx) * TS;
+            y += Math.round(dy) * TS;
+            if (x == this.entity.x && y == this.entity.y)
                 return undefined;
+            else if (x != this.entity.x)
+                return { x: x, y: this.entity.y };
             else
-                return { x: x + Math.round(dx) * TS, y: y + Math.round(dy) * TS };
+                return { x: this.entity.x, y: y };
         };
         return GamepadInput;
     }());

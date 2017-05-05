@@ -8,7 +8,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui/Minimap", "../ui/Entity", "../util/input", "../util/math", "../util/geom/Point", "../util/Counter", "../util/save", "./Scene", "./PauseScene", "../main"], function (require, exports, Chest_1, Ladder_1, Map_1, Minimap_1, Entity_1, input_1, math_1, Point_1, Counter_1, save_1, Scene_1, PauseScene_1, main_1) {
+define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui/Minimap", "../ui/Entity", "../util/input", "../util/math", "../util/geom/Point", "../util/save", "./Scene", "./PauseScene", "../main"], function (require, exports, Chest_1, Ladder_1, Map_1, Minimap_1, Entity_1, input_1, math_1, Point_1, save_1, Scene_1, PauseScene_1, main_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Text = PIXI.Text;
@@ -16,7 +16,6 @@ define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui
         __extends(PlayScene, _super);
         function PlayScene() {
             var _this = _super.call(this) || this;
-            _this.counter = new Counter_1.default();
             _this.enemies = [];
             _this.players = [];
             _this.entities = [];
@@ -54,7 +53,7 @@ define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui
                 _this.addItem(new Chest_1.default());
             for (var i = 0; i < PlayScene.MIN_ENEMIES; i++)
                 _this.makeEnemy();
-            _this.counter.register(PlayScene.TURN_DELAY, function () { return _this.startTurn(); });
+            setInterval(function () { return _this.startTurn(); }, PlayScene.TURN_DELAY * 1000);
             var gamepads = navigator.getGamepads() || [];
             _this.addEntity(Entity_1.default.defaultPlayer(_this));
             _this.minimap = new Minimap_1.default(_this.map.grid, _this.players, ladder);
@@ -151,11 +150,12 @@ define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui
             this.minimap.redraw();
         };
         PlayScene.prototype.connectGamepad = function (g) {
-            if (this.gamepadPlayers.has(g.index))
+            if (this.gamepadPlayers.has(g.index) || g.index == 0)
                 return;
             var player = new Entity_1.default(this, new input_1.GamepadInput(g.index));
             this.addEntity(player);
             this.placeNear(this.players[0], player);
+            this.gamepadPlayers.set(g.index, player);
         };
         PlayScene.prototype.checkAt = function (r) {
             if (this.map.isNotEmpty(r.x, r.y))
@@ -186,26 +186,16 @@ define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui
             } while (this.checkAt(p) != undefined && --numAttempts >= 0);
             return numAttempts < 0;
         };
-        PlayScene.prototype.placeNear = function (t, n, numAttempts) {
-            if (numAttempts === void 0) { numAttempts = 5; }
-            if (n.room != null) {
-                var origNumAttempts = numAttempts;
-                while (numAttempts-- > 0) {
-                    var r_1 = math_1.randomIn(this.map.grid.rooms);
-                    if (this.placeIn(t, r_1, origNumAttempts)) {
-                        t.room = r_1;
+        PlayScene.prototype.placeNear = function (t, n) {
+            var radius = 2;
+            for (t.x = n.x - radius; t.x <= n.x + radius; t.x += radius * 2) {
+                for (t.y = n.y - radius; t.y <= n.y + radius; t.y += radius * 2) {
+                    if (this.checkAt(t) == undefined)
                         return true;
-                    }
                 }
             }
-            var TS = PlayScene.TILE_SIZE;
-            t.x = n.x + (Math.random() * 2 - 1) | 0 * TS;
-            t.y = n.y + (Math.random() * 2 - 1) | 0 * TS;
-            if (this.checkAt(t) == undefined)
-                return true;
-            var r = this.place(t, numAttempts);
-            t.room = r;
-            return r != undefined;
+            this.place(t);
+            return false;
         };
         PlayScene.prototype.startTurn = function () {
             this.inTurn = true;
@@ -232,8 +222,7 @@ define(["require", "exports", "../ui/Chest", "../ui/Ladder", "../ui/Map", "../ui
                     arr.push(e);
             }
         };
-        PlayScene.prototype.update = function (dt) {
-            this.counter.update(dt);
+        PlayScene.prototype.update = function (_) {
             var gamepads = navigator.getGamepads() || [];
             for (var _i = 0, gamepads_2 = gamepads; _i < gamepads_2.length; _i++) {
                 var g = gamepads_2[_i];
